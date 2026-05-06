@@ -1,0 +1,366 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 🌞 Light Mode (Default) */
+  --background: 248 250 252;
+  --text: 15 23 42;
+  --card: 255 255 255;
+  --primary: 30 58 138;
+  --primary-foreground: 255 255 255;
+  --accent: 34 197 94;
+  --warning: 245 158 11;
+}
+
+.theme-dark {
+  /* 🌙 Dark Mode */
+  --background: 15 23 42;
+  --text: 226 232 240;
+  --card: 30 41 59;
+  --primary: 59 130 246;
+  --primary-foreground: 255 255 255;
+  --accent: 34 197 94;
+  --warning: 245 158 11;
+}
+
+.theme-study {
+  /* 📖 Study Mode */
+  --background: 242 238 221;
+  --text: 44 40 33;
+  --card: 250 246 232;
+  --primary: 30 58 138;
+  --primary-foreground: 255 255 255;
+  --accent: 34 197 94;
+  --warning: 245 158 11;
+}
+
+.theme-eye {
+  /* 👁 Eye Protection */
+  --background: 26 26 26;
+  --text: 255 223 163;
+  --card: 37 36 34;
+  --primary: 255 223 163;
+  --primary-foreground: 26 26 26; /* Deep dark text on the warm yellow background */
+  --accent: 163 230 53;
+  --warning: 251 191 36;
+}
+
+html, body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--text));
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--primary), 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--primary), 0.2);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb,
+.theme-eye ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover,
+.theme-eye ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Viewer Area — Theme-Responsive Backgrounds
+   The entire viewer panel changes with the theme,
+   not just the page canvases.
+   ═══════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════
+   PDF Viewer Area — Theme-Responsive Backgrounds
+   ═══════════════════════════════════════════════ */
+
+/* Default (Light) — soft neutral (NO transitions to prevent selection issues) */
+.pdf-viewer-area {
+  background-color: #f1f5f9;
+}
+
+/* 🌙 Dark — use the same slate-blue as navbar/sidebar, NOT pure black */
+.theme-dark .pdf-viewer-area {
+  background-color: rgb(20, 27, 45);
+}
+
+/* 📖 Reading/Study — warm parchment background */
+.theme-study .pdf-viewer-area {
+  background-color: #e8e0c8;
+}
+
+/* 👁 Eye Protector — deep warm/dim background */
+.theme-eye .pdf-viewer-area {
+  background-color: #1a1a1a;
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Page Filters (Only for Canvas)
+   ═══════════════════════════════════════════════ */
+
+.pdf-theme-dark canvas {
+  filter: invert(90%) hue-rotate(180deg) brightness(1.1) contrast(0.9);
+}
+
+.pdf-theme-eye canvas {
+  filter: sepia(0.8) contrast(1.1) brightness(0.9) hue-rotate(-15deg);
+}
+
+.pdf-theme-study canvas {
+  filter: sepia(0.2) contrast(1.05);
+}
+
+/* 👁 Eye Protector — deep warm dark */
+.theme-eye .pdf-viewer-area {
+  background-color: rgb(22, 22, 20);
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Canvas Theme Filters & Layer Stability
+   Filters applied directly to the <canvas>.
+   NO transitions on filtered elements to prevent selection drops.
+   ═══════════════════════════════════════════════ */
+
+/* Force GPU-composited layers to prevent sub-pixel misalignment during drags */
+.react-pdf__Page__canvas,
+.react-pdf__Page__textLayer {
+  backface-visibility: hidden;
+  perspective: 1000;
+  transform: translateZ(0);
+}
+
+/* 🌙 Dark — softer inversion (not pure black), matches the slate-dark UI */
+.pdf-theme-dark .react-pdf__Page__canvas {
+  filter: invert(0.85) hue-rotate(180deg) brightness(1.05) contrast(0.92);
+}
+
+/* 📖 Reading/Study — warm paper tint, slight contrast boost */
+.pdf-theme-study .react-pdf__Page__canvas {
+  filter: sepia(0.25) contrast(1.05) brightness(0.98);
+}
+
+/* 👁 Eye Protector — strong sepia, reduced brightness, desaturated */
+.pdf-theme-eye .react-pdf__Page__canvas {
+  filter: sepia(0.5) brightness(0.8) saturate(0.75);
+}
+
+/* Make the wrapper a positioning context */
+.pdf-page-wrapper {
+  position: relative;
+  background-color: white; /* Stable background for the PDF page */
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Page Wrapper — Theme-Aware Borders & Shadows
+   ═══════════════════════════════════════════════ */
+
+/* Dark mode pages — subtle border, elevated shadow */
+.theme-dark .pdf-page-wrapper {
+  border-color: rgba(100, 116, 139, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Study mode pages — warm shadow */
+.theme-study .pdf-page-wrapper {
+  border-color: rgba(180, 160, 120, 0.3) !important;
+  box-shadow: 0 6px 24px rgba(120, 100, 60, 0.15);
+}
+
+/* Eye protector pages — deep warm shadow */
+.theme-eye .pdf-page-wrapper {
+  border-color: rgba(120, 100, 60, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════════════
+   Global Theme Overrides — High-Contrast Element Removal
+   Ensures Tailwind's default light-mode elements (borders, shadows, 
+   neutral backgrounds) don't create 'white lines' or bright layers.
+   ═══════════════════════════════════════════════ */
+
+/* 👁 Eye Protector Overrides */
+.theme-eye .border-neutral-100, .theme-eye .border-neutral-200, .theme-eye .border-neutral-300,
+.theme-eye .border-b, .theme-eye .border-r, .theme-eye .border-t, .theme-eye .border-l, .theme-eye .border {
+  border-color: rgba(255, 223, 163, 0.04) !important;
+}
+
+.theme-eye .shadow-sm, .theme-eye .shadow, .theme-eye .shadow-md, .theme-eye .shadow-lg, .theme-eye .shadow-xl, .theme-eye .shadow-2xl {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+.theme-eye .bg-neutral-50, .theme-eye .bg-neutral-100, .theme-eye .bg-neutral-200 {
+  background-color: rgba(255, 223, 163, 0.02) !important;
+}
+
+/* 📖 Reading Mode Overrides */
+.theme-study .border-neutral-100, .theme-study .border-neutral-200, 
+.theme-study .border-b, .theme-study .border-r, .theme-study .border-t, .theme-study .border-l, .theme-study .border {
+  border-color: rgba(120, 100, 60, 0.08) !important;
+}
+
+.theme-study .bg-neutral-50, .theme-study .bg-neutral-100 {
+  background-color: rgba(120, 100, 60, 0.04) !important;
+}
+
+/* 🌙 Dark Mode Overrides */
+.theme-dark .border-neutral-100, .theme-dark .border-neutral-200,
+.theme-dark .border-b, .theme-dark .border-r, .theme-dark .border-t, .theme-dark .border-l, .theme-dark .border {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Rich Text Editor (Quill) Theme Overrides
+   ═══════════════════════════════════════════════ */
+
+.quill {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.ql-toolbar.ql-snow {
+  display: none;
+}
+
+.theme-dark .ql-toolbar.ql-snow, .theme-eye .ql-toolbar.ql-snow {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(var(--background)) !important;
+  color: rgb(var(--text)) !important;
+}
+
+.ql-editor {
+  flex: 1;
+  padding: 24px !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 1rem !important;
+  line-height: 1.8 !important;
+  color: rgb(var(--text)) !important;
+  background-color: rgb(var(--background)) !important;
+  min-height: 300px;
+}
+
+/* Force ALL child elements inside the editor to inherit theme colors */
+.ql-editor p,
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3,
+.ql-editor ul,
+.ql-editor ol,
+.ql-editor li,
+.ql-editor span:not([style*="color"]):not([style*="background"]) {
+  color: rgb(var(--text)) !important;
+  background-color: transparent !important;
+}
+
+.ql-editor.ql-blank::before {
+  color: inherit !important;
+  opacity: 0.3 !important;
+  font-style: normal !important;
+  left: 24px !important;
+}
+
+.ql-snow .ql-stroke {
+  stroke: currentColor !important;
+  opacity: 0.7;
+}
+
+.ql-snow .ql-fill {
+  fill: currentColor !important;
+  opacity: 0.7;
+}
+
+.ql-snow .ql-picker {
+  color: currentColor !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: var(--card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  padding: 8px !important;
+  z-index: 9999 !important;
+}
+
+.ql-snow .ql-picker-item:hover {
+  background-color: var(--primary) !important;
+  color: white !important;
+  border-radius: 4px;
+}
+
+.ql-snow .ql-picker-label:hover {
+  color: var(--primary) !important;
+}
+
+.ql-snow .ql-picker-label:hover .ql-stroke {
+  stroke: var(--primary) !important;
+}
+
+/* Deep Interactivity Force */
+.ql-snow .ql-picker-label, 
+.ql-snow .ql-picker-item, 
+.ql-snow .ql-toolbar button {
+  cursor: pointer !important;
+}
+
+.ql-snow .ql-picker-options {
+  pointer-events: auto !important;
+}
+
+.quill-content-preview {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  overflow: hidden;
+}
+
+.quill-content-preview * {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.quill-content-preview p {
+  margin-bottom: 0.5rem !important;
+}
+
+.quill-content-preview h1 {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 0.5rem !important;
+  color: var(--primary) !important;
+}
+
+.quill-content-preview h2 {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.4rem !important;
+}
+
