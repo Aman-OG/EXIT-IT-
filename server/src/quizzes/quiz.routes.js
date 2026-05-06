@@ -4,6 +4,7 @@ const quizController = require('./quiz.controller');
 const { protect, adminOnly } = require('../middleware/auth');
 
 // --- Student Routes ---
+router.get('/search', protect, quizController.searchQuizzes);
 router.get('/course/:courseId', protect, quizController.getQuizzesByCourse);
 router.get('/', protect, quizController.getAllQuizzes);
 router.get('/:id', protect, quizController.getQuizById);

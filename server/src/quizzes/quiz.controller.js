@@ -262,3 +262,29 @@ exports.updateQuestion = async (req, res) => {
     res.status(500).json({ message: 'Server error updating question' });
   }
 };
+
+exports.searchQuizzes = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const userId = req.user.id;
+    
+    if (!q || q.trim().length === 0) {
+      return res.json([]);
+    }
+
+    const searchTerm = `%${q}%`;
+    const result = await pool.query(`
+      SELECT q.id, q.title, q.description, q.is_official, c.title as course_title, c.id as course_id
+      FROM quizzes q
+      JOIN courses c ON q.course_id = c.id
+      WHERE (q.title ILIKE $1 OR q.description ILIKE $1) AND q.is_official = FALSE
+      ORDER BY q.created_at DESC
+      LIMIT 10
+    `, [searchTerm]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error searching quizzes' });
+  }
+};

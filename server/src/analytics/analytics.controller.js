@@ -1,5 +1,93 @@
 const pool = require('../config/db');
 
+// Combined dashboard endpoint - fetches all data in one query
+exports.getDashboardOverview = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch all dashboard data in optimized queries
+    const result = await pool.query(`
+      WITH user_stats AS (
+        SELECT 
+          (SELECT COUNT(*) FROM user_progress WHERE user_id = $1) as completed_materials,
+          (SELECT COUNT(*) FROM materials) as total_materials,
+          (SELECT AVG(score * 100.0 / total_questions) FROM quiz_attempts WHERE user_id = $1) as avg_accuracy,
+          (SELECT COUNT(DISTINCT DATE(completed_at)) FROM user_progress WHERE user_id = $1 AND completed_at > NOW() - INTERVAL '7 days') as streak_days,
+          (SELECT current_streak FROM users WHERE id = $1) as current_streak,
+          (SELECT streak_freeze FROM users WHERE id = $1) as streak_freeze
+      ),
+      weakest_subject AS (
+        SELECT c.title, AVG(qa.score * 100.0 / qa.total_questions) as avg_score
+        FROM quiz_attempts qa
+        JOIN quizzes q ON qa.quiz_id = q.id
+        JOIN courses c ON q.course_id = c.id
+        WHERE qa.user_id = $1
+        GROUP BY c.id, c.title
+        HAVING AVG(qa.score * 100.0 / qa.total_questions) < 70
+        ORDER BY avg_score ASC
+        LIMIT 1
+      ),
+      last_material AS (
+        SELECT p.material_id, p.percentage, m.title as material_title, c.title as course_title, c.id as course_id
+        FROM user_progress p
+        JOIN materials m ON p.material_id = m.id
+        JOIN courses c ON m.course_id = c.id
+        WHERE p.user_id = $1
+        ORDER BY p.last_accessed_at DESC
+        LIMIT 1
+      ),
+      exam_info AS (
+        SELECT exam_date FROM settings LIMIT 1
+      )
+      SELECT 
+        us.completed_materials,
+        us.total_materials,
+        ROUND((us.completed_materials::numeric / GREATEST(us.total_materials, 1)) * 100) as overall_progress,
+        ROUND(COALESCE(us.avg_accuracy, 0)) as avg_accuracy,
+        COALESCE(ws.title, 'None Detected') as weakest_subject,
+        us.current_streak,
+        us.streak_freeze,
+        lm.material_id,
+        lm.percentage,
+        lm.material_title,
+        lm.course_title,
+        lm.course_id,
+        ei.exam_date
+      FROM user_stats us
+      LEFT JOIN weakest_subject ws ON true
+      LEFT JOIN last_material lm ON true
+      LEFT JOIN exam_info ei ON true
+    `, [userId]);
+
+    const row = result.rows[0];
+    const examDate = new Date(row.exam_date || '2026-05-30');
+    const today = new Date();
+    const daysUntilExam = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
+    const examWarning = daysUntilExam <= 7 && daysUntilExam > 0;
+
+    res.json({
+      overallProgress: `${row.overall_progress}%`,
+      avgAccuracy: `${row.avg_accuracy}%`,
+      weakestSubject: row.weakest_subject,
+      currentStreak: row.current_streak || 0,
+      streakFreeze: row.streak_freeze || 0,
+      lastMaterial: row.material_id ? {
+        material_id: row.material_id,
+        percentage: row.percentage,
+        material_title: row.material_title,
+        course_title: row.course_title,
+        course_id: row.course_id
+      } : null,
+      examDate: row.exam_date,
+      daysUntilExam,
+      examWarning
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error fetching dashboard overview' });
+  }
+};
+
 exports.getOverviewStats = async (req, res) => {
   try {
     const userId = req.user.id;

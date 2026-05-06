@@ -231,6 +231,39 @@ const updateStreak = async (req, res) => {
   }
 };
 
+const useStreakFreeze = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query('SELECT streak_freezes FROM users WHERE id = $1', [userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentFreezes = result.rows[0].streak_freezes || 0;
+    
+    if (currentFreezes <= 0) {
+      return res.status(400).json({ message: 'No streak freezes available' });
+    }
+
+    // Decrement freeze and update last_active_date to protect streak
+    const newFreezes = currentFreezes - 1;
+    await pool.query(
+      'UPDATE users SET streak_freezes = $1, last_active_date = CURRENT_DATE WHERE id = $2',
+      [newFreezes, userId]
+    );
+
+    res.json({ 
+      success: true, 
+      streakFreeze: newFreezes,
+      message: 'Streak protected! Your streak is safe for 24 hours.'
+    });
+  } catch (err) {
+    console.error('Use freeze error:', err);
+    res.status(500).json({ message: 'Server error using freeze' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -239,5 +272,6 @@ module.exports = {
   updateTheme,
   getDashboardStats,
   updateStreak,
+  useStreakFreeze,
   updateName,
 };

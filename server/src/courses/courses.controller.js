@@ -60,4 +60,27 @@ const deleteCourse = async (req, res) => {
     }
 }
 
-module.exports = { getCourses, createCourse, updateCourse, deleteCourse };
+const searchCourses = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length === 0) {
+            return res.json([]);
+        }
+
+        const searchTerm = `%${q}%`;
+        const result = await pool.query(`
+            SELECT id, title, code, description
+            FROM courses
+            WHERE title ILIKE $1 OR code ILIKE $1 OR description ILIKE $1
+            ORDER BY title ASC
+            LIMIT 10
+        `, [searchTerm]);
+
+        res.json(result.rows);
+    } catch(e) {
+        console.error(e);
+        res.status(500).json({message: 'Failed to search courses'});
+    }
+}
+
+module.exports = { getCourses, createCourse, updateCourse, deleteCourse, searchCourses };
