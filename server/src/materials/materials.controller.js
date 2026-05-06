@@ -3,7 +3,28 @@ const archiver = require('archiver');
 const fs = require('fs');
 const path = require('path');
 
-const getMaterials = async (req, res) => {
+const searchMaterials = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length === 0) {
+            return res.json([]);
+        }
+
+        const searchTerm = `%${q}%`;
+        const result = await pool.query(`
+            SELECT id, title, description, course_id, file_url, created_at
+            FROM materials
+            WHERE title ILIKE $1 OR description ILIKE $1
+            ORDER BY created_at DESC
+            LIMIT 10
+        `, [searchTerm]);
+
+        res.json(result.rows);
+    } catch(e) {
+        console.error(e);
+        res.status(500).json({message: 'Failed to search materials'});
+    }
+};
     try {
         const { courseId } = req.params;
         const userId = req.user.id;
@@ -117,4 +138,4 @@ const downloadCourse = async (req, res) => {
     }
 }
 
-module.exports = { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse };
+module.exports = { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse, searchMaterials };

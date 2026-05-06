@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse } = require('./materials.controller');
+const { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse, searchMaterials } = require('./materials.controller');
 const { protect, adminOnly } = require('../middleware/auth');
 const fs = require('fs');
 
@@ -20,6 +20,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+router.get('/search', protect, searchMaterials);
 router.get('/course/:courseId', protect, getMaterials);
 router.get('/download-course/:courseId', protect, downloadCourse);
 router.get('/:id', protect, getMaterialById);
