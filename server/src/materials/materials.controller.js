@@ -25,6 +25,8 @@ const searchMaterials = async (req, res) => {
         res.status(500).json({message: 'Failed to search materials'});
     }
 };
+
+const getMaterials = async (req, res) => {
     try {
         const { courseId } = req.params;
         const userId = req.user.id;
