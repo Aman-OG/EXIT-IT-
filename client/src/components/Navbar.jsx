@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
 import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy } from 'lucide-react';
+import ExitItLogo from './ExitItLogo';
 
 const Navbar = ({ toggleSidebar }) => {
   const { theme, setTheme } = useContext(ThemeContext);
@@ -33,15 +34,24 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-4 md:px-6 relative z-30">
-      <div className="flex items-center">
-        <button className="text-text p-2 -ml-2 mr-4 md:hidden" onClick={toggleSidebar}>
+    <header className="h-16 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-4 md:px-6 relative z-30 shadow-sm">
+      <div className="flex items-center space-x-3">
+        <button className="text-text p-2 -ml-2 mr-2 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <h2 className="text-2xl font-bold tracking-tight text-primary">EXIT<span className="text-accent">-IT</span></h2>
+        <div className="hidden md:flex items-center space-x-2">
+          <ExitItLogo size={32} />
+          <div>
+            <h1 className="text-lg font-bold text-primary leading-tight">EXIT-IT</h1>
+            <p className="text-xs text-text/50">Exam Prep Platform</p>
+          </div>
+        </div>
+        <div className="md:hidden">
+          <ExitItLogo size={36} />
+        </div>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center space-x-2"
         <div className="relative" ref={streakRef}>
           {/* Streak Indicator (appears only if streak > 0) */}
           {user?.current_streak > 0 && (

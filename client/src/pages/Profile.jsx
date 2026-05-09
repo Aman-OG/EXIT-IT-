@@ -4,7 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy } from 'lucide-react';
-import ActivityHeatmap from '../components/ActivityHeatmap';
+import ActivityHeatmapGitHub from '../components/ActivityHeatmapGitHub';
 import Trophy3D from '../components/Trophy3D';
 
 const Profile = () => {
@@ -255,7 +255,7 @@ const Profile = () => {
                      </div>
                  </div>
                  <div className="w-full overflow-x-auto overflow-y-hidden pb-2 scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-800">
-                     <ActivityHeatmap data={profileData?.heatmap || []} />
+                    <ActivityHeatmapGitHub data={profileData?.heatmap || []} />
                  </div>
             </div>
 
