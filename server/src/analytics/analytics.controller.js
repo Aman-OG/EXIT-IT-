@@ -14,7 +14,7 @@ exports.getDashboardOverview = async (req, res) => {
           (SELECT AVG(score * 100.0 / total_questions) FROM quiz_attempts WHERE user_id = $1) as avg_accuracy,
           (SELECT COUNT(DISTINCT DATE(completed_at)) FROM user_progress WHERE user_id = $1 AND completed_at > NOW() - INTERVAL '7 days') as streak_days,
           (SELECT current_streak FROM users WHERE id = $1) as current_streak,
-          (SELECT streak_freeze FROM users WHERE id = $1) as streak_freeze
+          (SELECT streak_freezes FROM users WHERE id = $1) as streak_freeze
       ),
       weakest_subject AS (
         SELECT c.title, AVG(qa.score * 100.0 / qa.total_questions) as avg_score
@@ -37,7 +37,7 @@ exports.getDashboardOverview = async (req, res) => {
         LIMIT 1
       ),
       exam_info AS (
-        SELECT exam_date FROM settings LIMIT 1
+        SELECT exam_date FROM system_settings LIMIT 1
       )
       SELECT 
         us.completed_materials,

@@ -66,12 +66,15 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
   const theme = courseGradients[index % courseGradients.length];
 
   return (
-    <button
+    <div
       onClick={onClick}
       style={status.borderStyle}
       onMouseEnter={(e) => e.currentTarget.style.boxShadow = status.hoverShadow}
       onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-      className={`relative bg-card ${status.bgTint} rounded-2xl p-5 flex flex-col text-left hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden ${isRecommended ? 'ring-2 ring-amber-400/50 ring-offset-2 ring-offset-background' : ''}`}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      className={`relative bg-card ${status.bgTint} rounded-2xl p-5 flex flex-col text-left hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden cursor-pointer ${isRecommended ? 'ring-2 ring-amber-400/50 ring-offset-2 ring-offset-background' : ''}`}
     >
       {/* Gradient background on hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${theme.card} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
@@ -165,7 +168,7 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
           </div>
         )}
       </div>
-    </button>
+    </div>
   );
 };
 

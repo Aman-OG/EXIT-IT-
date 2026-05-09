@@ -31,7 +31,7 @@ const Dashboard = () => {
       try {
         // Single combined API call instead of 3 separate ones
         const { data } = await api.get('/analytics/dashboard');
-        
+
         setExamDateStr(data.examDate);
         setCurrentStreak(data.currentStreak);
         setStreakFreeze(data.streakFreeze);
@@ -76,7 +76,7 @@ const Dashboard = () => {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
-      
+
       {/* Welcome Banner & Countdown */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -93,15 +93,15 @@ const Dashboard = () => {
             <Clock size={28} className="text-primary-foreground" />
           </div>
           <div className="z-10 pr-2">
-             <p className="text-primary-foreground/90 text-sm font-semibold tracking-wide uppercase">Time until Exam</p>
-             <div className="flex items-baseline space-x-2">
-                 <p className="text-3xl font-extrabold tracking-tight">
-                    {timeLeft.days} <span className="text-lg font-medium opacity-90">Days</span>
-                 </p>
-                 <p className="text-lg font-bold tracking-tight opacity-90 border-l border-primary-foreground/20 pl-2 ml-1">
-                    {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
-                 </p>
-             </div>
+            <p className="text-primary-foreground/90 text-sm font-semibold tracking-wide uppercase">Time until Exam</p>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-3xl font-extrabold tracking-tight">
+                {timeLeft.days} <span className="text-lg font-medium opacity-90">Days</span>
+              </p>
+              <p className="text-lg font-bold tracking-tight opacity-90 border-l border-primary-foreground/20 pl-2 ml-1">
+                {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -119,8 +119,8 @@ const Dashboard = () => {
 
       {/* Streak Freeze Section */}
       {currentStreak > 0 && (
-        <StreakFreeze 
-          currentStreak={currentStreak} 
+        <StreakFreeze
+          currentStreak={currentStreak}
           streakFreeze={streakFreeze}
           onFreezeUsed={(data) => {
             setStreakFreeze(data.streakFreeze);
@@ -136,7 +136,7 @@ const Dashboard = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((stat, i) => (
-            <StatCard 
+            <StatCard
               key={i}
               icon={stat.icon}
               label={stat.label}
@@ -177,7 +177,7 @@ const Dashboard = () => {
           )}
         </div>
       ) : (
-        <EmptyState 
+        <EmptyState
           icon={BookOpen}
           title="Ready to start studying?"
           description="You haven't started any study materials yet. Head over to Courses to begin your exam preparation."
@@ -189,6 +189,6 @@ const Dashboard = () => {
     </div>
   );
 };
-};
+
 
 export default Dashboard;

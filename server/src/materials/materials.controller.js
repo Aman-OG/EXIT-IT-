@@ -20,11 +20,13 @@ const searchMaterials = async (req, res) => {
         `, [searchTerm]);
 
         res.json(result.rows);
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        res.status(500).json({message: 'Failed to search materials'});
+        res.status(500).json({ message: 'Failed to search materials' });
     }
 };
+
+const getMaterials = async (req, res) => {
     try {
         const { courseId } = req.params;
         const userId = req.user.id;
@@ -37,11 +39,12 @@ const searchMaterials = async (req, res) => {
             ORDER BY m.created_at DESC
         `, [courseId, userId]);
         res.json(result.rows);
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        res.status(500).json({message: 'Failed to fetch materials'});
+        res.status(500).json({ message: 'Failed to fetch materials' });
     }
-}
+};
+
 
 const updateMaterial = async (req, res) => {
     try {
@@ -52,9 +55,9 @@ const updateMaterial = async (req, res) => {
             [title, id]
         );
         res.json(result.rows[0]);
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        res.status(500).json({message: 'Failed to update material'});
+        res.status(500).json({ message: 'Failed to update material' });
     }
 }
 
@@ -64,9 +67,9 @@ const deleteMaterial = async (req, res) => {
         // Optionally delete the physical file here if needed
         await pool.query('DELETE FROM materials WHERE id = $1', [id]);
         res.json({ message: 'Material deleted successfully' });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        res.status(500).json({message: 'Failed to delete material'});
+        res.status(500).json({ message: 'Failed to delete material' });
     }
 }
 
@@ -76,9 +79,9 @@ const getMaterialById = async (req, res) => {
         const result = await pool.query('SELECT * FROM materials WHERE id = $1', [id]);
         if (result.rows.length === 0) return res.status(404).json({ message: 'Material not found' });
         res.json(result.rows[0]);
-    } catch(e) {
+    } catch (e) {
         console.error(e);
-        res.status(500).json({message: 'Failed to fetch material'});
+        res.status(500).json({ message: 'Failed to fetch material' });
     }
 }
 
@@ -88,13 +91,13 @@ const uploadMaterial = async (req, res) => {
         if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
         const file_url = `/uploads/${req.file.filename}`;
-        
+
         await pool.query(
-            'INSERT INTO materials (course_id, title, file_url, type) VALUES ($1, $2, $3, $4)', 
+            'INSERT INTO materials (course_id, title, file_url, type) VALUES ($1, $2, $3, $4)',
             [course_id, title, file_url, 'pdf']
         );
         res.json({ message: 'Material uploaded successfully', file_url });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Failed to save material db reference' });
     }
@@ -105,15 +108,15 @@ const downloadCourse = async (req, res) => {
         const { courseId } = req.params;
         const materialsResult = await pool.query('SELECT * FROM materials WHERE course_id = $1', [courseId]);
         const courseResult = await pool.query('SELECT title FROM courses WHERE id = $1', [courseId]);
-        
+
         if (materialsResult.rows.length === 0) {
             return res.status(404).json({ message: 'No materials found for this course' });
         }
 
         const courseTitle = courseResult.rows[0].title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        
+
         res.attachment(`${courseTitle}_materials.zip`);
-        
+
         const archive = archiver('zip', {
             zlib: { level: 9 }
         });
