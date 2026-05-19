@@ -288,3 +288,49 @@ exports.getFriendsLeaderboard = async (req, res) => {
     res.status(500).json({ error: 'Failed to get friends leaderboard' });
   }
 };
+
+// Get user stats (friends count and mutual friends)
+exports.getUserStats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    // Get friends count for the user
+    const friendsCount = await pool.query(
+      `SELECT COUNT(*) as count
+       FROM friendships
+       WHERE ((user_id = $1 OR friend_id = $1) AND status = 'accepted')`,
+      [userId]
+    );
+
+    // Get mutual friends
+    const mutualFriends = await pool.query(
+      `SELECT DISTINCT u.id, u.name, u.email
+       FROM friendships f1
+       JOIN friendships f2 ON (
+         (f1.user_id = f2.user_id OR f1.user_id = f2.friend_id OR f1.friend_id = f2.user_id OR f1.friend_id = f2.friend_id)
+         AND f1.id != f2.id
+       )
+       JOIN users u ON (
+         CASE
+           WHEN f2.user_id = $1 THEN f2.friend_id
+           WHEN f2.friend_id = $1 THEN f2.user_id
+         END = u.id
+       )
+       WHERE ((f1.user_id = $2 OR f1.friend_id = $2) AND f1.status = 'accepted')
+       AND ((f2.user_id = $1 OR f2.friend_id = $1) AND f2.status = 'accepted')
+       AND u.id != $1 AND u.id != $2
+       LIMIT 10`,
+      [currentUserId, userId]
+    );
+
+    res.json({
+      friendsCount: parseInt(friendsCount.rows[0].count),
+      mutualFriendsCount: mutualFriends.rows.length,
+      mutualFriends: mutualFriends.rows
+    });
+  } catch (error) {
+    console.error('❌ [Friends] Error getting user stats:', error);
+    res.status(500).json({ error: 'Failed to get user stats' });
+  }
+};

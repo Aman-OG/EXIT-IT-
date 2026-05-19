@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, Search, Check, X, Trash2, Trophy, Clock, BookOpen } from 'lucide-react';
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
+import UserProfileModal from '../components/UserProfileModal';
 
 export default function Friends() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Friends() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -220,6 +222,14 @@ export default function Friends() {
           onCancel={confirmDialog.onCancel}
         />
       )}
+      {selectedUser && (
+        <UserProfileModal
+          userId={selectedUser.id}
+          userName={selectedUser.name}
+          userEmail={selectedUser.email}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Friends</h1>
@@ -294,17 +304,27 @@ export default function Friends() {
                 </button>
               </div>
             ) : (
-              friends.map((friend) => (
+              friends.map((friend) => {
+                const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(friend.email || friend.name)}`;
+                return (
                 <div
                   key={friend.friend_id}
-                  className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
+                  className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between hover:shadow-md transition-shadow"
                 >
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{friend.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{friend.email}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Friends since {new Date(friend.friends_since).toLocaleDateString()}
-                    </p>
+                  <div 
+                    className="flex items-center gap-3 flex-1 cursor-pointer"
+                    onClick={() => setSelectedUser({ id: friend.friend_id, name: friend.name, email: friend.email })}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                      <img src={avatarUrl} alt={friend.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{friend.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{friend.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        Friends since {new Date(friend.friends_since).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => removeFriend(friend.friend_id)}
@@ -314,7 +334,8 @@ export default function Friends() {
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
-              ))
+              );
+              })
             )}
           </div>
         )}
@@ -333,17 +354,24 @@ export default function Friends() {
                     No pending friend requests
                   </p>
                 ) : (
-                  pendingRequests.map((request) => (
+                  pendingRequests.map((request) => {
+                    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name)}`;
+                    return (
                     <div
                       key={request.id}
                       className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
                     >
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                          <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -362,7 +390,8 @@ export default function Friends() {
                         </button>
                       </div>
                     </div>
-                  ))
+                  );
+                  })
                 )}
               </div>
             </div>
@@ -378,21 +407,29 @@ export default function Friends() {
                     No sent friend requests
                   </p>
                 ) : (
-                  sentRequests.map((request) => (
+                  sentRequests.map((request) => {
+                    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name)}`;
+                    return (
                     <div
                       key={request.id}
                       className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
                     >
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          Sent {new Date(request.created_at).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                          <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            Sent {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                       <span className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">Pending</span>
                     </div>
-                  ))
+                  );
+                  })
                 )}
               </div>
             </div>
@@ -428,24 +465,33 @@ export default function Friends() {
                   Enter at least 2 characters to search
                 </p>
               ) : (
-                searchResults.map((user) => (
+                searchResults.map((user) => {
+                  const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
+                  return (
                   <div
                     key={user.id}
                     className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
                   >
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                        <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                      </div>
                     </div>
                     <button
                       onClick={() => sendFriendRequest(user.id)}
                       disabled={loading}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       <UserPlus className="w-5 h-5" />
+                      <span>Add</span>
                     </button>
                   </div>
-                ))
+                );
+                })
               )}
             </div>
           </div>
@@ -479,7 +525,9 @@ export default function Friends() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {friendsLeaderboard.map((user) => (
+                  {friendsLeaderboard.map((user) => {
+                    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
+                    return (
                     <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -497,8 +545,15 @@ export default function Friends() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                            <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
                         {user.completed_materials}
@@ -513,7 +568,8 @@ export default function Friends() {
                         {Math.floor(user.total_study_minutes / 60)}h {user.total_study_minutes % 60}m
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
               {friendsLeaderboard.length === 0 && (
