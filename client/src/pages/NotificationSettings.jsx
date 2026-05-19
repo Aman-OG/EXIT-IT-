@@ -104,10 +104,10 @@ export default function NotificationSettings() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-text mb-2">
                 Notification Settings
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-text/70">
                 Manage how you receive notifications from EXIT-IT
               </p>
             </div>
@@ -122,17 +122,17 @@ export default function NotificationSettings() {
 
         <div className="space-y-6">
           {/* Global Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-card rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-text mb-4">
               Notification Channels
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Mail className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">Email Notifications</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h3 className="font-medium text-text">Email Notifications</h3>
+                    <p className="text-sm text-text/70">
                       Receive notifications via email
                     </p>
                   </div>
@@ -148,12 +148,12 @@ export default function NotificationSettings() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Smartphone className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">Push Notifications</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h3 className="font-medium text-text">Push Notifications</h3>
+                    <p className="text-sm text-text/70">
                       Receive in-app notifications
                     </p>
                   </div>
@@ -172,21 +172,21 @@ export default function NotificationSettings() {
           </div>
 
           {/* Notification Types */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-card rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-text mb-4">
               Notification Types
             </h2>
             <div className="space-y-4">
               {notificationTypes.map((type) => (
                 <div
                   key={type.key}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                  className="flex items-center justify-between p-4 bg-card/50 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{type.icon}</span>
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">{type.title}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{type.description}</p>
+                      <h3 className="font-medium text-text">{type.title}</h3>
+                      <p className="text-sm text-text/70">{type.description}</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">

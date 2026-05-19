@@ -18,10 +18,8 @@ router.put('/requests/:requestId/reject', friendsController.rejectFriendRequest)
 
 // Friends management
 router.get('/', friendsController.getFriends);
+router.get('/leaderboard', friendsController.getFriendsLeaderboard);
 router.get('/:userId/stats', friendsController.getUserStats);
 router.delete('/:friendId', friendsController.removeFriend);
-
-// Friends leaderboard
-router.get('/leaderboard', friendsController.getFriendsLeaderboard);
 
 module.exports = router;

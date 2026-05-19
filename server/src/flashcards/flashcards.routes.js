@@ -12,5 +12,7 @@ router.delete('/decks/:id', protect, ctrl.deleteDeck);
 router.get('/decks/:id/cards', protect, ctrl.getCards);
 router.post('/decks/:id/cards', protect, ctrl.addCard);
 router.delete('/cards/:id', protect, ctrl.deleteCard);
+router.post('/decks/:id/ai-generate', protect, ctrl.aiGenerateCards);
+router.post('/decks/:id/csv-import', protect, ctrl.csvImport);
 
 module.exports = router;

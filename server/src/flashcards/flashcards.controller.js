@@ -203,3 +203,102 @@ exports.getDueCount = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch due count' });
   }
 };
+
+// POST /flashcards/decks/:id/ai-generate
+exports.aiGenerateCards = async (req, res) => {
+  const { id } = req.params;
+  const { topic, count = 10 } = req.body;
+  if (!topic?.trim()) return res.status(400).json({ message: 'Topic is required' });
+
+  try {
+    const { Groq } = require('groq-sdk');
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama3-70b-8192',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an educational flashcard generator. Generate exactly ${count} flashcards as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`
+        },
+        {
+          role: 'user',
+          content: `Generate ${count} flashcards about: ${topic}`
+        }
+      ],
+      temperature: 0.7,
+    });
+
+    const raw = completion.choices[0].message.content.trim();
+    // Strip markdown code blocks if present
+    const jsonStr = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+    const cards = JSON.parse(jsonStr);
+
+    if (!Array.isArray(cards)) throw new Error('Invalid response format');
+
+    // Insert all cards into the deck
+    const inserted = [];
+    for (const card of cards) {
+      if (!card.front || !card.back) continue;
+      const result = await pool.query(
+        'INSERT INTO flashcards (deck_id, front, back) VALUES ($1, $2, $3) RETURNING *',
+        [id, card.front.trim(), card.back.trim()]
+      );
+      inserted.push(result.rows[0]);
+    }
+
+    res.status(201).json({ message: `Generated ${inserted.length} cards`, cards: inserted });
+  } catch (err) {
+    console.error('AI generate error:', err);
+    res.status(500).json({ message: 'Failed to generate flashcards: ' + err.message });
+  }
+};
+
+// POST /flashcards/decks/:id/csv-import
+exports.csvImport = async (req, res) => {
+  const { id } = req.params;
+  const { csvData } = req.body; // raw CSV string sent from frontend
+
+  if (!csvData?.trim()) return res.status(400).json({ message: 'CSV data is required' });
+
+  try {
+    const lines = csvData.trim().split('\n');
+    const inserted = [];
+    const errors = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Support comma and semicolon separators, handle quoted fields
+      const parts = line.match(/(".*?"|[^,;]+)(?=[,;]|$)/g);
+      if (!parts || parts.length < 2) {
+        errors.push(`Line ${i + 1}: Invalid format`);
+        continue;
+      }
+
+      const front = parts[0].replace(/^"|"$/g, '').trim();
+      const back = parts[1].replace(/^"|"$/g, '').trim();
+
+      if (!front || !back) {
+        errors.push(`Line ${i + 1}: Empty front or back`);
+        continue;
+      }
+
+      const result = await pool.query(
+        'INSERT INTO flashcards (deck_id, front, back) VALUES ($1, $2, $3) RETURNING *',
+        [id, front, back]
+      );
+      inserted.push(result.rows[0]);
+    }
+
+    res.status(201).json({
+      message: `Imported ${inserted.length} cards`,
+      cards: inserted,
+      errors
+    });
+  } catch (err) {
+    console.error('CSV import error:', err);
+    res.status(500).json({ message: 'Failed to import CSV: ' + err.message });
+  }
+};

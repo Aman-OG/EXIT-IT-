@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserPlus, Search, Check, X, Trash2, Trophy, Clock, BookOpen } from 'lucide-react';
+import { Users, UserPlus, Search, Check, X, UserMinus, Trophy, Clock, BookOpen } from 'lucide-react';
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import UserProfileModal from '../components/UserProfileModal';
@@ -232,18 +232,18 @@ export default function Friends() {
       )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Friends</h1>
-          <p className="text-gray-600 dark:text-gray-400">Connect with other learners and compete together</p>
+          <h1 className="text-3xl font-bold text-text mb-2">Friends</h1>
+          <p className="text-text/70">Connect with other learners and compete together</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex gap-2 mb-6 border-b border-text/10">
           <button
             onClick={() => setActiveTab('friends')}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === 'friends'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text/70 hover:text-text'
             }`}
           >
             <Users className="inline w-5 h-5 mr-2" />
@@ -253,8 +253,8 @@ export default function Friends() {
             onClick={() => setActiveTab('requests')}
             className={`px-4 py-2 font-medium transition-colors relative ${
               activeTab === 'requests'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text/70 hover:text-text'
             }`}
           >
             <UserPlus className="inline w-5 h-5 mr-2" />
@@ -269,8 +269,8 @@ export default function Friends() {
             onClick={() => setActiveTab('search')}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === 'search'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text/70 hover:text-text'
             }`}
           >
             <Search className="inline w-5 h-5 mr-2" />
@@ -280,8 +280,8 @@ export default function Friends() {
             onClick={() => setActiveTab('leaderboard')}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === 'leaderboard'
-                ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text/70 hover:text-text'
             }`}
           >
             <Trophy className="inline w-5 h-5 mr-2" />
@@ -293,12 +293,12 @@ export default function Friends() {
         {activeTab === 'friends' && (
           <div className="grid gap-4">
             {friends.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-                <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 mb-4">You don't have any friends yet</p>
+              <div className="text-center py-12 bg-card rounded-lg">
+                <Users className="w-16 h-16 mx-auto text-text/40 mb-4" />
+                <p className="text-text/70 mb-4">You don't have any friends yet</p>
                 <button
                   onClick={() => setActiveTab('search')}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
                 >
                   Find Friends
                 </button>
@@ -309,19 +309,19 @@ export default function Friends() {
                 return (
                 <div
                   key={friend.friend_id}
-                  className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between hover:shadow-md transition-shadow"
+                  className="bg-card p-4 rounded-lg flex items-center justify-between hover:shadow-md transition-shadow"
                 >
                   <div 
                     className="flex items-center gap-3 flex-1 cursor-pointer"
                     onClick={() => setSelectedUser({ id: friend.friend_id, name: friend.name, email: friend.email })}
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0">
                       <img src={avatarUrl} alt={friend.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{friend.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{friend.email}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      <h3 className="font-semibold text-text">{friend.name}</h3>
+                      <p className="text-sm text-text/70">{friend.email}</p>
+                      <p className="text-xs text-text/50 mt-1">
                         Friends since {new Date(friend.friends_since).toLocaleDateString()}
                       </p>
                     </div>
@@ -329,9 +329,10 @@ export default function Friends() {
                   <button
                     onClick={() => removeFriend(friend.friend_id)}
                     disabled={loading}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <UserMinus className="w-4 h-4" />
+                    Unfollow
                   </button>
                 </div>
               );
@@ -345,12 +346,12 @@ export default function Friends() {
           <div className="space-y-6">
             {/* Pending Requests */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-text mb-4">
                 Pending Requests ({pendingRequests.length})
               </h2>
               <div className="grid gap-4">
                 {pendingRequests.length === 0 ? (
-                  <p className="text-gray-600 dark:text-gray-400 text-center py-8 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="text-text/70 text-center py-8 bg-card rounded-lg">
                     No pending friend requests
                   </p>
                 ) : (
@@ -359,16 +360,16 @@ export default function Friends() {
                     return (
                     <div
                       key={request.id}
-                      className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
+                      className="bg-card p-4 rounded-lg flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0">
                           <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          <h3 className="font-semibold text-text">{request.name}</h3>
+                          <p className="text-sm text-text/70">{request.email}</p>
+                          <p className="text-xs text-text/50 mt-1">
                             {new Date(request.created_at).toLocaleDateString()}
                           </p>
                         </div>
@@ -398,12 +399,12 @@ export default function Friends() {
 
             {/* Sent Requests */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-text mb-4">
                 Sent Requests ({sentRequests.length})
               </h2>
               <div className="grid gap-4">
                 {sentRequests.length === 0 ? (
-                  <p className="text-gray-600 dark:text-gray-400 text-center py-8 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="text-text/70 text-center py-8 bg-card rounded-lg">
                     No sent friend requests
                   </p>
                 ) : (
@@ -412,16 +413,16 @@ export default function Friends() {
                     return (
                     <div
                       key={request.id}
-                      className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
+                      className="bg-card p-4 rounded-lg flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0">
                           <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{request.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{request.email}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          <h3 className="font-semibold text-text">{request.name}</h3>
+                          <p className="text-sm text-text/70">{request.email}</p>
+                          <p className="text-xs text-text/50 mt-1">
                             Sent {new Date(request.created_at).toLocaleDateString()}
                           </p>
                         </div>
@@ -441,7 +442,7 @@ export default function Friends() {
           <div>
             <div className="mb-6">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text/40" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -450,18 +451,18 @@ export default function Friends() {
                     searchUsers(e.target.value);
                   }}
                   placeholder="Search by name or email..."
-                  className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 bg-card border border-text/10 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
                 />
               </div>
             </div>
 
             <div className="grid gap-4">
               {searchLoading ? (
-                <p className="text-center py-8 text-gray-600 dark:text-gray-400">Searching...</p>
+                <p className="text-center py-8 text-text/70">Searching...</p>
               ) : searchResults.length === 0 && searchQuery.length >= 2 ? (
-                <p className="text-center py-8 text-gray-600 dark:text-gray-400">No users found</p>
+                <p className="text-center py-8 text-text/70">No users found</p>
               ) : searchQuery.length < 2 ? (
-                <p className="text-center py-8 text-gray-600 dark:text-gray-400">
+                <p className="text-center py-8 text-text/70">
                   Enter at least 2 characters to search
                 </p>
               ) : (
@@ -470,15 +471,15 @@ export default function Friends() {
                   return (
                   <div
                     key={user.id}
-                    className="bg-white dark:bg-gray-800 p-4 rounded-lg flex items-center justify-between"
+                    className="bg-card p-4 rounded-lg flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0">
                         <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                        <h3 className="font-semibold text-text">{user.name}</h3>
+                        <p className="text-sm text-text/70">{user.email}</p>
                       </div>
                     </div>
                     <button
@@ -500,35 +501,35 @@ export default function Friends() {
         {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && (
           <div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+            <div className="bg-card rounded-lg overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+                <thead className="bg-background">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text/50 uppercase">
                       Rank
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text/50 uppercase">
                       Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text/50 uppercase">
                       <BookOpen className="inline w-4 h-4 mr-1" />
                       Materials
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text/50 uppercase">
                       <Trophy className="inline w-4 h-4 mr-1" />
                       Streak
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text/50 uppercase">
                       <Clock className="inline w-4 h-4 mr-1" />
                       Study Time
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-text/10">
                   {friendsLeaderboard.map((user) => {
                     const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
                     return (
-                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <tr key={user.id} className="hover:bg-background/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
@@ -538,7 +539,7 @@ export default function Friends() {
                               ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                               : user.rank === 3
                               ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                              : 'text-gray-600 dark:text-gray-400'
+                              : 'text-text/70'
                           }`}
                         >
                           {user.rank}
@@ -546,25 +547,25 @@ export default function Friends() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-background flex-shrink-0">
                             <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                            <div className="font-medium text-text">{user.name}</div>
+                            <div className="text-sm text-gray-500 dark:text-text/40">{user.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-text">
                         {user.completed_materials}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-gray-900 dark:text-white">{user.current_streak} days</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                        <span className="text-text">{user.current_streak} days</span>
+                        <span className="text-xs text-gray-500 dark:text-text/40 ml-2">
                           (best: {user.longest_streak})
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-text">
                         {Math.floor(user.total_study_minutes / 60)}h {user.total_study_minutes % 60}m
                       </td>
                     </tr>
@@ -574,9 +575,9 @@ export default function Friends() {
               </table>
               {friendsLeaderboard.length === 0 && (
                 <div className="text-center py-12">
-                  <Trophy className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">No leaderboard data yet</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  <Trophy className="w-16 h-16 mx-auto text-text/40 mb-4" />
+                  <p className="text-text/70">No leaderboard data yet</p>
+                  <p className="text-sm text-text/50 mt-2">
                     Add friends to see how you compare!
                   </p>
                 </div>

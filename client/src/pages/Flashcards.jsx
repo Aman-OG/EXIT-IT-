@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import {
   Brain, Plus, Trash2, ChevronRight, BookOpen, X, Save,
-  RotateCcw, CheckCircle2, Clock, Zap, ArrowLeft, ArrowRight
+  RotateCcw, CheckCircle2, Clock, Zap, ArrowLeft, ArrowRight,
+  Sparkles, Upload, FileText
 } from 'lucide-react';
 
 /* ─── Card Flip Study Session ─── */
@@ -114,6 +115,14 @@ const DeckDetail = ({ deck, onBack }) => {
   const [studying, setStudying] = useState(false);
   const [sessionResult, setSessionResult] = useState(null);
   const [dueCards, setDueCards] = useState([]);
+  const [showAIGenerate, setShowAIGenerate] = useState(false);
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiCount, setAiCount] = useState(10);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showCSVImport, setShowCSVImport] = useState(false);
+  const [csvData, setCsvData] = useState('');
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [importResult, setImportResult] = useState(null);
 
   useEffect(() => {
     fetchCards();
@@ -154,6 +163,46 @@ const DeckDetail = ({ deck, onBack }) => {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!aiTopic.trim()) return;
+    setAiLoading(true);
+    try {
+      await api.post(`/flashcards/decks/${deck.id}/ai-generate`, { topic: aiTopic, count: aiCount });
+      setAiTopic('');
+      setShowAIGenerate(false);
+      fetchCards();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to generate cards. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCSVImport = async () => {
+    if (!csvData.trim()) return;
+    setCsvLoading(true);
+    try {
+      const res = await api.post(`/flashcards/decks/${deck.id}/csv-import`, { csvData });
+      setImportResult(res.data);
+      setCsvData('');
+      fetchCards();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to import CSV.');
+    } finally {
+      setCsvLoading(false);
+    }
+  };
+
+  const handleCSVFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setCsvData(ev.target.result);
+    reader.readAsText(file);
   };
 
   if (studying) {
@@ -218,7 +267,19 @@ const DeckDetail = ({ deck, onBack }) => {
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setShowAddCard(true)}
+            onClick={() => { setShowCSVImport(v => !v); setShowAIGenerate(false); setShowAddCard(false); }}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-accent/40 transition"
+          >
+            <Upload size={16} /><span>CSV Import</span>
+          </button>
+          <button
+            onClick={() => { setShowAIGenerate(v => !v); setShowCSVImport(false); setShowAddCard(false); }}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-primary/40 transition"
+          >
+            <Sparkles size={16} className="text-primary" /><span>AI Generate</span>
+          </button>
+          <button
+            onClick={() => { setShowAddCard(true); setShowAIGenerate(false); setShowCSVImport(false); }}
             className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-primary/40 transition"
           >
             <Plus size={16} /><span>Add Card</span>
@@ -286,6 +347,113 @@ const DeckDetail = ({ deck, onBack }) => {
             className="flex items-center space-x-2 px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50"
           >
             <Save size={16} /><span>Save Card</span>
+          </button>
+        </div>
+      )}
+
+      {/* AI Generate panel */}
+      {showAIGenerate && (
+        <div className="bg-card border border-primary/20 rounded-2xl p-5 space-y-4 animate-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-primary" />
+              <h3 className="font-bold">AI Generate Flashcards</h3>
+            </div>
+            <button onClick={() => setShowAIGenerate(false)} className="text-text/40 hover:text-text transition"><X size={18} /></button>
+          </div>
+          <p className="text-sm text-text/60">Enter a topic or paste text and AI will generate flashcards automatically.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase tracking-widest text-text/50 mb-2">Topic or Text</label>
+              <textarea
+                value={aiTopic}
+                onChange={e => setAiTopic(e.target.value)}
+                rows={3}
+                placeholder="e.g. 'Database normalization forms' or paste a paragraph of text..."
+                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text/50 mb-2">Number of Cards</label>
+              <select
+                value={aiCount}
+                onChange={e => setAiCount(Number(e.target.value))}
+                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {[5, 10, 15, 20].map(n => <option key={n} value={n}>{n} cards</option>)}
+              </select>
+            </div>
+          </div>
+          <button
+            onClick={handleAIGenerate}
+            disabled={!aiTopic.trim() || aiLoading}
+            className="flex items-center space-x-2 px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50"
+          >
+            {aiLoading ? (
+              <><div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /><span>Generating...</span></>
+            ) : (
+              <><Sparkles size={16} /><span>Generate {aiCount} Cards</span></>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* CSV Import panel */}
+      {showCSVImport && (
+        <div className="bg-card border border-accent/20 rounded-2xl p-5 space-y-4 animate-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText size={18} className="text-accent" />
+              <h3 className="font-bold">CSV Import</h3>
+            </div>
+            <button onClick={() => { setShowCSVImport(false); setImportResult(null); }} className="text-text/40 hover:text-text transition"><X size={18} /></button>
+          </div>
+          <div className="bg-background rounded-xl p-3 text-xs text-text/60 font-mono">
+            Format: <span className="text-accent">front,back</span> — one card per line<br/>
+            Example: <span className="text-text/80">What is SQL?,Structured Query Language</span>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text/50 mb-2">Upload CSV File</label>
+              <input
+                type="file"
+                accept=".csv,.txt"
+                onChange={handleCSVFile}
+                className="w-full text-sm text-text/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-accent/10 file:text-accent file:font-bold hover:file:bg-accent/20 cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text/50 mb-2">Or Paste CSV Data</label>
+              <textarea
+                value={csvData}
+                onChange={e => setCsvData(e.target.value)}
+                rows={5}
+                placeholder={"What is a primary key?,A unique identifier for each row\nWhat is SQL?,Structured Query Language"}
+                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent resize-none text-sm font-mono"
+              />
+            </div>
+          </div>
+          {importResult && (
+            <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 text-sm">
+              <p className="font-bold text-accent">✓ {importResult.message}</p>
+              {importResult.errors?.length > 0 && (
+                <div className="mt-2 text-text/60">
+                  <p className="font-bold text-warning text-xs">Skipped lines:</p>
+                  {importResult.errors.map((e, i) => <p key={i} className="text-xs">{e}</p>)}
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={handleCSVImport}
+            disabled={!csvData.trim() || csvLoading}
+            className="flex items-center space-x-2 px-5 py-2.5 bg-accent text-background font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50"
+          >
+            {csvLoading ? (
+              <><div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin" /><span>Importing...</span></>
+            ) : (
+              <><Upload size={16} /><span>Import Cards</span></>
+            )}
           </button>
         </div>
       )}

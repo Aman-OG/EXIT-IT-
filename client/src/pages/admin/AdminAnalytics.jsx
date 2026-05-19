@@ -100,7 +100,14 @@ const AdminAnalytics = () => {
                   <XAxis dataKey="code" tick={{ fontSize: 11, fill: 'rgba(var(--text), 0.5)' }} angle={-35} textAnchor="end" />
                   <YAxis tick={{ fontSize: 11, fill: 'rgba(var(--text), 0.5)' }} domain={[0, 100]} />
                   <Tooltip
-                    contentStyle={{ background: 'rgb(var(--card))', border: '1px solid rgba(var(--text), 0.1)', borderRadius: '12px' }}
+                    contentStyle={{ 
+                      background: 'rgb(var(--card))', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      color: 'rgb(var(--text))'
+                    }}
+                    labelStyle={{ color: 'rgb(var(--text))' }}
+                    itemStyle={{ color: 'rgb(var(--text))' }}
                     formatter={(value) => [`${value}%`, 'Avg Completion']}
                   />
                   <Bar dataKey="avg_completion" radius={[6, 6, 0, 0]}>
