@@ -15,7 +15,7 @@ exports.getQuizzesByCourse = async (req, res) => {
                MAX(qa.score) as best_score, MAX(qa.total_questions) as total_questions
         FROM quizzes q
         LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id
-        WHERE q.course_id = $1
+        WHERE q.course_id = $1 AND COALESCE(q.quiz_type, 'quiz') != 'exam'
         GROUP BY q.id
         ORDER BY q.is_official DESC, q.created_at DESC
       `, [courseId]);
@@ -25,7 +25,8 @@ exports.getQuizzesByCourse = async (req, res) => {
                MAX(qa.score) as best_score, MAX(qa.total_questions) as total_questions
         FROM quizzes q
         LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id AND qa.user_id = $2
-        WHERE q.course_id = $1 AND q.is_official = FALSE AND (q.user_id IS NULL OR q.user_id = $2)
+        WHERE q.course_id = $1 AND COALESCE(q.quiz_type, 'quiz') != 'exam'
+        AND (q.is_official = TRUE OR q.user_id = $2)
         GROUP BY q.id
         ORDER BY q.created_at DESC
       `, [courseId, userId]);
@@ -71,16 +72,33 @@ exports.getAllQuizzes = async (req, res) => {
   const userId = req.user.id;
   const isAdmin = req.user.role === 'admin';
   try {
-    const result = await pool.query(`
-      SELECT q.id, q.title, q.description, q.is_official, q.user_id, q.created_at, c.title as course_title, c.code as course_code,
-             MAX(qa.score) as best_score, MAX(qa.total_questions) as total_questions
-      FROM quizzes q
-      JOIN courses c ON q.course_id = c.id
-      LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id AND qa.user_id = $1
-      WHERE q.is_official = FALSE AND (q.user_id IS NULL OR q.user_id = $1)
-      GROUP BY q.id, c.title, c.code
-      ORDER BY c.title ASC, q.created_at DESC
-    `, [userId]);
+    let result;
+    if (isAdmin) {
+      // Admins see everything except exam-type quizzes (those are in Exam Mode)
+      result = await pool.query(`
+        SELECT q.id, q.title, q.description, q.is_official, q.user_id, q.created_at, c.title as course_title, c.code as course_code,
+               MAX(qa.score) as best_score, MAX(qa.total_questions) as total_questions
+        FROM quizzes q
+        JOIN courses c ON q.course_id = c.id
+        LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id AND qa.user_id = $1
+        WHERE COALESCE(q.quiz_type, 'quiz') != 'exam'
+        GROUP BY q.id, c.title, c.code
+        ORDER BY c.title ASC, q.is_official DESC, q.created_at DESC
+      `, [userId]);
+    } else {
+      // Regular users see: all official quizzes (admin-created, type=quiz) + their own private quizzes
+      result = await pool.query(`
+        SELECT q.id, q.title, q.description, q.is_official, q.user_id, q.created_at, c.title as course_title, c.code as course_code,
+               MAX(qa.score) as best_score, MAX(qa.total_questions) as total_questions
+        FROM quizzes q
+        JOIN courses c ON q.course_id = c.id
+        LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id AND qa.user_id = $1
+        WHERE COALESCE(q.quiz_type, 'quiz') != 'exam'
+        AND (q.is_official = TRUE OR q.user_id = $1)
+        GROUP BY q.id, c.title, c.code
+        ORDER BY c.title ASC, q.is_official DESC, q.created_at DESC
+      `, [userId]);
+    }
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -97,16 +115,27 @@ exports.submitQuiz = async (req, res) => {
     const questionsRes = await pool.query('SELECT id FROM questions WHERE quiz_id = $1', [id]);
     const totalQuestions = questionsRes.rows.length;
     let score = 0;
+    const answers_map = {};
+
+    // Get all correct options at once
+    const questionIds = questionsRes.rows.map(q => q.id);
+    const correctOptionsRes = await pool.query(
+      'SELECT question_id, id FROM options WHERE is_correct = TRUE AND question_id = ANY($1::int[])',
+      [questionIds]
+    );
+    const correctMap = {};
+    correctOptionsRes.rows.forEach(r => { correctMap[r.question_id] = r.id; });
 
     for (const q of questionsRes.rows) {
-      const correctOptionRes = await pool.query(
-        'SELECT id FROM options WHERE question_id = $1 AND is_correct = TRUE',
-        [q.id]
-      );
-      const correctOptionId = correctOptionRes.rows[0]?.id;
-      if (answers[q.id] == correctOptionId) {
-        score++;
-      }
+      const correctOptionId = correctMap[q.id];
+      const selectedOptionId = answers[q.id];
+      const isCorrect = selectedOptionId == correctOptionId;
+      if (isCorrect) score++;
+      answers_map[q.id] = {
+        selectedOptionId: selectedOptionId || null,
+        correctOptionId: correctOptionId || null,
+        isCorrect
+      };
     }
 
     await pool.query(
@@ -122,7 +151,7 @@ exports.submitQuiz = async (req, res) => {
       );
     }
 
-    res.json({ score, totalQuestions });
+    res.json({ score, totalQuestions, answers_map });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error submitting quiz' });
@@ -140,10 +169,12 @@ exports.createQuiz = async (req, res) => {
     // Only admin can create official quizzes
     const officialFlag = (role === 'admin') ? (is_official !== undefined ? is_official : true) : false;
     const ownerId = officialFlag ? null : userId;
+    // Admin quizzes created via QuizManager are type 'quiz', not 'exam'
+    const quizType = 'quiz';
 
     const result = await pool.query(
-      'INSERT INTO quizzes (course_id, title, description, is_official, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [course_id, title, description, officialFlag, ownerId]
+      'INSERT INTO quizzes (course_id, title, description, is_official, user_id, quiz_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [course_id, title, description, officialFlag, ownerId, quizType]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -286,5 +317,68 @@ exports.searchQuizzes = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error searching quizzes' });
+  }
+};
+
+exports.importQuestionsFromCSV = async (req, res) => {
+  const { quizId } = req.params;
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+  try {
+    const { parse } = require('csv-parse/sync');
+    const records = parse(req.file.buffer.toString('utf-8'), {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    });
+
+    // Expected columns: question_text, option_a, option_b, option_c, option_d, correct_option, explanation
+    // correct_option should be: a, b, c, or d (case-insensitive)
+
+    const errors = [];
+    let imported = 0;
+
+    for (let i = 0; i < records.length; i++) {
+      const row = records[i];
+      const rowNum = i + 2; // 1-indexed + header row
+
+      const questionText = row.question_text?.trim();
+      const optA = row.option_a?.trim();
+      const optB = row.option_b?.trim();
+      const optC = row.option_c?.trim();
+      const optD = row.option_d?.trim();
+      const correctLetter = row.correct_option?.trim().toLowerCase();
+      const explanation = row.explanation?.trim() || null;
+
+      if (!questionText) { errors.push(`Row ${rowNum}: missing question_text`); continue; }
+      if (!optA || !optB || !optC || !optD) { errors.push(`Row ${rowNum}: all 4 options required`); continue; }
+      if (!['a','b','c','d'].includes(correctLetter)) { errors.push(`Row ${rowNum}: correct_option must be a, b, c, or d`); continue; }
+
+      const options = [
+        { text: optA, is_correct: correctLetter === 'a' },
+        { text: optB, is_correct: correctLetter === 'b' },
+        { text: optC, is_correct: correctLetter === 'c' },
+        { text: optD, is_correct: correctLetter === 'd' },
+      ];
+
+      const qRes = await pool.query(
+        'INSERT INTO questions (quiz_id, question_text, explanation) VALUES ($1, $2, $3) RETURNING id',
+        [quizId, questionText, explanation]
+      );
+      const questionId = qRes.rows[0].id;
+
+      for (const opt of options) {
+        await pool.query(
+          'INSERT INTO options (question_id, option_text, is_correct) VALUES ($1, $2, $3)',
+          [questionId, opt.text, opt.is_correct]
+        );
+      }
+      imported++;
+    }
+
+    res.json({ imported, errors, total: records.length });
+  } catch (err) {
+    console.error('CSV import error:', err);
+    res.status(500).json({ message: 'Failed to parse CSV: ' + err.message });
   }
 };

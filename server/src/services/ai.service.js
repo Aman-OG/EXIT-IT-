@@ -139,36 +139,30 @@ const aiService = {
     if (!groq) throw new Error('Groq AI not initialized');
     
     try {
+      // Skip the first 2000 chars (usually cover page/TOC) and take a meaningful chunk
+      const skipChars = 2000;
+      const maxChars = 5000;
+      const startPos = content.length > skipChars ? skipChars : 0;
+      const truncatedContent = content.length > (startPos + maxChars)
+        ? content.substring(startPos, startPos + maxChars)
+        : content.substring(startPos);
+
       const chatCompletion = await groq.chat.completions.create({
         "messages": [
           {
             "role": "system",
-            "content": "You are an expert exam creator. You MUST strictly use ONLY the provided MATERIAL to generate the questions. Do NOT use outside knowledge. Do NOT invent concepts not found in the text. Return ONLY a valid JSON array of question objects. NO CONVERSATIONAL TEXT."
+            "content": "You are an expert exam creator. Use ONLY the provided MATERIAL. Return ONLY a valid JSON array. NO extra text."
           },
           {
             "role": "user",
-            "content": `Generate ${count} multiple-choice questions for difficulty: ${difficulty} using ONLY this material. 
-            
-            STRUCTURE:
-            [
-              {
-                "question_text": "...",
-                "options": [
-                  {"text": "...", "is_correct": true},
-                  {"text": "...", "is_correct": false},
-                  {"text": "...", "is_correct": false},
-                  {"text": "...", "is_correct": false}
-                ],
-                "explanation": "..."
-              }
-            ]
-
-            MATERIAL: "${content}"`
+            "content": `Generate ${count} MCQ questions, difficulty: ${difficulty}. JSON format:
+[{"question_text":"...","options":[{"text":"...","is_correct":true},{"text":"...","is_correct":false},{"text":"...","is_correct":false},{"text":"...","is_correct":false}],"explanation":"..."}]
+MATERIAL: "${truncatedContent}"`
           }
         ],
-        "model": "llama-3.1-8b-instant",
+        "model": "llama-3.3-70b-versatile",
         "temperature": 0.2,
-        "max_completion_tokens": 4096,
+        "max_completion_tokens": 3000,
         "top_p": 0.95,
         "stream": false
       });

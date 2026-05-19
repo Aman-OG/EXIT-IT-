@@ -18,6 +18,8 @@ const RoadmapPage = () => {
   const [overallData, setOverallData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [issuingCert, setIssuingCert] = useState(null);
+  const [certSuccess, setCertSuccess] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +73,19 @@ const RoadmapPage = () => {
   const handleCourseClick = (course) => {
     localStorage.setItem('expanded_course_id', course.course_id);
     navigate('/courses');
+  };
+
+  const handleGetCertificate = async (courseId) => {
+    setIssuingCert(courseId);
+    try {
+      const res = await api.post(`/progress/certificates/${courseId}`);
+      setCertSuccess(res.data.certificate_code);
+      setTimeout(() => setCertSuccess(null), 4000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIssuingCert(null);
+    }
   };
 
   if (loading) {
@@ -292,19 +307,36 @@ const RoadmapPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredCourses.map((course, idx) => (
-                <CourseCard
-                  key={course.course_id}
-                  course={course}
-                  index={idx}
-                  isRecommended={recommendedCourse?.course_id === course.course_id}
-                  onClick={() => handleCourseClick(course)}
-                />
+                <div key={course.course_id} className="flex flex-col">
+                  <CourseCard
+                    course={course}
+                    index={idx}
+                    isRecommended={recommendedCourse?.course_id === course.course_id}
+                    onClick={() => handleCourseClick(course)}
+                  />
+                  {Number(course.progress_percentage) >= 70 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleGetCertificate(course.course_id || course.id); }}
+                      disabled={issuingCert === (course.course_id || course.id)}
+                      className="mt-2 w-full flex items-center justify-center space-x-2 py-2 bg-accent/10 text-accent border border-accent/20 rounded-xl text-xs font-bold hover:bg-accent/20 transition disabled:opacity-50"
+                    >
+                      <Award size={12} />
+                      <span>{issuingCert === (course.course_id || course.id) ? 'Issuing...' : 'Get Certificate'}</span>
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
         </div>
       )}
 
+      {/* Certificate success toast */}
+      {certSuccess && (
+        <div className="fixed bottom-6 right-6 z-50 bg-accent text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm animate-in slide-in-from-bottom-4 duration-300">
+          ✅ Certificate issued! Code: {certSuccess}
+        </div>
+      )}
     </div>
   );
 };

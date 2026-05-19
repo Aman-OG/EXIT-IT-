@@ -1,9 +1,10 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
-import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy } from 'lucide-react';
+import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy, Users } from 'lucide-react';
 import ExitItLogo from './ExitItLogo';
+import NotificationBell from './NotificationBell';
 
 const Navbar = ({ toggleSidebar }) => {
   const { theme, setTheme } = useContext(ThemeContext);
@@ -34,24 +35,24 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-4 md:px-6 relative z-30 shadow-sm">
-      <div className="flex items-center space-x-3">
-        <button className="text-text p-2 -ml-2 mr-2 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" onClick={toggleSidebar}>
+    <header className="h-16 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between pl-0 pr-3 md:pr-4 relative z-30 shadow-sm">
+      <div className="flex items-center">
+        <button className="text-text p-1.5 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors ml-2" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <div className="hidden md:flex items-center space-x-2">
+        <Link to="/" className="hidden md:flex items-center space-x-1.5 pl-3 hover:opacity-80 transition-opacity">
+          <ExitItLogo size={30} />
+          <h1 className="text-lg font-bold text-primary leading-tight">EXIT-IT</h1>
+        </Link>
+        <Link to="/" className="md:hidden ml-2">
           <ExitItLogo size={32} />
-          <div>
-            <h1 className="text-lg font-bold text-primary leading-tight">EXIT-IT</h1>
-            <p className="text-xs text-text/50">Exam Prep Platform</p>
-          </div>
-        </div>
-        <div className="md:hidden">
-          <ExitItLogo size={36} />
-        </div>
+        </Link>
       </div>
 
-      <div className="flex items-center space-x-2"
+      <div className="flex items-center space-x-2">
+        {/* Notification Bell */}
+        <NotificationBell />
+        
         <div className="relative" ref={streakRef}>
           {/* Streak Indicator (appears only if streak > 0) */}
           {user?.current_streak > 0 && (
@@ -190,6 +191,13 @@ const Navbar = ({ toggleSidebar }) => {
                 >
                   <User size={18} className="group-hover:scale-110 transition-transform" />
                   <span>View Profile</span>
+                </button>
+                <button 
+                  onClick={() => { setDropdownOpen(false); navigate('/friends'); }}
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
+                >
+                  <Users size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>Friends</span>
                 </button>
                 <button 
                   onClick={() => { setDropdownOpen(false); navigate('/trophies'); }}

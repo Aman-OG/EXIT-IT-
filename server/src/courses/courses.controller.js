@@ -7,7 +7,8 @@ const getCourses = async (req, res) => {
             SELECT 
                 c.*,
                 (SELECT COUNT(*) FROM materials m WHERE m.course_id = c.id) as total_materials,
-                (SELECT COALESCE(SUM(percentage), 0) / 100.0 FROM user_progress up 
+                (SELECT COALESCE(SUM(LEAST(up.percentage, 100)), 0) / 100.0 
+                 FROM user_progress up 
                  JOIN materials m ON up.material_id = m.id 
                  WHERE m.course_id = c.id AND up.user_id = $1) as completed_materials
             FROM courses c

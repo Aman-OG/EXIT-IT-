@@ -5,7 +5,7 @@ exports.getOfficialList = async (req, res) => {
     const query = `
       SELECT id, title 
       FROM quizzes 
-      WHERE is_official = TRUE 
+      WHERE is_official = TRUE AND COALESCE(quiz_type, 'exam') = 'exam'
       ORDER BY title ASC
     `;
     const result = await pool.query(query);

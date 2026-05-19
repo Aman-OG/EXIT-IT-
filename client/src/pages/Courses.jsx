@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
-import { BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download } from 'lucide-react';
+import { BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, GripVertical } from 'lucide-react';
 import { CourseSkeleton } from '../components/Skeleton';
 
 const Courses = () => {
@@ -25,6 +25,10 @@ const Courses = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'course'|'material', id, title }
   const [courseForm, setCourseForm] = useState({ title: '', code: '', description: '' });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Drag-and-drop state (admin only)
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
 
 
   useEffect(() => {
@@ -133,6 +137,59 @@ const Courses = () => {
     }
   };
 
+  // Drag-and-drop handlers for chapter reordering (admin only)
+  const handleDragStart = (e, courseId, index) => {
+    dragItem.current = { courseId, index };
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e, courseId, index) => {
+    dragOverItem.current = { courseId, index };
+    e.preventDefault();
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, courseId) => {
+    e.preventDefault();
+    if (
+      dragItem.current === null ||
+      dragOverItem.current === null ||
+      dragItem.current.index === dragOverItem.current.index
+    ) return;
+
+    const courseIdKey = courseId;
+    const items = [...(materials[courseIdKey] || [])];
+    const fromIndex = dragItem.current.index;
+    const toIndex = dragOverItem.current.index;
+
+    // Reorder locally for instant feedback
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+
+    setMaterials(prev => ({ ...prev, [courseIdKey]: items }));
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    // Persist to server
+    try {
+      await api.patch('/materials/reorder', { orderedIds: items.map(m => m.id) });
+    } catch (e) {
+      console.error('Failed to save order', e);
+      // Revert on failure
+      fetchMaterials(courseIdKey);
+    }
+  };
+
+  const handleDragEnd = () => {
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
 
   const courseColors = [
     'from-blue-500/10 to-blue-600/5 border-blue-200 dark:border-blue-800',
@@ -232,13 +289,21 @@ const Courses = () => {
               {expandedCourse === course.id && (
                 <div className={`p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 bg-gradient-to-r ${courseColors[idx % courseColors.length]}`}>
                   {user?.role === 'admin' && (
-                    <button
-                      onClick={() => setUploadModal(course.id)}
-                      className="flex items-center space-x-2 px-4 py-2.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm hover:bg-primary/20 transition mb-3"
-                    >
-                      <Upload size={16} />
-                      <span>Upload Material</span>
-                    </button>
+                    <div className="flex items-center gap-3 mb-3">
+                      <button
+                        onClick={() => setUploadModal(course.id)}
+                        className="flex items-center space-x-2 px-4 py-2.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm hover:bg-primary/20 transition"
+                      >
+                        <Upload size={16} />
+                        <span>Upload Material</span>
+                      </button>
+                      {materials[course.id]?.length > 1 && (
+                        <span className="flex items-center space-x-1.5 text-[11px] text-text/40 font-medium">
+                          <GripVertical size={13} />
+                          <span>Drag cards to reorder chapters</span>
+                        </span>
+                      )}
+                    </div>
                   )}
 
                   {/* Student View Quizzes */}
@@ -250,59 +315,79 @@ const Courses = () => {
                     <p className="text-text/50 text-center py-6">No materials uploaded for this course yet.</p>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
-                      {materials[course.id].map(mat => (
-                        <button
+                      {materials[course.id].map((mat, matIdx) => (
+                        <div
                           key={mat.id}
-                          onClick={() => navigate(`/study/${mat.id}`)}
-                          className="bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
+                          draggable={user?.role === 'admin'}
+                          onDragStart={user?.role === 'admin' ? (e) => handleDragStart(e, course.id, matIdx) : undefined}
+                          onDragEnter={user?.role === 'admin' ? (e) => handleDragEnter(e, course.id, matIdx) : undefined}
+                          onDragOver={user?.role === 'admin' ? handleDragOver : undefined}
+                          onDrop={user?.role === 'admin' ? (e) => handleDrop(e, course.id) : undefined}
+                          onDragEnd={user?.role === 'admin' ? handleDragEnd : undefined}
+                          className={`relative group ${user?.role === 'admin' ? '' : ''}`}
                         >
-                          <div className="absolute top-0 right-0 p-2 flex space-x-1">
-                             {user?.role === 'admin' && (
-                               <>
-                                 <div onClick={(e) => { e.stopPropagation(); setEditMaterial(mat); setUploadTitle(mat.title); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
-                                   <Pencil size={12}/>
+                          <button
+                            onClick={() => navigate(`/study/${mat.id}`)}
+                            className="w-full bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
+                          >
+                            {/* Drag handle — admin only */}
+                            {user?.role === 'admin' && (
+                              <div
+                                className="absolute top-2 left-2 p-1.5 rounded-lg text-text/30 opacity-0 group-hover:opacity-100 group-hover:text-primary group-hover:bg-primary/10 hover:scale-110 transition-all duration-200 cursor-grab active:cursor-grabbing"
+                                title="Drag to reorder"
+                              >
+                                <GripVertical size={20} strokeWidth={2} />
+                              </div>
+                            )}
+
+                            <div className="absolute top-0 right-0 p-2 flex space-x-1">
+                               {user?.role === 'admin' && (
+                                 <>
+                                   <div onClick={(e) => { e.stopPropagation(); setEditMaterial(mat); setUploadTitle(mat.title); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
+                                     <Pencil size={12}/>
+                                   </div>
+                                   <div onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'material', id: mat.id, title: mat.title }); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-warning p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
+                                     <Trash2 size={12}/>
+                                   </div>
+                                 </>
+                               )}
+                               <a 
+                                 href={`http://localhost:5005${mat.file_url}`} 
+                                 download={`${mat.title}.pdf`}
+                                 onClick={(e) => e.stopPropagation()}
+                                 className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800"
+                                 title="Download PDF"
+                               >
+                                  <Download size={12} />
+                               </a>
+                               {mat.is_completed && (
+                                 <div className="bg-emerald-500 text-white p-1 rounded-lg shadow-md scale-110">
+                                    <CheckCircle2 size={12} strokeWidth={3} />
                                  </div>
-                                 <div onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'material', id: mat.id, title: mat.title }); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-warning p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
-                                   <Trash2 size={12}/>
-                                 </div>
-                               </>
-                             )}
-                             <a 
-                               href={`http://localhost:5005${mat.file_url}`} 
-                               download={`${mat.title}.pdf`}
-                               onClick={(e) => e.stopPropagation()}
-                               className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800"
-                               title="Download PDF"
-                             >
-                                <Download size={12} />
-                             </a>
-                             {mat.is_completed && (
-                               <div className="bg-emerald-500 text-white p-1 rounded-lg shadow-md scale-110">
-                                  <CheckCircle2 size={12} strokeWidth={3} />
-                               </div>
-                             )}
-                             {!mat.is_completed && (
-                                <div className="bg-primary/10 text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
-                                </div>
-                             )}
-                          </div>
-                          
-                          <div className="w-16 h-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
-                            <FileText size={32} strokeWidth={1.5} />
-                          </div>
-                          
-                          <h3 className="font-bold text-sm mb-1 line-clamp-2 min-h-[2.5rem] flex items-center justify-center group-hover:text-primary transition-colors leading-tight">
-                            {mat.title}
-                          </h3>
-                          
-                          <div className="w-full h-px bg-neutral-100 dark:bg-neutral-800 my-4" />
-                          
-                          <div className="flex items-center justify-between w-full mt-auto">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-md">{mat.type}</span>
-                            <span className="text-[10px] font-medium text-text/40">{new Date(mat.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </button>
+                               )}
+                               {!mat.is_completed && (
+                                  <div className="bg-primary/10 text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                                  </div>
+                               )}
+                            </div>
+                            
+                            <div className="w-16 h-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
+                              <FileText size={32} strokeWidth={1.5} />
+                            </div>
+                            
+                            <h3 className="font-bold text-sm mb-1 line-clamp-2 min-h-[2.5rem] flex items-center justify-center group-hover:text-primary transition-colors leading-tight">
+                              {mat.title}
+                            </h3>
+                            
+                            <div className="w-full h-px bg-neutral-100 dark:bg-neutral-800 my-4" />
+                            
+                            <div className="flex items-center justify-between w-full mt-auto">
+                              <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-md">{mat.type}</span>
+                              <span className="text-[10px] font-medium text-text/40">{new Date(mat.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}

@@ -29,29 +29,29 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
   const getStatusConfig = () => {
     if (pct >= 70) return { 
       label: 'Completed', 
-      badgeBg: 'bg-emerald-100 dark:bg-emerald-500/20',
-      badgeText: 'text-emerald-700 dark:text-emerald-400',
-      badgeBorder: 'border-emerald-300 dark:border-emerald-500/30',
+      badgeBg: 'bg-emerald-500/10',
+      badgeText: 'text-emerald-600 dark:text-emerald-400',
+      badgeBorder: 'border-emerald-500/20',
       dot: 'bg-emerald-500',
       dotAnim: '',
       borderStyle: { borderColor: 'rgb(16, 185, 129)', borderWidth: '2px' },
       hoverShadow: '0 8px 30px -6px rgba(16, 185, 129, 0.25)',
-      bgTint: 'bg-emerald-50/50 dark:bg-emerald-500/5',
+      bgTint: 'bg-emerald-500/5',
     };
     if (pct > 0) return { 
       label: 'In Progress', 
-      badgeBg: 'bg-amber-100 dark:bg-amber-500/20',
-      badgeText: 'text-amber-700 dark:text-amber-400',
-      badgeBorder: 'border-amber-300 dark:border-amber-500/30',
+      badgeBg: 'bg-amber-500/10',
+      badgeText: 'text-amber-600 dark:text-amber-400',
+      badgeBorder: 'border-amber-500/20',
       dot: 'bg-amber-500',
       dotAnim: 'animate-pulse',
       borderStyle: { borderColor: 'rgb(245, 158, 11)', borderWidth: '2px' },
       hoverShadow: '0 8px 30px -6px rgba(245, 158, 11, 0.25)',
-      bgTint: 'bg-amber-50/50 dark:bg-amber-500/5',
+      bgTint: 'bg-amber-500/5',
     };
     return { 
       label: 'Not Started', 
-      badgeBg: 'bg-neutral-100 dark:bg-neutral-800',
+      badgeBg: 'bg-neutral-500/10 dark:bg-neutral-800',
       badgeText: 'text-neutral-500 dark:text-neutral-400',
       badgeBorder: 'border-neutral-200 dark:border-neutral-700',
       dot: 'bg-neutral-400',
@@ -159,7 +159,7 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
             <ArrowRight size={14} className="text-emerald-500/50 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
           </div>
         ) : (
-          <div className="flex items-center justify-between bg-neutral-50 dark:bg-neutral-800/30 rounded-lg px-3 py-2 group-hover:bg-primary/5 transition-colors">
+          <div className="flex items-center justify-between bg-neutral-500/5 dark:bg-neutral-800/30 rounded-lg px-3 py-2 group-hover:bg-primary/5 transition-colors">
             <span className="text-xs font-bold text-text/40 group-hover:text-primary transition-colors flex items-center space-x-1.5">
               <BookOpen size={12} />
               <span>Start Course</span>

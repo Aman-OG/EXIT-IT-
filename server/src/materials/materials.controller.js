@@ -36,7 +36,7 @@ const getMaterials = async (req, res) => {
                 EXISTS (SELECT 1 FROM user_progress up WHERE up.material_id = m.id AND up.user_id = $2) as is_completed
             FROM materials m
             WHERE m.course_id = $1
-            ORDER BY m.created_at DESC
+            ORDER BY m.sort_order ASC, m.created_at ASC
         `, [courseId, userId]);
         res.json(result.rows);
     } catch (e) {
@@ -92,9 +92,16 @@ const uploadMaterial = async (req, res) => {
 
         const file_url = `/uploads/${req.file.filename}`;
 
+        // Assign sort_order = max existing + 1 so new uploads go to the end
+        const maxResult = await pool.query(
+            'SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM materials WHERE course_id = $1',
+            [course_id]
+        );
+        const nextOrder = maxResult.rows[0].next_order;
+
         await pool.query(
-            'INSERT INTO materials (course_id, title, file_url, type) VALUES ($1, $2, $3, $4)',
-            [course_id, title, file_url, 'pdf']
+            'INSERT INTO materials (course_id, title, file_url, type, sort_order) VALUES ($1, $2, $3, $4, $5)',
+            [course_id, title, file_url, 'pdf', nextOrder]
         );
         res.json({ message: 'Material uploaded successfully', file_url });
     } catch (e) {
@@ -141,4 +148,25 @@ const downloadCourse = async (req, res) => {
     }
 }
 
-module.exports = { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse, searchMaterials };
+const reorderMaterials = async (req, res) => {
+    try {
+        // orderedIds: array of material IDs in the new desired order
+        const { orderedIds } = req.body;
+        if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+            return res.status(400).json({ message: 'orderedIds array is required' });
+        }
+
+        // Update each material's sort_order based on its position in the array
+        const updates = orderedIds.map((id, index) =>
+            pool.query('UPDATE materials SET sort_order = $1 WHERE id = $2', [index + 1, id])
+        );
+        await Promise.all(updates);
+
+        res.json({ message: 'Order updated successfully' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Failed to reorder materials' });
+    }
+};
+
+module.exports = { getMaterials, getMaterialById, uploadMaterial, updateMaterial, deleteMaterial, downloadCourse, searchMaterials, reorderMaterials };

@@ -15,6 +15,7 @@ const Profile = () => {
     const [selectedBadge, setSelectedBadge] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState("");
+    const [certificates, setCertificates] = useState([]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -25,6 +26,14 @@ const Profile = () => {
                 // ── Badge unlock detection ──
                 if (authUser?.id) {
                     evaluateBadges();
+                }
+
+                // Fetch certificates
+                try {
+                    const certRes = await api.get('/progress/certificates');
+                    setCertificates(certRes.data);
+                } catch (certErr) {
+                    console.error('Failed to fetch certificates', certErr);
                 }
             } catch (err) {
                 console.error("Failed to fetch profile data", err);
@@ -278,7 +287,6 @@ const Profile = () => {
                         <span>Enter Trophy Hall</span>
                     </button>
                 </div>
-
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     {badgeMap.map((b) => {
                         const badgeData = badges && badges[b.id];
@@ -338,6 +346,32 @@ const Profile = () => {
                     })}
                 </div>
             </div>
+
+            {/* Certificates */}
+            {certificates.length > 0 && (
+                <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 md:p-8 shadow-sm">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="p-2 bg-accent/10 text-accent rounded-xl"><Award size={20} /></div>
+                        <h2 className="text-xl font-bold">Certificates</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {certificates.map(cert => (
+                            <div key={cert.id} className="bg-gradient-to-br from-accent/5 to-primary/5 border border-accent/20 rounded-2xl p-5 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                                <div className="flex items-start space-x-3">
+                                    <div className="p-2.5 bg-accent/10 text-accent rounded-xl shrink-0"><Award size={20} /></div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-sm truncate">{cert.course_title}</p>
+                                        <p className="text-xs text-text/40 mt-0.5">{cert.course_code}</p>
+                                        <p className="text-xs text-text/40 mt-1">Issued {new Date(cert.issued_at).toLocaleDateString()}</p>
+                                        <p className="text-[10px] font-mono text-text/30 mt-1">{cert.certificate_code}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

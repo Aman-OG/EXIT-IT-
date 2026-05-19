@@ -33,7 +33,12 @@ app.use((req, res, next) => {
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+const flashcardsRoutes = require('./flashcards/flashcards.routes');
+const friendsRoutes = require('./friends/friends.routes');
+const notificationsRoutes = require('./notifications/notifications.routes');
+
 // Routes
+app.use('/api/ai', aiRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
@@ -44,7 +49,9 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/exams', examsRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/flashcards', flashcardsRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

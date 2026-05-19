@@ -1,146 +1,244 @@
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
-const ActivityHeatmap = ({ contributions = {}, year = 2024 }) => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
-  const startDate = new Date(year, 0, 1);
-  const endDate = new Date(year, 11, 31);
-  
-  // Get the first day of the year and calculate starting week day
-  let firstDayOfWeek = startDate.getDay();
-  const startOfFirstWeek = new Date(startDate);
-  startOfFirstWeek.setDate(startDate.getDate() - firstDayOfWeek);
-  
-  // Generate all weeks
-  const weeks = [];
-  let currentDate = new Date(startOfFirstWeek);
-  
-  while (currentDate <= endDate) {
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      week.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
+const CELL = 11;
+const GAP  = 3;
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS_LIGHT = ['#ebedf0','#9be9a8','#40c463','#30a14e','#216e39'];
+const COLORS_DARK  = ['#161b22','#0e4429','#006d32','#26a641','#39d353'];
+
+const intensity = (count) => {
+  if (!count) return 0;
+  if (count < 2) return 1;
+  if (count < 4) return 2;
+  if (count < 7) return 3;
+  return 4;
+};
+
+const ActivityHeatmapGitHub = ({ data = [] }) => {
+  const [tooltip, setTooltip] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const isDark =
+    document.documentElement.classList.contains('theme-dark') ||
+    document.documentElement.classList.contains('theme-eye');
+  const colors = isDark ? COLORS_DARK : COLORS_LIGHT;
+
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear, currentYear - 1, currentYear - 2];
+
+  const { weeks, monthPositions, total } = useMemo(() => {
+    const map = new Map();
+    let total = 0;
+    data.forEach(({ date, count }) => {
+      if (!date) return;
+      const key = new Date(date).toISOString().split('T')[0];
+      const c = parseInt(count) || 0;
+      map.set(key, c);
+      total += c;
+    });
+
+    // Jan 1 of selected year
+    const yearStart = new Date(selectedYear, 0, 1);
+    const yearEnd   = new Date(selectedYear, 11, 31);
+
+    // Snap back to Sunday before Jan 1
+    const start = new Date(yearStart);
+    start.setDate(start.getDate() - start.getDay());
+
+    // Snap forward to Saturday after Dec 31
+    const end = new Date(yearEnd);
+    end.setDate(end.getDate() + (6 - end.getDay()));
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const days = [];
+    const cur = new Date(start);
+    while (cur <= end) {
+      const key = cur.toISOString().split('T')[0];
+      const inYear = cur.getFullYear() === selectedYear;
+      days.push({
+        date: new Date(cur),
+        key,
+        count: inYear ? (map.get(key) || 0) : 0,
+        outOfYear: !inYear,
+        future: cur > today,
+      });
+      cur.setDate(cur.getDate() + 1);
     }
-    weeks.push(week);
-  }
-  
-  // Color intensity based on contribution count
-  const getColor = (count) => {
-    const colors = {
-      0: 'bg-neutral-100 dark:bg-neutral-800',
-      1: 'bg-primary/20',
-      2: 'bg-primary/40',
-      3: 'bg-primary/60',
-      4: 'bg-primary/80',
-      5: 'bg-primary',
-    };
-    
-    if (count === 0) return colors[0];
-    if (count <= 5) return colors[1];
-    if (count <= 10) return colors[2];
-    if (count <= 20) return colors[3];
-    if (count <= 40) return colors[4];
-    return colors[5];
-  };
-  
-  const getContributionCount = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return contributions[dateStr] || 0;
-  };
-  
-  const currentMonth = useRef(-1);
-  const monthLabels = [];
-  
+
+    // Chunk into weeks (columns of 7, Sun=0 … Sat=6)
+    const weeks = [];
+    for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+
+    // Month label positions — first week where month[0] changes
+    const monthPositions = [];
+    let lastMonth = -1;
+    weeks.forEach((week, wi) => {
+      // find first day in this week that belongs to selectedYear
+      const rep = week.find(d => d.date.getFullYear() === selectedYear) || week[0];
+      const m = rep.date.getMonth();
+      if (m !== lastMonth) {
+        monthPositions.push({ wi, label: MONTHS[m] });
+        lastMonth = m;
+      }
+    });
+
+    return { weeks, monthPositions, total };
+  }, [data, selectedYear]);
+
+  const colW = CELL + GAP;
+  const LEFT_LABEL_W = 30; // px for Mon/Wed/Fri labels
+
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h3 className="text-xl font-bold text-text mb-2">Activity Heatmap</h3>
-        <p className="text-text/60 text-sm">Study streak activity for {year}</p>
+    <div className="select-none w-full">
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-semibold text-text">
+          <span className="font-bold">{total}</span> activities in {selectedYear}
+        </p>
       </div>
-      
-      {/* Heatmap */}
-      <div className="overflow-x-auto pb-4">
-        <div className="inline-block">
-          {/* Week day labels */}
-          <div className="flex mb-2">
-            <div className="w-12" /> {/* Space for month labels */}
-            <div className="flex gap-1">
-              {weekDays.map((day, idx) => (
-                <div key={idx} className="w-4 h-4 flex items-center justify-center text-xs font-medium text-text/50">
-                  {day.charAt(0)}
-                </div>
+
+      <div className="flex items-start gap-4">
+        {/* Main grid */}
+        <div className="flex-1 overflow-x-auto">
+          <div style={{ display: 'inline-block', minWidth: '100%' }}>
+
+            {/* Month labels row */}
+            <div style={{ display: 'flex', marginLeft: LEFT_LABEL_W, marginBottom: 6, position: 'relative', height: 16 }}>
+              {monthPositions.map(({ wi, label }) => (
+                <span
+                  key={wi + label}
+                  style={{
+                    position: 'absolute',
+                    left: wi * colW,
+                    fontSize: 12,
+                    whiteSpace: 'nowrap',
+                    fontWeight: 500,
+                  }}
+                  className="text-text/60"
+                >
+                  {label}
+                </span>
               ))}
             </div>
-          </div>
-          
-          {/* Months and heatmap grid */}
-          <div className="flex gap-1">
-            {/* Month labels */}
-            <div className="flex flex-col justify-between pr-2 text-xs font-medium text-text/60">
-              {months.map((month, idx) => (
-                <div key={idx} className="h-6 flex items-center">
-                  {idx % 2 === 0 ? month : ''}
-                </div>
-              ))}
+
+            {/* Day labels + cell grid */}
+            <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+              {/* Mon / Wed / Fri labels */}
+              <div style={{ width: LEFT_LABEL_W, display: 'flex', flexDirection: 'column', gap: GAP, paddingTop: 1, flexShrink: 0 }}>
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+                  <div key={i} style={{ height: CELL, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6 }}>
+                    <span style={{ fontSize: 11 }} className="text-text/50">
+                      {(i === 1 || i === 3 || i === 5) ? d : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Cell columns */}
+              <div style={{ display: 'flex', gap: GAP }}>
+                {weeks.map((week, wi) => (
+                  <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: GAP }}>
+                    {week.map((day, di) => {
+                      const level = (day.outOfYear || day.future) ? 0 : intensity(day.count);
+                      const dimmed = day.outOfYear || day.future;
+                      return (
+                        <div
+                          key={di}
+                          style={{
+                            width: CELL,
+                            height: CELL,
+                            borderRadius: 2,
+                            backgroundColor: colors[level],
+                            opacity: dimmed ? 0.25 : 1,
+                            cursor: dimmed ? 'default' : 'pointer',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (day.outOfYear) return;
+                            const r = e.currentTarget.getBoundingClientRect();
+                            setTooltip({
+                              x: r.left + r.width / 2,
+                              y: r.top,
+                              count: day.count,
+                              date: day.date.toLocaleDateString('en-US', {
+                                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+                              }),
+                            });
+                          }}
+                          onMouseLeave={() => setTooltip(null)}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
-            
-            {/* Weeks grid */}
-            <div className="flex gap-1">
-              {weeks.map((week, weekIdx) => (
-                <div key={weekIdx} className="flex flex-col gap-1">
-                  {week.map((date, dayIdx) => {
-                    const count = getContributionCount(date);
-                    const isCurrentYear = date.getFullYear() === year;
-                    const isToday = 
-                      date.toDateString() === new Date().toDateString();
-                    
-                    return (
-                      <div
-                        key={`${weekIdx}-${dayIdx}`}
-                        className={`
-                          w-3 h-3 rounded cursor-pointer transition-all duration-200 
-                          ${isCurrentYear ? getColor(count) : 'bg-neutral-50 dark:bg-neutral-900'}
-                          ${isToday ? 'ring-2 ring-primary' : ''}
-                          hover:scale-125 hover:shadow-lg hover:z-10
-                          group relative
-                        `}
-                        title={`${date.toDateString()}: ${count} studies`}
-                      >
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-text text-background text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                          {count} stud{count !== 1 ? 'ies' : 'y'} on {date.toDateString()}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+
+            {/* Footer: legend */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 8, marginLeft: LEFT_LABEL_W }}>
+              <span style={{ fontSize: 11 }} className="text-text/40 mr-1">Less</span>
+              {colors.map((c, i) => (
+                <div key={i} style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: c }} />
               ))}
+              <span style={{ fontSize: 11 }} className="text-text/40 ml-1">More</span>
             </div>
+
           </div>
         </div>
+
+        {/* Year selector — right side like GitHub */}
+        <div className="flex flex-col gap-1 flex-shrink-0 pt-6">
+          {years.map(y => (
+            <button
+              key={y}
+              onClick={() => setSelectedYear(y)}
+              className={`text-xs px-3 py-1.5 rounded-md font-semibold transition-all text-right w-16 ${
+                y === selectedYear
+                  ? 'bg-primary text-white'
+                  : 'text-text/50 hover:text-text hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
       </div>
-      
-      {/* Legend */}
-      <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-        <span className="text-xs font-medium text-text/60">Less</span>
-        {[0, 1, 2, 3, 4, 5].map((intensity) => (
-          <div
-            key={intensity}
-            className={`w-3 h-3 rounded ${getColor(intensity === 0 ? 0 : intensity * 10)}`}
-            title={`${intensity === 0 ? 'No' : (intensity * 10 - 5)} studies`}
-          />
-        ))}
-        <span className="text-xs font-medium text-text/60">More</span>
-      </div>
+
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tooltip.x,
+            top: tooltip.y - 10,
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{
+            background: '#24292f',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 500,
+            padding: '6px 10px',
+            borderRadius: 6,
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+          }}>
+            <strong>{tooltip.count} {tooltip.count === 1 ? 'activity' : 'activities'}</strong> on {tooltip.date}
+          </div>
+          <div style={{
+            width: 8, height: 8,
+            background: '#24292f',
+            transform: 'rotate(45deg)',
+            margin: '-4px auto 0',
+          }} />
+        </div>
+      )}
     </div>
   );
 };
 
-const useRef = (initialValue) => {
-  const ref = React.useRef(initialValue);
-  return ref;
-};
-
-export default ActivityHeatmap;
+export default ActivityHeatmapGitHub;

@@ -1,169 +1,194 @@
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+const CELL = 13;   // cell size px
+const GAP  = 3;    // gap between cells px
+
+const DAY_LABELS  = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// GitHub green palette
+const LIGHT_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+const DARK_COLORS  = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+
+const getIntensity = (count) => {
+  if (!count || count === 0) return 0;
+  if (count < 2)  return 1;
+  if (count < 4)  return 2;
+  if (count < 7)  return 3;
+  return 4;
+};
 
 const ActivityHeatmap = ({ data = [] }) => {
-  // data = [{ date: '2023-10-10...', count: 5 }, ...]
-  
-  const { weeks, monthLabels, totalCount, startDateStr, endDateStr, years } = useMemo(() => {
+  const [tooltip, setTooltip] = useState(null);
+
+  const { weeks, monthLabels, totalCount } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
+    // Build activity map
     const activityMap = new Map();
     data.forEach(d => {
       if (!d.date) return;
-      const dateStr = new Date(d.date).toISOString().split('T')[0];
-      activityMap.set(dateStr, parseInt(d.count));
+      const key = new Date(d.date).toISOString().split('T')[0];
+      activityMap.set(key, parseInt(d.count) || 0);
     });
 
-    const numWeeks = 53; 
+    // Start from 52 weeks ago, aligned to Sunday
+    const start = new Date(today);
+    start.setDate(today.getDate() - 364);
+    // Rewind to Sunday
+    start.setDate(start.getDate() - start.getDay());
+
     const days = [];
-    
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (numWeeks * 7 - 1) - today.getDay());
-    
-    const months = [];
-    let currentMonth = -1;
     let totalCount = 0;
+    const cur = new Date(start);
 
-    for (let i = 0; i < numWeeks * 7; i++) {
-        const d = new Date(startDate);
-        d.setDate(startDate.getDate() + i);
-        
-        const dateStr = d.toISOString().split('T')[0];
-        const count = activityMap.get(dateStr) || 0;
-        totalCount += count;
-        
-        // Intensity 0-4
-        let intensity = 0;
-        if (count > 0 && count < 2) intensity = 1;
-        else if (count >= 2 && count < 4) intensity = 2;
-        else if (count >= 4 && count < 7) intensity = 3;
-        else if (count >= 7) intensity = 4;
-
-        days.push({
-            date: d,
-            dateStr,
-            count,
-            intensity,
-            isFuture: d > today
-        });
-        
-        if (i % 7 === 0) {
-            const m = d.getMonth();
-            if (m !== currentMonth) {
-                months.push({ name: d.toLocaleString('default', { month: 'short' }), weekIndex: i / 7 });
-                currentMonth = m;
-            } else {
-                months.push({ name: null, weekIndex: i / 7 });
-            }
-        }
+    while (cur <= today) {
+      const key = cur.toISOString().split('T')[0];
+      const count = activityMap.get(key) || 0;
+      totalCount += count;
+      days.push({
+        date: new Date(cur),
+        dateStr: key,
+        count,
+        intensity: getIntensity(count),
+        isFuture: cur > today,
+      });
+      cur.setDate(cur.getDate() + 1);
     }
 
-    const weeksArr = [];
+    // Chunk into weeks (columns of 7)
+    const weeks = [];
     for (let i = 0; i < days.length; i += 7) {
-        weeksArr.push(days.slice(i, i + 7));
+      weeks.push(days.slice(i, i + 7));
     }
 
-    const startStr = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric', day: 'numeric' });
-    const endStr = today.toLocaleDateString('en-US', { month: 'short', year: 'numeric', day: 'numeric' });
-    
-    return { 
-      weeks: weeksArr, 
-      monthLabels: months, 
-      totalCount, 
-      startDateStr: startStr, 
-      endDateStr: endStr,
-      years: [today.getFullYear(), today.getFullYear() - 1, today.getFullYear() - 2]
-    };
+    // Month labels: place label at the first week that starts in a new month
+    const monthLabels = [];
+    weeks.forEach((week, wi) => {
+      const firstDay = week[0];
+      const month = firstDay.date.getMonth();
+      const prevWeekFirstDay = wi > 0 ? weeks[wi - 1][0].date.getMonth() : -1;
+      if (month !== prevWeekFirstDay) {
+        monthLabels.push({ weekIndex: wi, label: MONTH_NAMES[month] });
+      }
+    });
+
+    return { weeks, monthLabels, totalCount };
   }, [data]);
 
-  const getIntensityClass = (intensity, isFuture) => {
-    if (isFuture) return 'bg-[#ebedf0] dark:bg-[#161b22] opacity-50';
-    switch (intensity) {
-        case 1: return 'bg-[#9be9a8] dark:bg-[#0e4429]';
-        case 2: return 'bg-[#40c463] dark:bg-[#006d32]';
-        case 3: return 'bg-[#30a14e] dark:bg-[#26a641]';
-        case 4: return 'bg-[#216e39] dark:bg-[#39d353]';
-        default: return 'bg-[#ebedf0] dark:bg-[#161b22]'; 
-    }
-  };
+  const isDark = document.documentElement.classList.contains('theme-dark') ||
+                 document.documentElement.classList.contains('theme-eye');
+
+  const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
+
+  const totalWidth  = weeks.length * (CELL + GAP) - GAP;
+  const totalHeight = 7 * (CELL + GAP) - GAP;
 
   return (
-    <div className="flex select-none gap-8">
-      {/* Main Heatmap Area */}
-      <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-text">
-                {totalCount} activities in the last year
-              </p>
-              <div className="text-[10px] font-bold text-text/40 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                {startDateStr} - {endDateStr}
-              </div>
-          </div>
+    <div className="w-full select-none">
+      {/* Header */}
+      <p className="text-sm font-semibold text-text/70 mb-3">
+        <span className="font-bold text-text">{totalCount}</span> activities in the last year
+      </p>
 
-          <div className="flex ml-8 mb-1">
-            {monthLabels.map((m, i) => (
-              <div key={i} className="flex-shrink-0 w-[10px] h-[10px] mr-[2px]">
-                {m.name && <span className="text-[9px] text-text/50 font-medium absolute translate-y-[-2px]">{m.name}</span>}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-start">
-            <div className="flex flex-col text-[9px] text-text/40 pr-2 pt-1 gap-[11px] h-full justify-start mt-[1px]">
-                <span className="leading-none">Sun</span>
-                <span className="leading-none">Tue</span>
-                <span className="leading-none">Thu</span>
-                <span className="leading-none">Sat</span>
-            </div>
-
-            <div className="flex-1 overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
-                <div className="flex gap-[2px]">
-                    {weeks.map((week, wIdx) => (
-                    <div key={wIdx} className="flex flex-col gap-[2px]">
-                        {week.map((day, dIdx) => (
-                            <div 
-                            key={dIdx} 
-                            className={`w-[10px] h-[10px] rounded-[1px] cursor-pointer transition-colors duration-200 hover:ring-1 hover:ring-primary/50 relative group ${getIntensityClass(day.intensity, day.isFuture)}`}
-                            >
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none">
-                                    <div className="bg-neutral-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xl whitespace-nowrap">
-                                        {day.count} activities on {new Date(day.date).toLocaleDateString()}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    ))}
+      <div className="overflow-x-auto pb-2">
+        <div style={{ minWidth: totalWidth + 32 }}>
+          {/* Month labels row */}
+          <div className="flex ml-8 mb-1" style={{ gap: 0 }}>
+            {weeks.map((_, wi) => {
+              const label = monthLabels.find(m => m.weekIndex === wi);
+              return (
+                <div
+                  key={wi}
+                  style={{ width: CELL + GAP, flexShrink: 0 }}
+                  className="relative"
+                >
+                  {label && (
+                    <span className="absolute text-[11px] text-text/50 font-medium whitespace-nowrap">
+                      {label.label}
+                    </span>
+                  )}
                 </div>
+              );
+            })}
+          </div>
+
+          {/* Grid + day labels */}
+          <div className="flex items-start gap-1">
+            {/* Day-of-week labels */}
+            <div className="flex flex-col flex-shrink-0 mr-1" style={{ gap: GAP }}>
+              {DAY_LABELS.map((label, i) => (
+                <div
+                  key={i}
+                  style={{ height: CELL, width: 28 }}
+                  className="flex items-center justify-end"
+                >
+                  <span className="text-[11px] text-text/40 font-medium">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Cells */}
+            <div className="relative flex" style={{ gap: GAP }}>
+              {weeks.map((week, wi) => (
+                <div key={wi} className="flex flex-col" style={{ gap: GAP }}>
+                  {week.map((day, di) => (
+                    <div
+                      key={di}
+                      style={{
+                        width: CELL,
+                        height: CELL,
+                        borderRadius: 2,
+                        backgroundColor: day.isFuture ? colors[0] : colors[day.intensity],
+                        opacity: day.isFuture ? 0.4 : 1,
+                        cursor: 'pointer',
+                        position: 'relative',
+                      }}
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltip({
+                          x: rect.left + rect.width / 2,
+                          y: rect.top,
+                          count: day.count,
+                          date: day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        });
+                      }}
+                      onMouseLeave={() => setTooltip(null)}
+                    />
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-end space-x-1 mt-3 mr-2 text-[9px] text-text/50 font-medium pb-2">
-             <span>Less</span>
-             <div className="w-[10px] h-[10px] rounded-[1px] bg-[#ebedf0] dark:bg-[#161b22]" />
-             <div className="w-[10px] h-[10px] rounded-[1px] bg-[#9be9a8] dark:bg-[#0e4429]" />
-             <div className="w-[10px] h-[10px] rounded-[1px] bg-[#40c463] dark:bg-[#006d32]" />
-             <div className="w-[10px] h-[10px] rounded-[1px] bg-[#30a14e] dark:bg-[#26a641]" />
-             <div className="w-[10px] h-[10px] rounded-[1px] bg-[#216e39] dark:bg-[#39d353]" />
-             <span>More</span>
+          {/* Legend */}
+          <div className="flex items-center justify-end gap-1 mt-3 ml-8">
+            <span className="text-[11px] text-text/40 mr-1">Less</span>
+            {colors.map((color, i) => (
+              <div
+                key={i}
+                style={{ width: CELL, height: CELL, borderRadius: 2, backgroundColor: color }}
+              />
+            ))}
+            <span className="text-[11px] text-text/40 ml-1">More</span>
           </div>
+        </div>
       </div>
 
-      {/* Year Sidebar (GitHub Style) */}
-      <div className="hidden lg:flex flex-col gap-1 pt-10">
-          {years.map(y => (
-            <button 
-              key={y} 
-              className={`text-xs px-3 py-1.5 rounded-lg font-bold transition-all text-left w-24 ${y === years[0] ? 'bg-primary text-white shadow-lg' : 'text-text/40 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
-            >
-              {y}
-            </button>
-          ))}
-          <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl">
-             <p className="text-[10px] font-black uppercase text-primary tracking-widest leading-tight">Mastered</p>
-             <p className="text-xs font-bold text-text/60">Full Cycle</p>
+      {/* Tooltip — fixed to viewport */}
+      {tooltip && (
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{ left: tooltip.x, top: tooltip.y - 8, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="bg-neutral-900 dark:bg-neutral-700 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-md shadow-xl whitespace-nowrap">
+            <span className="font-bold">{tooltip.count} {tooltip.count === 1 ? 'activity' : 'activities'}</span>
+            {' '}on {tooltip.date}
           </div>
-      </div>
+          <div className="w-2 h-2 bg-neutral-900 dark:bg-neutral-700 rotate-45 mx-auto -mt-1" />
+        </div>
+      )}
     </div>
   );
 };

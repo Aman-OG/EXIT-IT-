@@ -1,6 +1,7 @@
 require('dotenv').config();
 const app = require('./src/app');
 const pool = require('./src/config/db');
+const { startCronJobs } = require('./src/services/cron.service');
 
 const PORT = process.env.PORT || 5000;
 
@@ -13,6 +14,8 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       console.log(`🚀 EXIT-IT Server fully loaded on port ${PORT}`);
+      // Start cron jobs for notifications
+      startCronJobs();
       // Removed Heartbeat Log
     });
   } catch (err) {

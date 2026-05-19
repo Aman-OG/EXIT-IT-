@@ -2,10 +2,51 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
-import { BookOpen, Target, Flame, Clock, ChevronRight, AlertTriangle } from 'lucide-react';
+import { BookOpen, Target, Flame, Clock, ChevronRight, AlertTriangle, Zap, Brain } from 'lucide-react';
 import { StatSkeleton, ResumeSkeleton } from '../components/Skeleton';
 import { StatCard, EmptyState } from '../components/Card';
-import StreakFreeze from '../components/StreakFreeze';
+
+const DailyGoalWidget = () => {
+  const navigate = useNavigate();
+  const [data, setData] = React.useState(null);
+
+  React.useEffect(() => {
+    api.get('/progress/today').then(r => setData(r.data)).catch(() => {});
+  }, []);
+
+  if (!data) return null;
+
+  const pct = Math.min(100, Math.round((data.totalMinutes / data.goalMinutes) * 100));
+
+  return (
+    <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 flex items-center space-x-5 shadow-sm">
+      <div className="relative w-14 h-14 shrink-0">
+        <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+          <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="5" className="text-neutral-100 dark:text-neutral-800" />
+          <circle cx="28" cy="28" r="22" fill="none" stroke="rgb(var(--primary))" strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={`${pct * 1.382} ${138.2 - pct * 1.382}`} className="transition-all duration-700" />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-black text-primary">{pct}%</span>
+        </div>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold text-text/40 uppercase tracking-widest mb-0.5">Daily Goal</p>
+        <p className="font-bold text-text">
+          {data.totalMinutes} <span className="text-text/40 font-normal">/ {data.goalMinutes} min</span>
+        </p>
+        {data.goalMet ? (
+          <p className="text-xs text-emerald-500 font-bold mt-0.5">✅ Goal complete!</p>
+        ) : (
+          <p className="text-xs text-text/40 mt-0.5">{data.goalMinutes - data.totalMinutes} min remaining</p>
+        )}
+      </div>
+      <button onClick={() => navigate('/courses')} className="shrink-0 px-3 py-2 bg-primary/10 text-primary rounded-xl text-xs font-bold hover:bg-primary/20 transition">
+        Study
+      </button>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -117,16 +158,16 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Streak Freeze Section */}
-      {currentStreak > 0 && (
-        <StreakFreeze
-          currentStreak={currentStreak}
-          streakFreeze={streakFreeze}
-          onFreezeUsed={(data) => {
-            setStreakFreeze(data.streakFreeze);
-          }}
-        />
+      {/* Streak info — no banner, auto-managed by backend */}
+      {currentStreak > 0 && streakFreeze > 0 && (
+        <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 flex items-center space-x-2 text-sm">
+          <Zap className="text-primary flex-shrink-0" size={16} />
+          <span className="text-text/70">🔥 <strong>{currentStreak}</strong> day streak · <strong>{streakFreeze}</strong> freeze{streakFreeze !== 1 ? 's' : ''} available</span>
+        </div>
       )}
+
+      {/* Daily Goal */}
+      <DailyGoalWidget />
 
       {/* Stats Grid */}
       {loading ? (

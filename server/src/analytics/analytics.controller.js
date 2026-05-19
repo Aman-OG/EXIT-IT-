@@ -37,7 +37,7 @@ exports.getDashboardOverview = async (req, res) => {
         LIMIT 1
       ),
       exam_info AS (
-        SELECT exam_date FROM system_settings LIMIT 1
+        SELECT value as exam_date FROM system_settings WHERE key = 'exam_date' LIMIT 1
       )
       SELECT 
         us.completed_materials,

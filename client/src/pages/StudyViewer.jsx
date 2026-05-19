@@ -11,7 +11,7 @@ import { AuthContext } from '../context/AuthContext';
 import { 
   ArrowLeft, ZoomIn, ZoomOut, Sparkles, FileQuestion, HelpCircle, CheckSquare, 
   Plus, StickyNote, ChevronLeft, ChevronRight, CheckCircle2, Loader2, Maximize, 
-  Download, Clock 
+  Download, Clock, Bookmark, BookmarkCheck, Trash2
 } from 'lucide-react';
 import Skeleton, { StudySkeleton } from '../components/Skeleton';
 
@@ -29,6 +29,8 @@ const StudyViewer = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [numPages, setNumPages] = useState(null);
   const [zoom, setZoom] = useState(1); // 1 = 100%
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState('1');
   const [sidebarTab, setSidebarTab] = useState('notes');
   const [showSidebar, setShowSidebar] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -40,7 +42,10 @@ const StudyViewer = () => {
   // AI Feature States
   const [aiResponse, setAiResponse] = useState(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiResponseMode, setAiResponseMode] = useState(null); // 'explain' or 'summarize'
+  const [aiResponseMode, setAiResponseMode] = useState(null);
+
+  // Bookmarks state
+  const [bookmarks, setBookmarks] = useState([]);
 
   // Timer States
   const [studyTime, setStudyTime] = useState(0);
@@ -48,7 +53,7 @@ const StudyViewer = () => {
   
   const timerIntervalRef = useRef(null);
 
-  // Study Timer Logic (Counting up)
+  // Timer tick
   useEffect(() => {
     if (isTimerRunning) {
       timerIntervalRef.current = setInterval(() => {
@@ -59,6 +64,22 @@ const StudyViewer = () => {
     }
     return () => clearInterval(timerIntervalRef.current);
   }, [isTimerRunning]);
+
+  // Auto-log study session when component unmounts (SPA navigation)
+  const studyTimeRef = useRef(0);
+  const materialRef = useRef(null);
+  useEffect(() => { studyTimeRef.current = studyTime; }, [studyTime]);
+  useEffect(() => { materialRef.current = material; }, [material]);
+  useEffect(() => {
+    return () => {
+      if (studyTimeRef.current >= 10 && materialRef.current) {
+        api.post('/progress/session', {
+          materialId: materialRef.current.id,
+          durationSeconds: studyTimeRef.current
+        }).catch(() => {});
+      }
+    };
+  }, []);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -101,6 +122,10 @@ const StudyViewer = () => {
         // Fetch User Note for this material
         const noteRes = await api.get(`/notes/${id}`);
         setNoteContent(noteRes.data.content || '');
+
+        // Fetch bookmarks
+        const bkRes = await api.get(`/materials/${id}/bookmarks`);
+        setBookmarks(bkRes.data);
         
         setIsLoading(false);
       } catch (err) {
@@ -190,25 +215,16 @@ const StudyViewer = () => {
     setSidebarTab('ai');
 
     try {
-      // Extract text dynamically from the PDF using pdfjs
-      const pdfUrlToFetch = `http://localhost:5005${material.file_url}`;
-      let extractedText = '';
+      // Extract full PDF text via server-side endpoint (no page limit)
+      let payloadContent = `Topic: ${material.title}. Context: Study material for this course chapter.`;
       try {
-        const loadingTask = pdfjs.getDocument(pdfUrlToFetch);
-        const pdfDoc = await loadingTask.promise;
-        const maxPages = Math.min(pdfDoc.numPages, 10); // Sample first 10 pages
-        for (let i = 1; i <= maxPages; i++) {
-          const page = await pdfDoc.getPage(i);
-          const textContent = await page.getTextContent();
-          extractedText += textContent.items.map(item => item.str).join(' ') + ' ';
+        const extractRes = await api.get(`/ai/extract-pdf/${material.id}`);
+        if (extractRes.data.text && extractRes.data.text.trim().length > 50) {
+          payloadContent = `Material Content: ${extractRes.data.text}`;
         }
       } catch (pdfErr) {
-        console.error('Failed to extract PDF text', pdfErr);
+        console.error('Failed to extract PDF text via server, using title fallback', pdfErr);
       }
-      
-      const payloadContent = extractedText.trim().length > 50 
-        ? `Material Content: ${extractedText.substring(0, 15000)}` 
-        : `Topic: ${material.title}. Context: Study material for this course chapter.`;
 
       const res = await api.post('/ai/generate-quiz', {
         courseId: material.course_id,
@@ -218,7 +234,7 @@ const StudyViewer = () => {
         title: `Practice: ${material.title} (${difficulty})`,
         isOfficial: false
       });
-      setAiResponse(`✅ Successfully generated a ${difficulty} practice quiz with 5 questions based on actual chapter content! You can find it in the Quizzes tab or Course Assessments.`);
+      setAiResponse(`✅ Successfully generated a ${difficulty} practice quiz with 5 questions based on the full chapter content! You can find it in the Quizzes tab or Course Assessments.`);
       // Refresh quizzes list
       const quizRes = await api.get(`/quizzes/course/${material.course_id}`);
       setQuizzes(quizRes.data);
@@ -229,6 +245,42 @@ const StudyViewer = () => {
     }
   };
 
+
+  const handleAddBookmark = async () => {
+    try {
+      const res = await api.post(`/materials/${id}/bookmarks`, {
+        page_number: currentPage,
+        label: `Page ${currentPage}`
+      });
+      setBookmarks(prev => [...prev.filter(b => b.page_number !== currentPage), res.data]);
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteBookmark = async (bookmarkId) => {
+    try {
+      await api.delete(`/materials/bookmarks/${bookmarkId}`);
+      setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+    } catch (e) { console.error(e); }
+  };
+
+  // Keyboard navigation for PDF pages (arrow keys)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't hijack when user is typing in an input/textarea
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        scrollToPage(currentPage + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        scrollToPage(currentPage - 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, numPages]);
 
   // Scroll Tracking & Last Page Persistence
   // Global text selection listener for "Add to Notes" popup
@@ -298,6 +350,8 @@ const StudyViewer = () => {
         });
 
         localStorage.setItem(`pdf_page_${id}`, currentPage);
+        setCurrentPage(currentPage);
+        setPageInput(String(currentPage));
         
         // Continuous Percentage Tracking
         if (numPages && !isCompleted) {
@@ -333,7 +387,8 @@ const StudyViewer = () => {
       async (entries) => {
         if (entries[0].isIntersecting) {
           try {
-            await api.post(`/progress/${id}`);
+            await api.post(`/progress/${id}`, { percentage: 100 });
+            localStorage.setItem(`pdf_pct_${id}`, '100');
             setIsCompleted(true);
             setTimeout(() => evaluateBadges(), 500);
           } catch (e) {
@@ -352,6 +407,24 @@ const StudyViewer = () => {
     };
   }, [numPages, id, isCompleted]);
 
+  const scrollToPage = (page) => {
+    if (!numPages) return;
+    const target = Math.max(1, Math.min(numPages, page));
+    const pageElement = document.getElementById(`pdf-page-${target}`);
+    if (pageElement) {
+      pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setCurrentPage(target);
+      setPageInput(String(target));
+    }
+  };
+
+  const handlePageInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const parsed = parseInt(pageInput);
+      if (!isNaN(parsed)) scrollToPage(parsed);
+    }
+  };
+
   const handleFullscreen = () => {
     const container = document.getElementById('study-container');
     if (container) {
@@ -365,6 +438,11 @@ const StudyViewer = () => {
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
+    // Restore last read page indicator
+    const savedPage = parseInt(localStorage.getItem(`pdf_page_${id}`) || '1');
+    const restoredPage = Math.min(savedPage, numPages);
+    setCurrentPage(restoredPage);
+    setPageInput(String(restoredPage));
     // Force a progress ping to update last_accessed_at in DB
     const savedPct = parseInt(localStorage.getItem(`pdf_pct_${id}`) || '0');
     api.post(`/progress/${id}`, { percentage: savedPct }).catch(e => console.error(e));
@@ -530,6 +608,50 @@ const StudyViewer = () => {
         {/* PDF Viewer Panel */}
         {!isNotesMode && (
           <div className={`pdf-viewer-area flex-1 overflow-y-auto relative ${showSidebar ? '' : 'w-full'}`}>
+
+          {/* Floating Page Navigation Pill — fixed bottom center of viewport */}
+          {numPages && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+              <div className="pointer-events-auto flex items-center space-x-1 px-3 py-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-1 ring-black/5">
+                <button
+                  onClick={() => scrollToPage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="p-1.5 rounded-xl text-text/50 hover:text-primary hover:bg-primary/10 transition disabled:opacity-25 disabled:cursor-not-allowed"
+                  title="Previous Page (← or ↑)"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="flex items-center space-x-1.5 px-2">
+                  <input
+                    type="text"
+                    value={pageInput}
+                    onChange={e => setPageInput(e.target.value)}
+                    onKeyDown={handlePageInputKeyDown}
+                    onBlur={() => { const p = parseInt(pageInput); if (!isNaN(p)) scrollToPage(p); else setPageInput(String(currentPage)); }}
+                    className="w-9 text-center text-sm font-bold bg-transparent border-b-2 border-primary/40 focus:border-primary focus:outline-none transition-colors text-text"
+                  />
+                  <span className="text-xs text-text/50 font-semibold">/ {numPages}</span>
+                </div>
+                <button
+                  onClick={() => scrollToPage(currentPage + 1)}
+                  disabled={currentPage >= numPages}
+                  className="p-1.5 rounded-xl text-text/50 hover:text-primary hover:bg-primary/10 transition disabled:opacity-25 disabled:cursor-not-allowed"
+                  title="Next Page (→ or ↓)"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <div className="w-px h-4 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
+                <button
+                  onClick={handleAddBookmark}
+                  disabled={bookmarks.some(b => b.page_number === currentPage)}
+                  className={`p-1.5 rounded-xl transition ${bookmarks.some(b => b.page_number === currentPage) ? 'text-primary' : 'text-text/40 hover:text-primary hover:bg-primary/10'} disabled:cursor-default`}
+                  title={bookmarks.some(b => b.page_number === currentPage) ? 'Page bookmarked' : 'Bookmark this page'}
+                >
+                  {bookmarks.some(b => b.page_number === currentPage) ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+                </button>
+              </div>
+            </div>
+          )}
           {pdfUrl ? (
             <div className="flex flex-col items-center p-4">
               <Document
@@ -681,6 +803,13 @@ const StudyViewer = () => {
                 >
                   <HelpCircle size={16} />
                   <span>Quizzes</span>
+                </button>
+                <button
+                  onClick={() => setSidebarTab('bookmarks')}
+                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'bookmarks' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                >
+                  <Bookmark size={16} />
+                  <span>Marks</span>
                 </button>
               </div>
             )}
@@ -882,6 +1011,47 @@ const StudyViewer = () => {
                            </button>
                          </div>
                       </div>
+                    </div>
+                  )}
+                </div>
+              ) : sidebarTab === 'bookmarks' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Bookmarks</p>
+                    <button
+                      onClick={handleAddBookmark}
+                      disabled={bookmarks.some(b => b.page_number === currentPage)}
+                      className="flex items-center space-x-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition disabled:opacity-40"
+                    >
+                      <Bookmark size={12} />
+                      <span>{bookmarks.some(b => b.page_number === currentPage) ? 'Bookmarked' : 'Bookmark Page'}</span>
+                    </button>
+                  </div>
+                  {bookmarks.length === 0 ? (
+                    <div className="py-8 text-center text-text/30">
+                      <Bookmark size={32} className="mx-auto mb-2 opacity-20" />
+                      <p className="text-sm">No bookmarks yet</p>
+                      <p className="text-xs mt-1">Bookmark pages to return to them quickly</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {bookmarks.sort((a,b) => a.page_number - b.page_number).map(bk => (
+                        <div key={bk.id} className="flex items-center justify-between p-3 bg-background rounded-xl border border-neutral-100 dark:border-neutral-800 group">
+                          <button
+                            onClick={() => scrollToPage(bk.page_number)}
+                            className="flex items-center space-x-2 flex-1 text-left hover:text-primary transition-colors"
+                          >
+                            <BookmarkCheck size={14} className="text-primary shrink-0" />
+                            <span className="text-sm font-medium">{bk.label || `Page ${bk.page_number}`}</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBookmark(bk.id)}
+                            className="p-1 text-text/20 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

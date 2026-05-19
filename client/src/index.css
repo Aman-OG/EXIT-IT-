@@ -202,6 +202,10 @@ html, body {
   background-color: white; /* Stable background for the PDF page */
 }
 
+.theme-eye .pdf-page-wrapper {
+  background-color: #1e1e1c !important;
+}
+
 /* ═══════════════════════════════════════════════
    PDF Page Wrapper — Theme-Aware Borders & Shadows
    ═══════════════════════════════════════════════ */
@@ -225,23 +229,109 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════
-   Global Theme Overrides — High-Contrast Element Removal
-   Ensures Tailwind's default light-mode elements (borders, shadows, 
-   neutral backgrounds) don't create 'white lines' or bright layers.
+   Eye Protect Mode — Comprehensive White/Light Layer Fixes
+   Eliminates all white-ish overlays, backdrops, and neutral backgrounds
    ═══════════════════════════════════════════════ */
 
-/* 👁 Eye Protector Overrides */
-.theme-eye .border-neutral-100, .theme-eye .border-neutral-200, .theme-eye .border-neutral-300,
-.theme-eye .border-b, .theme-eye .border-r, .theme-eye .border-t, .theme-eye .border-l, .theme-eye .border {
-  border-color: rgba(255, 223, 163, 0.04) !important;
+/* Kill all white/light backdrop overlays */
+.theme-eye [class*="bg-white"] {
+  background-color: rgb(var(--card)) !important;
 }
 
-.theme-eye .shadow-sm, .theme-eye .shadow, .theme-eye .shadow-md, .theme-eye .shadow-lg, .theme-eye .shadow-xl, .theme-eye .shadow-2xl {
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+.theme-eye [class*="bg-white\/"] {
+  background-color: transparent !important;
 }
 
-.theme-eye .bg-neutral-50, .theme-eye .bg-neutral-100, .theme-eye .bg-neutral-200 {
-  background-color: rgba(255, 223, 163, 0.02) !important;
+/* Fix backdrop-blur headers (StudyViewer, Navbar) */
+.theme-eye .backdrop-blur-xl,
+.theme-eye .backdrop-blur-sm,
+.theme-eye .backdrop-blur-md {
+  background-color: rgba(37, 36, 34, 0.85) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Fix card/20 and similar opacity variants used in countdown etc */
+.theme-eye [class*="bg-card\/"] {
+  background-color: rgba(37, 36, 34, 0.4) !important;
+}
+
+/* Fix neutral backgrounds */
+.theme-eye [class*="bg-neutral-50"],
+.theme-eye [class*="bg-neutral-100"],
+.theme-eye [class*="bg-neutral-200"] {
+  background-color: rgba(255, 223, 163, 0.04) !important;
+}
+
+/* Fix PDF page wrapper white background */
+.theme-eye .pdf-page-wrapper {
+  background-color: #1a1a1a !important;
+}
+
+/* Fix progress bar track */
+.theme-eye [class*="bg-neutral-100"],
+.theme-eye .h-1\.5.bg-neutral-100,
+.theme-eye .h-2.bg-neutral-100,
+.theme-eye .h-1.bg-neutral-100 {
+  background-color: rgba(255, 223, 163, 0.08) !important;
+}
+
+/* Fix SVG circle tracks in progress rings */
+.theme-eye .text-neutral-100 {
+  color: rgba(255, 223, 163, 0.08) !important;
+}
+
+/* Fix gradient overlays that use white */
+.theme-eye [class*="from-primary\/5"],
+.theme-eye [class*="via-transparent"],
+.theme-eye [class*="to-accent\/3"] {
+  opacity: 0.5;
+}
+
+/* Fix skeleton/pulse backgrounds */
+.theme-eye .animate-pulse {
+  background-color: rgba(255, 223, 163, 0.06) !important;
+}
+
+/* Fix hover states with neutral backgrounds */
+.theme-eye [class*="hover:bg-neutral-100"]:hover,
+.theme-eye [class*="hover:bg-neutral-200"]:hover {
+  background-color: rgba(255, 223, 163, 0.06) !important;
+}
+
+/* Fix dark:bg-neutral-800 fallbacks that don't apply in eye mode */
+.theme-eye [class*="dark:bg-neutral-800"] {
+  background-color: rgba(255, 223, 163, 0.04) !important;
+}
+
+/* Fix border colors that appear as white lines */
+.theme-eye [class*="border-neutral-100"],
+.theme-eye [class*="border-neutral-200"],
+.theme-eye [class*="border-neutral-300"] {
+  border-color: rgba(255, 223, 163, 0.06) !important;
+}
+
+/* Fix completed badge / emerald backgrounds */
+.theme-eye [class*="bg-emerald-500\/10"] {
+  background-color: rgba(163, 230, 53, 0.08) !important;
+}
+
+/* Fix warning/amber backgrounds */
+.theme-eye [class*="bg-amber-500\/5"],
+.theme-eye [class*="bg-amber-500\/8"],
+.theme-eye [class*="bg-amber-500\/10"] {
+  background-color: rgba(251, 191, 36, 0.06) !important;
+}
+
+/* Fix gradient backgrounds on cards */
+.theme-eye [class*="bg-gradient-to-"] {
+  background-image: none !important;
+  background-color: rgb(var(--card)) !important;
+}
+
+/* But keep primary gradient buttons working */
+.theme-eye .bg-primary {
+  background-color: rgb(var(--primary)) !important;
+  background-image: none !important;
 }
 
 /* 📖 Reading Mode Overrides */
