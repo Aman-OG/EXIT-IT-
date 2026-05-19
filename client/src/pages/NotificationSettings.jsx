@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Mail, Smartphone, Save } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import { Bell, Mail, Smartphone } from 'lucide-react';
 
 export default function NotificationSettings() {
   const [preferences, setPreferences] = useState({
@@ -12,8 +11,8 @@ export default function NotificationSettings() {
     achievements: true,
     daily_goals: true,
   });
-  const [loading, setLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedMessage, setSavedMessage] = useState('');
 
   useEffect(() => {
     fetchPreferences();
@@ -33,31 +32,37 @@ export default function NotificationSettings() {
     }
   };
 
-  const savePreferences = async () => {
-    setLoading(true);
-    setSaved(false);
+  const savePreferences = async (updatedPreferences) => {
+    setSaving(true);
+    setSavedMessage('');
     try {
       const res = await fetch('http://localhost:5005/api/notifications/preferences', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(preferences),
+        body: JSON.stringify(updatedPreferences),
       });
 
       if (res.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        setSavedMessage('Saved!');
+        setTimeout(() => setSavedMessage(''), 2000);
+      } else {
+        setSavedMessage('Failed to save');
+        setTimeout(() => setSavedMessage(''), 2000);
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      alert('Failed to save preferences');
+      setSavedMessage('Failed to save');
+      setTimeout(() => setSavedMessage(''), 2000);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   const togglePreference = (key) => {
-    setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
+    const updatedPreferences = { ...preferences, [key]: !preferences[key] };
+    setPreferences(updatedPreferences);
+    savePreferences(updatedPreferences);
   };
 
   const notificationTypes = [
@@ -94,16 +99,25 @@ export default function NotificationSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
+    <div className="h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Notification Settings
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage how you receive notifications from EXIT-IT
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Notification Settings
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Manage how you receive notifications from EXIT-IT
+              </p>
+            </div>
+            {savedMessage && (
+              <span className="text-green-600 dark:text-green-400 flex items-center gap-2 text-sm font-medium">
+                <span className="text-xl">✓</span>
+                {savedMessage}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -187,24 +201,6 @@ export default function NotificationSettings() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end gap-4">
-            {saved && (
-              <span className="text-green-600 dark:text-green-400 flex items-center gap-2">
-                <span className="text-xl">✓</span>
-                Settings saved successfully!
-              </span>
-            )}
-            <button
-              onClick={savePreferences}
-              disabled={loading}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              {loading ? 'Saving...' : 'Save Preferences'}
-            </button>
           </div>
         </div>
       </div>

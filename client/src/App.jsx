@@ -23,6 +23,7 @@ import RoadmapPage from './pages/RoadmapPage';
 import LandingPage from './pages/LandingPage';
 import Flashcards from './pages/Flashcards';
 import Friends from './pages/Friends';
+import Notifications from './pages/Notifications';
 import NotificationSettings from './pages/NotificationSettings';
 import StreakCelebration from './components/StreakCelebration';
 
@@ -72,6 +73,7 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="flashcards" element={<Flashcards />} />
         <Route path="friends" element={<Friends />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="notifications/settings" element={<NotificationSettings />} />
         
         {/* Strictly Guarded Admin Zone */}

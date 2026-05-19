@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, Search, Check, X, Trash2, Trophy, Clock, BookOpen } from 'lucide-react';
-import Navbar from '../components/Navbar';
+import Toast from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Friends() {
   const navigate = useNavigate();
@@ -14,6 +15,16 @@ export default function Friends() {
   const [friendsLeaderboard, setFriendsLeaderboard] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   useEffect(() => {
     fetchFriends();
@@ -111,17 +122,17 @@ export default function Friends() {
       });
 
       if (res.ok) {
-        alert('Friend request sent!');
+        showToast('Friend request sent!', 'success');
         setSearchResults([]);
         setSearchQuery('');
         fetchSentRequests();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to send friend request');
+        showToast(data.error || 'Failed to send friend request', 'error');
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      alert('Failed to send friend request');
+      showToast('Failed to send friend request', 'error');
     } finally {
       setLoading(false);
     }
@@ -136,13 +147,14 @@ export default function Friends() {
       });
 
       if (res.ok) {
-        alert('Friend request accepted!');
+        showToast('Friend request accepted!', 'success');
         fetchPendingRequests();
         fetchFriends();
         fetchFriendsLeaderboard();
       }
     } catch (error) {
       console.error('Error accepting friend request:', error);
+      showToast('Failed to accept friend request', 'error');
     } finally {
       setLoading(false);
     }
@@ -157,39 +169,57 @@ export default function Friends() {
       });
 
       if (res.ok) {
+        showToast('Friend request rejected', 'info');
         fetchPendingRequests();
       }
     } catch (error) {
       console.error('Error rejecting friend request:', error);
+      showToast('Failed to reject friend request', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const removeFriend = async (friendId) => {
-    if (!confirm('Are you sure you want to remove this friend?')) return;
+    setConfirmDialog({
+      title: 'Remove Friend',
+      message: 'Are you sure you want to remove this friend? This action cannot be undone.',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        setLoading(true);
+        try {
+          const res = await fetch(`http://localhost:5005/api/friends/${friendId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-    setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:5005/api/friends/${friendId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (res.ok) {
-        fetchFriends();
-        fetchFriendsLeaderboard();
-      }
-    } catch (error) {
-      console.error('Error removing friend:', error);
-    } finally {
-      setLoading(false);
-    }
+          if (res.ok) {
+            showToast('Friend removed', 'info');
+            fetchFriends();
+            fetchFriendsLeaderboard();
+          }
+        } catch (error) {
+          console.error('Error removing friend:', error);
+          showToast('Failed to remove friend', 'error');
+        } finally {
+          setLoading(false);
+        }
+      },
+      onCancel: () => setConfirmDialog(null),
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
+    <div className="h-full overflow-y-auto">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
+      {confirmDialog && (
+        <ConfirmDialog
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={confirmDialog.onCancel}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Friends</h1>
