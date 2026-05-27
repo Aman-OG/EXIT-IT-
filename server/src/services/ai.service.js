@@ -1,11 +1,29 @@
+const OpenAI = require('openai');
 const { Groq } = require('groq-sdk');
 
 /**
- * AI Service for EXIT-IT Intelligence (GROQ EDITION)
- * This edition is hardened to prevent crashes.
+ * AI Service for EXIT-IT Intelligence
+ * - DeepSeek V4 Flash (NVIDIA) for explain/summarize — high quality
+ * - Groq llama-3.3-70b-versatile for quiz generation — fast, low latency
  */
 
-// Initialize Groq client
+// NVIDIA client for explain/summarize
+let nvidia;
+try {
+  if (process.env.NVIDIA_API_KEY) {
+    nvidia = new OpenAI({
+      apiKey: process.env.NVIDIA_API_KEY,
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+    });
+    console.log('✅ NVIDIA AI (DeepSeek V4 Flash) initialized successfully');
+  } else {
+    console.warn('⚠️ NVIDIA_API_KEY is missing in .env');
+  }
+} catch (e) {
+  console.error('❌ Failed to initialize NVIDIA AI:', e.message);
+}
+
+// Groq client for fast quiz generation
 let groq;
 try {
   if (process.env.GROQ_API_KEY) {
@@ -18,61 +36,64 @@ try {
   console.error('❌ Failed to initialize Groq SDK:', e.message);
 }
 
+const NVIDIA_MODEL = 'deepseek-ai/deepseek-v4-flash';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+
 const aiService = {
-  
+
   /**
    * Explains a specific portion of text for the student.
    */
   async explainText(text) {
-    if (!groq) throw new Error('Groq AI not initialized');
-    
+    if (!nvidia) throw new Error('NVIDIA AI not initialized');
     try {
-      const chatCompletion = await groq.chat.completions.create({
-        "messages": [
+      const completion = await nvidia.chat.completions.create({
+        model: NVIDIA_MODEL,
+        messages: [
           {
-            "role": "system",
-            "content": "You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate."
+            role: 'system',
+            content: 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.',
           },
           {
-            "role": "user",
-            "content": `Explain the following text: "${text}"`
-          }
+            role: 'user',
+            content: `Explain the following text: "${text}"`,
+          },
         ],
-        "model": "llama-3.1-8b-instant",
-        "temperature": 0.7,
-        "max_completion_tokens": 1024,
-        "top_p": 1,
-        "stream": false
+        temperature: 0.7,
+        top_p: 0.95,
+        max_tokens: 1024,
+        extra_body: { chat_template_kwargs: { thinking: false } },
+        stream: false,
       });
-
-      return chatCompletion.choices[0]?.message?.content || "No explanation generated.";
+      return completion.choices[0]?.message?.content || 'No explanation generated.';
     } catch (err) {
-      console.error('🔴 Groq Explain error:', err.message);
+      console.error('🔴 AI Explain error:', err.message);
       throw err;
     }
   },
-  
+
   /**
    * STREAMING: Explains a specific portion of text.
    */
   async streamExplainText(text) {
-    if (!groq) throw new Error('Groq AI not initialized');
-    return groq.chat.completions.create({
+    if (!nvidia) throw new Error('NVIDIA AI not initialized');
+    return nvidia.chat.completions.create({
+      model: NVIDIA_MODEL,
       messages: [
         {
-          role: "system",
-          content: "You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate."
+          role: 'system',
+          content: 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.',
         },
         {
-          role: "user",
-          content: `Explain the following text: "${text}"`
-        }
+          role: 'user',
+          content: `Explain the following text: "${text}"`,
+        },
       ],
-      model: "llama-3.1-8b-instant",
       temperature: 0.7,
-      max_completion_tokens: 1024,
-      top_p: 1,
-      stream: true
+      top_p: 0.95,
+      max_tokens: 1024,
+      extra_body: { chat_template_kwargs: { thinking: false } },
+      stream: true,
     });
   },
 
@@ -80,30 +101,29 @@ const aiService = {
    * Summarizes a passage of study material.
    */
   async summarizeText(text) {
-    if (!groq) throw new Error('Groq AI not initialized');
-    
+    if (!nvidia) throw new Error('NVIDIA AI not initialized');
     try {
-      const chatCompletion = await groq.chat.completions.create({
-        "messages": [
+      const completion = await nvidia.chat.completions.create({
+        model: NVIDIA_MODEL,
+        messages: [
           {
-            "role": "system",
-            "content": "Summarize study material concisely. Focus on key concepts and 'must-know' facts."
+            role: 'system',
+            content: "Summarize study material concisely. Focus on key concepts and 'must-know' facts.",
           },
           {
-            "role": "user",
-            "content": `Summarize this text: "${text}"`
-          }
+            role: 'user',
+            content: `Summarize this text: "${text}"`,
+          },
         ],
-        "model": "llama-3.1-8b-instant",
-        "temperature": 0.5,
-        "max_completion_tokens": 1024,
-        "top_p": 1,
-        "stream": false
+        temperature: 0.5,
+        top_p: 0.95,
+        max_tokens: 1024,
+        extra_body: { chat_template_kwargs: { thinking: false } },
+        stream: false,
       });
-
-      return chatCompletion.choices[0]?.message?.content || "No summary generated.";
+      return completion.choices[0]?.message?.content || 'No summary generated.';
     } catch (err) {
-      console.error('🔴 Groq Summarize error:', err.message);
+      console.error('🔴 AI Summarize error:', err.message);
       throw err;
     }
   },
@@ -112,23 +132,24 @@ const aiService = {
    * STREAMING: Summarizes a passage of study material.
    */
   async streamSummarizeText(text) {
-    if (!groq) throw new Error('Groq AI not initialized');
-    return groq.chat.completions.create({
+    if (!nvidia) throw new Error('NVIDIA AI not initialized');
+    return nvidia.chat.completions.create({
+      model: MODEL,
       messages: [
         {
-          role: "system",
-          content: "Summarize study material concisely. Focus on key concepts and 'must-know' facts."
+          role: 'system',
+          content: "Summarize study material concisely. Focus on key concepts and 'must-know' facts.",
         },
         {
-          role: "user",
-          content: `Summarize this text: "${text}"`
-        }
+          role: 'user',
+          content: `Summarize this text: "${text}"`,
+        },
       ],
-      model: "llama-3.1-8b-instant",
       temperature: 0.5,
-      max_completion_tokens: 1024,
-      top_p: 1,
-      stream: true
+      top_p: 0.95,
+      max_tokens: 1024,
+      extra_body: { chat_template_kwargs: { thinking: false } },
+      stream: true,
     });
   },
 
@@ -137,9 +158,7 @@ const aiService = {
    */
   async generateQuestions(content, difficulty = 'Medium', count = 5) {
     if (!groq) throw new Error('Groq AI not initialized');
-    
     try {
-      // Skip the first 2000 chars (usually cover page/TOC) and take a meaningful chunk
       const skipChars = 2000;
       const maxChars = 5000;
       const startPos = content.length > skipChars ? skipChars : 0;
@@ -147,46 +166,42 @@ const aiService = {
         ? content.substring(startPos, startPos + maxChars)
         : content.substring(startPos);
 
-      const chatCompletion = await groq.chat.completions.create({
-        "messages": [
+      const completion = await groq.chat.completions.create({
+        model: GROQ_MODEL,
+        messages: [
           {
-            "role": "system",
-            "content": "You are an expert exam creator. Use ONLY the provided MATERIAL. Return ONLY a valid JSON array. NO extra text."
+            role: 'system',
+            content: 'You are an expert exam creator. Use ONLY the provided MATERIAL. Return ONLY a valid JSON array. NO extra text.',
           },
           {
-            "role": "user",
-            "content": `Generate ${count} MCQ questions, difficulty: ${difficulty}. JSON format:
+            role: 'user',
+            content: `Generate ${count} MCQ questions, difficulty: ${difficulty}. JSON format:
 [{"question_text":"...","options":[{"text":"...","is_correct":true},{"text":"...","is_correct":false},{"text":"...","is_correct":false},{"text":"...","is_correct":false}],"explanation":"..."}]
-MATERIAL: "${truncatedContent}"`
-          }
+MATERIAL: "${truncatedContent}"`,
+          },
         ],
-        "model": "llama-3.3-70b-versatile",
-        "temperature": 0.2,
-        "max_completion_tokens": 3000,
-        "top_p": 0.95,
-        "stream": false
+        temperature: 0.2,
+        max_completion_tokens: 3000,
+        top_p: 0.95,
+        stream: false,
       });
 
-      let output = chatCompletion.choices[0]?.message?.content || "[]";
-      
-      // Robust Regex to find the JSON array even if there is text around it
+      let output = completion.choices[0]?.message?.content || '[]';
       const jsonMatch = output.match(/\[\s*\{[\s\S]*\}\s*\]/);
-      if (jsonMatch) {
-         output = jsonMatch[0];
-      }
-      
+      if (jsonMatch) output = jsonMatch[0];
+
       try {
         const parsed = JSON.parse(output);
         return Array.isArray(parsed) ? parsed : (parsed.questions || []);
       } catch (e) {
-        console.error('🟠 Groq Quiz JSON Parse error:', output);
+        console.error('🟠 AI Quiz JSON Parse error:', output);
         return [];
       }
     } catch (err) {
-      console.error('🔴 Groq Quiz error:', err.message);
+      console.error('🔴 AI Quiz error:', err.message);
       throw err;
     }
-  }
+  },
 };
 
 module.exports = aiService;

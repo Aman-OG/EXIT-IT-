@@ -258,15 +258,14 @@ exports.getFriendsLeaderboard = async (req, res) => {
            u.name,
            u.email,
            COUNT(DISTINCT up.material_id) as completed_materials,
-           COALESCE(s.current_streak, 0) as current_streak,
-           COALESCE(s.longest_streak, 0) as longest_streak,
+           COALESCE(u.current_streak, 0) as current_streak,
+           COALESCE(u.max_streak, 0) as longest_streak,
            COALESCE(SUM(ss.duration_minutes), 0) as total_study_minutes
          FROM users u
          LEFT JOIN user_progress up ON u.id = up.user_id
-         LEFT JOIN streaks s ON u.id = s.user_id
          LEFT JOIN study_sessions ss ON u.id = ss.user_id
          WHERE u.id IN (SELECT friend_id FROM friend_ids UNION SELECT $1)
-         GROUP BY u.id, u.name, u.email, s.current_streak, s.longest_streak
+         GROUP BY u.id, u.name, u.email, u.current_streak, u.max_streak
        )
        SELECT 
          id,

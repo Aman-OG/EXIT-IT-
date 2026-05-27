@@ -36,6 +36,7 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 const flashcardsRoutes = require('./flashcards/flashcards.routes');
 const friendsRoutes = require('./friends/friends.routes');
 const notificationsRoutes = require('./notifications/notifications.routes');
+const videosRoutes = require('./videos/videos.routes');
 
 // Routes
 app.use('/api/ai', aiRoutes);
@@ -52,6 +53,7 @@ app.use('/api/exams', examsRoutes);
 app.use('/api/flashcards', flashcardsRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/videos', videosRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

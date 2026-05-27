@@ -211,11 +211,14 @@ exports.aiGenerateCards = async (req, res) => {
   if (!topic?.trim()) return res.status(400).json({ message: 'Topic is required' });
 
   try {
-    const { Groq } = require('groq-sdk');
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const OpenAI = require('openai');
+    const nvidia = new OpenAI({
+      apiKey: process.env.NVIDIA_API_KEY,
+      baseURL: 'https://integrate.api.nvidia.com/v1',
+    });
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama3-70b-8192',
+    const completion = await nvidia.chat.completions.create({
+      model: 'deepseek-ai/deepseek-v4-flash',
       messages: [
         {
           role: 'system',
@@ -227,6 +230,10 @@ exports.aiGenerateCards = async (req, res) => {
         }
       ],
       temperature: 0.7,
+      top_p: 0.95,
+      max_tokens: 4096,
+      extra_body: { chat_template_kwargs: { thinking: false } },
+      stream: false,
     });
 
     const raw = completion.choices[0].message.content.trim();
@@ -300,5 +307,23 @@ exports.csvImport = async (req, res) => {
   } catch (err) {
     console.error('CSV import error:', err);
     res.status(500).json({ message: 'Failed to import CSV: ' + err.message });
+  }
+};
+
+// PUT /flashcards/cards/:id
+exports.updateCard = async (req, res) => {
+  const { id } = req.params;
+  const { front, back } = req.body;
+  if (!front?.trim() || !back?.trim()) return res.status(400).json({ message: 'Front and back are required' });
+  try {
+    const result = await pool.query(
+      'UPDATE flashcards SET front = $1, back = $2 WHERE id = $3 RETURNING *',
+      [front.trim(), back.trim(), id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ message: 'Card not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update card' });
   }
 };

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { AuthContext } from '../context/AuthContext';
 import {
   Brain, Plus, Trash2, ChevronRight, BookOpen, X, Save,
   RotateCcw, CheckCircle2, Clock, Zap, ArrowLeft, ArrowRight,
-  Sparkles, Upload, FileText
+  Sparkles, Upload, FileText, Pencil
 } from 'lucide-react';
 
 /* ─── Card Flip Study Session ─── */
@@ -108,6 +109,8 @@ const StudySession = ({ cards, onFinish }) => {
 
 /* ─── Deck Detail View ─── */
 const DeckDetail = ({ deck, onBack }) => {
+  const { user } = useContext(AuthContext);
+  const isAdminOrOwner = user?.role === 'admin';
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddCard, setShowAddCard] = useState(false);
@@ -123,6 +126,8 @@ const DeckDetail = ({ deck, onBack }) => {
   const [csvData, setCsvData] = useState('');
   const [csvLoading, setCsvLoading] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [editingCard, setEditingCard] = useState(null); // { id, front, back }
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     fetchCards();
@@ -203,6 +208,23 @@ const DeckDetail = ({ deck, onBack }) => {
     const reader = new FileReader();
     reader.onload = (ev) => setCsvData(ev.target.result);
     reader.readAsText(file);
+  };
+
+  const handleEditCard = async () => {
+    if (!editingCard?.front?.trim() || !editingCard?.back?.trim()) return;
+    setEditLoading(true);
+    try {
+      await api.put(`/flashcards/cards/${editingCard.id}`, {
+        front: editingCard.front,
+        back: editingCard.back,
+      });
+      setEditingCard(null);
+      fetchCards();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   if (studying) {
@@ -472,33 +494,88 @@ const DeckDetail = ({ deck, onBack }) => {
       ) : (
         <div className="space-y-3">
           {cards.map((card, idx) => (
-            <div key={card.id} className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-start justify-between group hover:border-primary/30 transition">
-              <div className="flex items-start space-x-4 flex-1 min-w-0">
-                <span className="text-xs font-black text-text/30 mt-1 w-6 shrink-0">{idx + 1}</span>
-                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest mb-1">Front</p>
-                    <p className="text-sm font-medium text-text line-clamp-2">{card.front}</p>
+            <div key={card.id} className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 group hover:border-primary/30 transition">
+              {editingCard?.id === card.id ? (
+                // ── Inline Edit Form ──
+                <div className="space-y-3 animate-in fade-in duration-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-text/40 mb-1">Front</label>
+                      <textarea
+                        value={editingCard.front}
+                        onChange={e => setEditingCard(c => ({ ...c, front: e.target.value }))}
+                        rows={3}
+                        className="w-full px-3 py-2 bg-background border border-primary/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-text/40 mb-1">Back</label>
+                      <textarea
+                        value={editingCard.back}
+                        onChange={e => setEditingCard(c => ({ ...c, back: e.target.value }))}
+                        rows={3}
+                        className="w-full px-3 py-2 bg-background border border-primary/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none text-sm"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest mb-1">Back</p>
-                    <p className="text-sm text-text/60 line-clamp-2">{card.back}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleEditCard}
+                      disabled={editLoading}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      <Save size={14} />
+                      {editLoading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => setEditingCard(null)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-card border border-text/10 text-text/60 font-bold rounded-xl text-sm hover:text-text transition"
+                    >
+                      <X size={14} />
+                      Cancel
+                    </button>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2 ml-4 shrink-0">
-                {card.next_review_date && (
-                  <span className="text-[10px] font-bold text-text/30 hidden md:block">
-                    Next: {new Date(card.next_review_date).toLocaleDateString()}
-                  </span>
-                )}
-                <button
-                  onClick={() => handleDeleteCard(card.id)}
-                  className="p-1.5 text-text/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
+              ) : (
+                // ── Normal Card View ──
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4 flex-1 min-w-0">
+                    <span className="text-xs font-black text-text/30 mt-1 w-6 shrink-0">{idx + 1}</span>
+                    <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest mb-1">Front</p>
+                        <p className="text-sm font-medium text-text line-clamp-2">{card.front}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest mb-1">Back</p>
+                        <p className="text-sm text-text/60 line-clamp-2">{card.back}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1 ml-4 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                    {card.next_review_date && (
+                      <span className="text-[10px] font-bold text-text/30 hidden md:block mr-2">
+                        Next: {new Date(card.next_review_date).toLocaleDateString()}
+                      </span>
+                    )}
+                    {isAdminOrOwner && (
+                      <button
+                        onClick={() => setEditingCard({ id: card.id, front: card.front, back: card.back })}
+                        className="p-1.5 text-text/30 hover:text-primary hover:bg-primary/10 rounded-lg transition"
+                        title="Edit card"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteCard(card.id)}
+                      className="p-1.5 text-text/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

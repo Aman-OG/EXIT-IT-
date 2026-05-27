@@ -11,9 +11,10 @@ import { AuthContext } from '../context/AuthContext';
 import { 
   ArrowLeft, ZoomIn, ZoomOut, Sparkles, FileQuestion, HelpCircle, CheckSquare, 
   Plus, StickyNote, ChevronLeft, ChevronRight, CheckCircle2, Loader2, Maximize, 
-  Download, Clock, Bookmark, BookmarkCheck, Trash2
+  Download, Clock, Bookmark, BookmarkCheck, Trash2, PlayCircle
 } from 'lucide-react';
 import Skeleton, { StudySkeleton } from '../components/Skeleton';
+import VideoPanel from '../components/VideoPanel';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -811,6 +812,13 @@ const StudyViewer = () => {
                   <Bookmark size={16} />
                   <span>Marks</span>
                 </button>
+                <button
+                  onClick={() => setSidebarTab('videos')}
+                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
+                >
+                  <PlayCircle size={16} />
+                  <span>Videos</span>
+                </button>
               </div>
             )}
 
@@ -1055,6 +1063,8 @@ const StudyViewer = () => {
                     </div>
                   )}
                 </div>
+              ) : sidebarTab === 'videos' ? (
+                <VideoPanel materialId={id} materialTitle={material?.title} />
               ) : (
                 <div className="space-y-4">
                    <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Course Assessments</p>

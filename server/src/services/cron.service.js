@@ -9,15 +9,14 @@ const streakWarningJob = cron.schedule('0 20 * * *', async () => {
   try {
     // Find users who haven't studied today and have an active streak
     const result = await pool.query(
-      `SELECT u.id, u.name, s.current_streak, s.last_study_date, s.freeze_count
+      `SELECT u.id, u.name, u.current_streak, u.last_active_date, u.streak_freezes as freeze_count
        FROM users u
-       JOIN streaks s ON u.id = s.user_id
        LEFT JOIN study_sessions ss ON u.id = ss.user_id 
          AND DATE(ss.created_at) = CURRENT_DATE
-       WHERE s.current_streak > 0 
-         AND DATE(s.last_study_date) < CURRENT_DATE
+       WHERE u.current_streak > 0 
+         AND u.last_active_date < CURRENT_DATE
          AND ss.id IS NULL
-       GROUP BY u.id, u.name, s.current_streak, s.last_study_date, s.freeze_count`
+       GROUP BY u.id, u.name, u.current_streak, u.last_active_date, u.streak_freezes`
     );
 
     for (const user of result.rows) {

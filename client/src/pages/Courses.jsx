@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
-import { BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, GripVertical } from 'lucide-react';
+import { BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, GripVertical, PlayCircle } from 'lucide-react';
 import { CourseSkeleton } from '../components/Skeleton';
+import VideoPanel from '../components/VideoPanel';
 
 const Courses = () => {
   const { user } = useContext(AuthContext);
@@ -387,6 +388,10 @@ const Courses = () => {
                               <span className="text-[10px] font-medium text-text/40">{new Date(mat.created_at).toLocaleDateString()}</span>
                             </div>
                           </button>
+                          {/* Videos preview below card */}
+                          <div className="mt-2 px-1">
+                            <VideoPanel materialId={mat.id} materialTitle={mat.title} />
+                          </div>
                         </div>
                       ))}
                     </div>
