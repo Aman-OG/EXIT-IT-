@@ -89,6 +89,7 @@ const Courses = () => {
       setUploadFile(null);
       fetchMaterials(uploadModal);
     } catch (e) {
+      console.error(e);
       alert('Upload failed. Make sure you are an Admin.');
     }
     setUploading(false);
@@ -106,6 +107,7 @@ const Courses = () => {
       const res = await api.get('/courses');
       setCourses(res.data);
     } catch (e) {
+      console.error(e);
       alert('Failed to save course');
     }
   };
@@ -117,6 +119,7 @@ const Courses = () => {
       setUploadTitle('');
       fetchMaterials(expandedCourse);
     } catch (e) {
+      console.error(e);
       alert('Failed to update material');
     }
   };
@@ -134,6 +137,7 @@ const Courses = () => {
       }
       setDeleteConfirm(null);
     } catch (e) {
+      console.error(e);
       alert('Delete failed');
     }
   };
@@ -564,7 +568,9 @@ const QuizButtonList = ({ courseId, navigate, user }) => {
     try {
       const res = await api.get(`/quizzes/course/${courseId}`);
       setQuizzes(res.data);
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -582,6 +588,7 @@ const QuizButtonList = ({ courseId, navigate, user }) => {
         await api.delete(`/quizzes/${quizId}`);
         fetchQuizzes();
       } catch (e) {
+        console.error(e);
         alert('Failed to delete quiz');
       }
     }
