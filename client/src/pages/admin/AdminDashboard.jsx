@@ -47,6 +47,7 @@ const AdminDashboard = () => {
         await api.put('/settings', { key: 'exam_date', value: dbFormattedDate });
         alert('Exam Date updated explicitly across the network.');
     } catch(e) {
+        console.error(e);
         alert('Failed to update date');
     }
     setSaving(false);
@@ -127,7 +128,9 @@ const QuizCourseLinks = ({ navigate }) => {
       try {
         const res = await api.get('/courses');
         setCourses(res.data);
-      } catch (e) {}
+      } catch (e) {
+        console.error(e);
+      }
     };
     fetchCourses();
   }, []);
