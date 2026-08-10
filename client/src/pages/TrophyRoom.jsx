@@ -52,7 +52,7 @@ const TrophyRoom = () => {
             <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-8">
                 <div className="flex items-center justify-between">
                     <button 
-                        onClick={() => { console.log('Back button clicked'); navigate('/profile'); }}
+                        onClick={() => navigate('/profile')}
                         style={{ pointerEvents: 'auto' }}
                         className="flex items-center space-x-2 text-white/60 hover:text-white transition-colors bg-white/10 backdrop-blur-lg px-6 py-3 rounded-2xl border border-white/20 group relative z-50 cursor-pointer"
                     >
