@@ -43,14 +43,14 @@ const dailyGoalReminderJob = cron.schedule('0 18 * * *', async () => {
     // Find users who haven't met their daily goal
     const result = await pool.query(
       `SELECT u.id, u.name, dg.target_minutes, 
-              COALESCE(SUM(ss.duration_minutes), 0) as today_minutes
+              COALESCE(ROUND(SUM(ss.duration_seconds) / 60.0), 0) as today_minutes
        FROM users u
        JOIN daily_goals dg ON u.id = dg.user_id
        LEFT JOIN study_sessions ss ON u.id = ss.user_id 
          AND DATE(ss.created_at) = CURRENT_DATE
        WHERE dg.target_minutes > 0
        GROUP BY u.id, u.name, dg.target_minutes
-       HAVING COALESCE(SUM(ss.duration_minutes), 0) < dg.target_minutes`
+       HAVING COALESCE(ROUND(SUM(ss.duration_seconds) / 60.0), 0) < dg.target_minutes`
     );
 
     for (const user of result.rows) {

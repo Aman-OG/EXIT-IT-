@@ -65,10 +65,10 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="h-full overflow-y-auto w-full flex flex-col bg-background relative pb-32 transition-colors duration-300 rounded-tl-3xl">
+    <div className="h-full overflow-y-auto w-full flex flex-col bg-background relative pb-40 transition-colors duration-300 rounded-tl-3xl">
       
       {/* HERO SECTION: SIDE-BY-SIDE */}
-      <div className="relative w-full overflow-hidden border-b border-neutral-200 dark:border-neutral-800/50">
+      <div className="relative w-full border-b border-neutral-200 dark:border-neutral-800/50">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background/40 to-transparent pointer-events-none" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-10 lg:py-20 flex flex-col lg:flex-row items-center lg:items-center justify-between gap-12 lg:gap-20">
@@ -110,7 +110,7 @@ const Leaderboard = () => {
             </div>
 
             {/* RIGHT COLUMN: 3D PODIUM */}
-            <div className="flex-1 flex justify-center order-1 lg:order-2 w-full max-w-2xl">
+            <div className="flex-1 flex justify-center order-1 lg:order-2 w-full max-w-2xl min-h-[200px]">
                 <div className="flex justify-center items-end gap-1.5 md:gap-4 w-full transform scale-95 lg:scale-100 pb-4">
                     {/* RANK 2 */}
                     {top3[1] && (
@@ -225,25 +225,25 @@ const Leaderboard = () => {
         )}
       </div>
 
-      {/* STICKY USER FOOTER / OVERTAKE LOGIC */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-background via-background/80 to-transparent pt-16 pointer-events-none">
+      {/* STICKY USER FOOTER — fixed to viewport but offset past sidebar */}
+      <div className="fixed bottom-0 left-0 md:left-[80px] right-0 z-40 p-4 bg-gradient-to-t from-background via-background/90 to-transparent pt-12 pointer-events-none">
         <div className="max-w-4xl mx-auto pointer-events-auto">
-            <div className="bg-primary text-primary-foreground rounded-[2rem] p-4 md:p-6 shadow-2xl shadow-primary/50 flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-white/10 dark:border-white/5 transition-all duration-500 hover:scale-[1.02]">
+            <div className="bg-primary text-primary-foreground rounded-[2rem] p-4 md:p-5 shadow-2xl shadow-primary/50 flex flex-col md:flex-row items-center justify-between gap-3 border-2 border-white/10 dark:border-white/5 transition-all duration-500 hover:scale-[1.01]">
                 <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary-foreground/30 bg-primary-foreground/10 shadow-inner">
+                    <div className="w-11 h-11 rounded-xl overflow-hidden border-2 border-primary-foreground/30 bg-primary-foreground/10 shadow-inner flex-shrink-0">
                         <img src={getAvatar(authUser?.email, authUser?.name)} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider opacity-80 font-mono">My Global Identity</p>
-                        <p className="text-xl font-black">Rank #{userRank || '?'}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-80">My Global Identity</p>
+                        <p className="text-lg font-black leading-tight">Rank #{userRank || '?'}</p>
                     </div>
                 </div>
 
                 {userAbove ? (
-                    <div className="flex items-center space-x-3 bg-primary-foreground/10 px-4 py-2 rounded-2xl animate-pulse">
-                        <ChevronUp className="text-primary-foreground" />
-                        <p className="text-sm font-bold">
-                            Only <span className="text-primary-foreground underline font-black">{
+                    <div className="flex items-center space-x-2 bg-primary-foreground/10 px-3 py-1.5 rounded-xl">
+                        <ChevronUp size={18} className="text-primary-foreground flex-shrink-0" />
+                        <p className="text-xs font-bold">
+                            <span className="text-primary-foreground font-black">{
                                 sortBy === 'total_score' 
                                 ? (userAbove.total_score - (currentUserEntry?.total_score || 0)) 
                                 : sortBy === 'streak' 
@@ -251,20 +251,20 @@ const Leaderboard = () => {
                                 : sortBy === 'accuracy'
                                 ? (userAbove.avg_accuracy - (currentUserEntry?.avg_accuracy || 0))
                                 : (userAbove.total_quizzes - (currentUserEntry?.total_quizzes || 0))
-                            }</span> {getMetricLabel()} to overtake <span className="font-black italic underline">{userAbove.name}</span>!
+                            }</span> {getMetricLabel()} to overtake <span className="font-black">{userAbove.name}</span>
                         </p>
                     </div>
                 ) : userRank === 1 ? (
-                    <div className="flex items-center space-x-3 bg-primary-foreground/10 px-4 py-2 rounded-2xl">
-                        <Crown className="text-yellow-300" />
-                        <p className="text-sm font-black italic uppercase tracking-[0.1em]">Top of the World: Undisputed Champion</p>
+                    <div className="flex items-center space-x-2 bg-primary-foreground/10 px-3 py-1.5 rounded-xl">
+                        <Crown size={18} className="text-yellow-300" />
+                        <p className="text-xs font-black italic uppercase tracking-wider">Undisputed Champion</p>
                     </div>
                 ) : (
-                    <div className="text-sm font-bold opacity-80 italic">Climb the ranks by starting a session!</div>
+                    <div className="text-xs font-bold opacity-80 italic">Climb the ranks!</div>
                 )}
 
                 <div className="hidden md:flex flex-col items-end">
-                    <p className="text-2xl font-black leading-none">{getMetricValue(currentUserEntry || { [sortBy]: 0 })}</p>
+                    <p className="text-xl font-black leading-none">{getMetricValue(currentUserEntry || { [sortBy]: 0 })}</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Personal Total</p>
                 </div>
             </div>

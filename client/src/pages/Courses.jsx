@@ -2,15 +2,32 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
-import { BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, GripVertical, PlayCircle } from 'lucide-react';
+import { 
+  BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, 
+  CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, 
+  GripVertical, PlayCircle, CheckSquare 
+} from 'lucide-react';
 import { CourseSkeleton } from '../components/Skeleton';
 import VideoPanel from '../components/VideoPanel';
+
+const YoutubeIcon = ({ size = 16, className = "" }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="currentColor" 
+    className={className}
+  >
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
 
 const Courses = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [materials, setMaterials] = useState({});
+  const [contentType, setContentType] = useState('pdf'); // 'pdf' | 'video' | 'quiz'
   const [expandedCourse, setExpandedCourse] = useState(() => {
     const saved = localStorage.getItem('expanded_course_id');
     return saved ? parseInt(saved) : null;
@@ -30,7 +47,6 @@ const Courses = () => {
   // Drag-and-drop state (admin only)
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
-
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -191,7 +207,6 @@ const Courses = () => {
     dragOverItem.current = null;
   };
 
-
   const courseColors = [
     'from-blue-500/10 to-blue-600/5 border-blue-200 dark:border-blue-800',
     'from-emerald-500/10 to-emerald-600/5 border-emerald-200 dark:border-emerald-800',
@@ -204,11 +219,52 @@ const Courses = () => {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-1">Your Courses</h1>
-          <p className="text-text/70">Select a course to study materials and prepare for your exams.</p>
+          <p className="text-text/70">Select a course to study materials, watch tutorials, or take quizzes.</p>
         </div>
+
+        {/* Middle Tab Switcher (PDFs vs Videos vs Quizzes) */}
+        <div className="flex items-center bg-neutral-100 dark:bg-neutral-800/60 p-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-700/50 self-start md:self-auto shadow-sm">
+          <button
+            onClick={() => setContentType('pdf')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              contentType === 'pdf'
+                ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
+                : 'text-text/60 hover:text-text'
+            }`}
+          >
+            <FileText size={16} className="text-red-500" />
+            <span>PDFs</span>
+          </button>
+          
+          <button
+            onClick={() => setContentType('video')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              contentType === 'video'
+                ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
+                : 'text-text/60 hover:text-text'
+            }`}
+          >
+            <YoutubeIcon size={16} className="text-red-600" />
+            <span>Videos</span>
+          </button>
+
+          <button
+            onClick={() => setContentType('quiz')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              contentType === 'quiz'
+                ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
+                : 'text-text/60 hover:text-text'
+            }`}
+          >
+            <CheckSquare size={16} className="text-accent" />
+            <span>Quizzes</span>
+          </button>
+        </div>
+
         {user?.role === 'admin' && (
           <button 
             onClick={() => { setCourseForm({ title: '', code: '', description: '' }); setCourseModal({ mode: 'add' }); }}
@@ -241,7 +297,13 @@ const Courses = () => {
               >
                 <div className="flex items-center space-x-4 flex-1">
                   <div className={`p-3 rounded-xl bg-card/80 shadow-sm ${iconColors[idx % iconColors.length]}`}>
-                    <BookOpen size={24} strokeWidth={2.5} />
+                    {contentType === 'video' ? (
+                      <YoutubeIcon size={24} className="text-red-600" />
+                    ) : contentType === 'quiz' ? (
+                      <CheckSquare size={24} className="text-accent" />
+                    ) : (
+                      <BookOpen size={24} strokeWidth={2.5} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 mr-4">
                     <div className="flex items-center space-x-3 mb-1">
@@ -286,116 +348,146 @@ const Courses = () => {
                 </div>
               </div>
 
-              {/* Expanded Materials List */}
+              {/* Expanded Content View */}
               {expandedCourse === course.id && (
-                <div className={`p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 bg-gradient-to-r ${courseColors[idx % courseColors.length]}`}>
-                  {user?.role === 'admin' && (
-                    <div className="flex items-center gap-3 mb-3">
-                      <button
-                        onClick={() => setUploadModal(course.id)}
-                        className="flex items-center space-x-2 px-4 py-2.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm hover:bg-primary/20 transition"
-                      >
-                        <Upload size={16} />
-                        <span>Upload Material</span>
-                      </button>
-                      {materials[course.id]?.length > 1 && (
-                        <span className="flex items-center space-x-1.5 text-[11px] text-text/40 font-medium">
-                          <GripVertical size={13} />
-                          <span>Drag cards to reorder chapters</span>
-                        </span>
+                <div className={`p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 bg-gradient-to-r ${courseColors[idx % courseColors.length]}`}>
+                  
+                  {/* ================= MODE 1: PDF TAB ================= */}
+                  {contentType === 'pdf' && (
+                    <>
+                      <div className="flex flex-wrap gap-3 mb-4">
+                         <QuizButtonList courseId={course.id} navigate={navigate} user={user} />
+                      </div>
+
+                      {user?.role === 'admin' && (
+                        <div className="flex items-center gap-3 mb-3">
+                          <button
+                            onClick={() => setUploadModal(course.id)}
+                            className="flex items-center space-x-2 px-4 py-2.5 bg-primary/10 text-primary rounded-xl font-semibold text-sm hover:bg-primary/20 transition"
+                          >
+                            <Upload size={16} />
+                            <span>Upload Material</span>
+                          </button>
+                          {materials[course.id]?.length > 1 && (
+                            <span className="flex items-center space-x-1.5 text-[11px] text-text/40 font-medium">
+                              <GripVertical size={13} />
+                              <span>Drag cards to reorder chapters</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {(!materials[course.id] || materials[course.id].length === 0) ? (
+                        <p className="text-text/50 text-center py-6">No materials uploaded for this course yet.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                          {materials[course.id].map((mat, matIdx) => (
+                            <div
+                              key={mat.id}
+                              draggable={user?.role === 'admin'}
+                              onDragStart={user?.role === 'admin' ? (e) => handleDragStart(e, course.id, matIdx) : undefined}
+                              onDragEnter={user?.role === 'admin' ? (e) => handleDragEnter(e, course.id, matIdx) : undefined}
+                              onDragOver={user?.role === 'admin' ? handleDragOver : undefined}
+                              onDrop={user?.role === 'admin' ? (e) => handleDrop(e, course.id) : undefined}
+                              onDragEnd={user?.role === 'admin' ? handleDragEnd : undefined}
+                              className={`relative group ${user?.role === 'admin' ? '' : ''}`}
+                            >
+                              <button
+                                onClick={() => navigate(`/study/${mat.id}`)}
+                                className="w-full bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
+                              >
+                                {/* Drag handle — admin only */}
+                                {user?.role === 'admin' && (
+                                  <div
+                                    className="absolute top-2 left-2 p-1.5 rounded-lg text-text/30 opacity-0 group-hover:opacity-100 group-hover:text-primary group-hover:bg-primary/10 hover:scale-110 transition-all duration-200 cursor-grab active:cursor-grabbing"
+                                    title="Drag to reorder"
+                                  >
+                                    <GripVertical size={20} strokeWidth={2} />
+                                  </div>
+                                )}
+
+                                <div className="absolute top-0 right-0 p-2 flex space-x-1">
+                                   {user?.role === 'admin' && (
+                                     <>
+                                       <div onClick={(e) => { e.stopPropagation(); setEditMaterial(mat); setUploadTitle(mat.title); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
+                                         <Pencil size={12}/>
+                                       </div>
+                                       <div onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'material', id: mat.id, title: mat.title }); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-warning p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
+                                         <Trash2 size={12}/>
+                                       </div>
+                                     </>
+                                   )}
+                                   <a 
+                                     href={`http://localhost:5005${mat.file_url}`} 
+                                     download={`${mat.title}.pdf`}
+                                     onClick={(e) => e.stopPropagation()}
+                                     className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800"
+                                     title="Download PDF"
+                                   >
+                                      <Download size={12} />
+                                   </a>
+                                   {mat.is_completed && (
+                                     <div className="bg-emerald-500 text-white p-1 rounded-lg shadow-md scale-110">
+                                        <CheckCircle2 size={12} strokeWidth={3} />
+                                     </div>
+                                   )}
+                                   {!mat.is_completed && (
+                                      <div className="bg-primary/10 text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                                      </div>
+                                   )}
+                                </div>
+                                
+                                <div className="w-16 h-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
+                                  <FileText size={32} strokeWidth={1.5} />
+                                </div>
+                                
+                                <h3 className="font-bold text-sm mb-1 line-clamp-2 min-h-[2.5rem] flex items-center justify-center group-hover:text-primary transition-colors leading-tight">
+                                  {mat.title}
+                                </h3>
+                                
+                                <div className="w-full h-px bg-neutral-100 dark:bg-neutral-800 my-4" />
+                                
+                                <div className="flex items-center justify-between w-full mt-auto">
+                                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-md">{mat.type}</span>
+                                  <span className="text-[10px] font-medium text-text/40">{new Date(mat.created_at).toLocaleDateString()}</span>
+                                </div>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ================= MODE 2: VIDEOS TAB ================= */}
+                  {contentType === 'video' && (
+                    <div className="space-y-4">
+                      {(!materials[course.id] || materials[course.id].length === 0) ? (
+                        <p className="text-text/50 text-center py-6">No video materials available for this course yet.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {materials[course.id].map((mat) => (
+                            <div key={mat.id} className="bg-background border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+                              <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-neutral-100 dark:border-neutral-800">
+                                <FileText size={16} className="text-primary" />
+                                <h4 className="font-bold text-sm text-text truncate">{mat.title}</h4>
+                              </div>
+                              <VideoPanel materialId={mat.id} materialTitle={mat.title} defaultExpanded={true} />
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   )}
 
-                  {/* Student View Quizzes */}
-                  <div className="flex flex-wrap gap-3 mb-6">
-                     <QuizButtonList courseId={course.id} navigate={navigate} user={user} />
-                  </div>
-
-                  {(!materials[course.id] || materials[course.id].length === 0) ? (
-                    <p className="text-text/50 text-center py-6">No materials uploaded for this course yet.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
-                      {materials[course.id].map((mat, matIdx) => (
-                        <div
-                          key={mat.id}
-                          draggable={user?.role === 'admin'}
-                          onDragStart={user?.role === 'admin' ? (e) => handleDragStart(e, course.id, matIdx) : undefined}
-                          onDragEnter={user?.role === 'admin' ? (e) => handleDragEnter(e, course.id, matIdx) : undefined}
-                          onDragOver={user?.role === 'admin' ? handleDragOver : undefined}
-                          onDrop={user?.role === 'admin' ? (e) => handleDrop(e, course.id) : undefined}
-                          onDragEnd={user?.role === 'admin' ? handleDragEnd : undefined}
-                          className={`relative group ${user?.role === 'admin' ? '' : ''}`}
-                        >
-                          <button
-                            onClick={() => navigate(`/study/${mat.id}`)}
-                            className="w-full bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
-                          >
-                            {/* Drag handle — admin only */}
-                            {user?.role === 'admin' && (
-                              <div
-                                className="absolute top-2 left-2 p-1.5 rounded-lg text-text/30 opacity-0 group-hover:opacity-100 group-hover:text-primary group-hover:bg-primary/10 hover:scale-110 transition-all duration-200 cursor-grab active:cursor-grabbing"
-                                title="Drag to reorder"
-                              >
-                                <GripVertical size={20} strokeWidth={2} />
-                              </div>
-                            )}
-
-                            <div className="absolute top-0 right-0 p-2 flex space-x-1">
-                               {user?.role === 'admin' && (
-                                 <>
-                                   <div onClick={(e) => { e.stopPropagation(); setEditMaterial(mat); setUploadTitle(mat.title); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
-                                     <Pencil size={12}/>
-                                   </div>
-                                   <div onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'material', id: mat.id, title: mat.title }); }} className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-warning p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800">
-                                     <Trash2 size={12}/>
-                                   </div>
-                                 </>
-                               )}
-                               <a 
-                                 href={`http://localhost:5005${mat.file_url}`} 
-                                 download={`${mat.title}.pdf`}
-                                 onClick={(e) => e.stopPropagation()}
-                                 className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800"
-                                 title="Download PDF"
-                               >
-                                  <Download size={12} />
-                               </a>
-                               {mat.is_completed && (
-                                 <div className="bg-emerald-500 text-white p-1 rounded-lg shadow-md scale-110">
-                                    <CheckCircle2 size={12} strokeWidth={3} />
-                                 </div>
-                               )}
-                               {!mat.is_completed && (
-                                  <div className="bg-primary/10 text-primary p-1 rounded-lg opacity-0 group-hover:opacity-100 transition">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
-                                  </div>
-                               )}
-                            </div>
-                            
-                            <div className="w-16 h-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
-                              <FileText size={32} strokeWidth={1.5} />
-                            </div>
-                            
-                            <h3 className="font-bold text-sm mb-1 line-clamp-2 min-h-[2.5rem] flex items-center justify-center group-hover:text-primary transition-colors leading-tight">
-                              {mat.title}
-                            </h3>
-                            
-                            <div className="w-full h-px bg-neutral-100 dark:bg-neutral-800 my-4" />
-                            
-                            <div className="flex items-center justify-between w-full mt-auto">
-                              <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-md">{mat.type}</span>
-                              <span className="text-[10px] font-medium text-text/40">{new Date(mat.created_at).toLocaleDateString()}</span>
-                            </div>
-                          </button>
-                          {/* Videos preview below card */}
-                          <div className="mt-2 px-1">
-                            <VideoPanel materialId={mat.id} materialTitle={mat.title} />
-                          </div>
-                        </div>
-                      ))}
+                  {/* ================= MODE 3: QUIZZES TAB ================= */}
+                  {contentType === 'quiz' && (
+                    <div className="space-y-4">
+                      <QuizSection courseId={course.id} navigate={navigate} user={user} />
                     </div>
                   )}
+
                 </div>
               )}
             </div>
@@ -555,6 +647,156 @@ const DeleteModal = ({ data, onClose, onConfirm }) => (
     </div>
   </div>
 );
+
+// Full Quizzes Tab Section
+const QuizSection = ({ courseId, navigate, user }) => {
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchQuizzes = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/quizzes/course/${courseId}`);
+      setQuizzes(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuizzes();
+  }, [courseId]);
+
+  const deleteQuiz = async (quizId, title) => {
+    if(window.confirm(`Are you sure you want to delete "${title}"?`)) {
+      try {
+        await api.delete(`/quizzes/${quizId}`);
+        fetchQuizzes();
+      } catch (e) {
+        alert('Failed to delete quiz');
+      }
+    }
+  };
+
+  if (loading) return (
+    <div className="flex justify-center py-8">
+      <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+
+  const officialQuizzes = quizzes.filter(q => q.is_official);
+  const aiQuizzes = quizzes.filter(q => !q.is_official);
+
+  return (
+    <div className="space-y-6 bg-background/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-base flex items-center gap-2">
+            <CheckSquare size={18} className="text-accent" />
+            <span>Course Quizzes & Assessments</span>
+          </h3>
+          <p className="text-xs text-text/50">Test your knowledge across official exams and AI-generated practice sets.</p>
+        </div>
+      </div>
+
+      {quizzes.length === 0 ? (
+        <div className="text-center py-8 border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <HelpCircle size={32} className="mx-auto text-text/20 mb-2" />
+          <p className="text-sm font-semibold text-text/50">No quizzes available for this course yet</p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Official Quizzes */}
+          {officialQuizzes.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-text/50">Official Course Quizzes</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {officialQuizzes.map(q => (
+                  <div
+                    key={q.id}
+                    className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-accent/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-md">Official</span>
+                        {q.best_score != null && (
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            Best: {q.best_score}/{q.total_questions}
+                          </span>
+                        )}
+                      </div>
+                      <h5 className="font-bold text-sm text-text group-hover:text-accent transition-colors line-clamp-1">{q.title}</h5>
+                      <p className="text-xs text-text/50 line-clamp-2 mt-1">{q.description || 'Practice quiz for this course'}</p>
+                    </div>
+
+                    <button
+                      onClick={() => navigate(`/quiz/${q.id}`)}
+                      className="w-full bg-accent/10 hover:bg-accent text-accent hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
+                    >
+                      <PlayCircle size={14} />
+                      <span>Start Quiz</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Practice Quizzes */}
+          {aiQuizzes.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">AI Generated Practice Quizzes</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {aiQuizzes.map(q => (
+                  <div
+                    key={q.id}
+                    className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Sparkles size={10} />
+                          AI Practice
+                        </span>
+                        {(user?.role === 'admin' || user?.id == q.user_id) && (
+                          <button
+                            onClick={() => deleteQuiz(q.id, q.title)}
+                            className="text-text/30 hover:text-red-500 transition p-1 rounded-md"
+                            title="Delete Quiz"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                      <h5 className="font-bold text-sm text-text group-hover:text-emerald-600 transition-colors line-clamp-1">{q.title}</h5>
+                      {q.best_score != null ? (
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                          Best Score: {q.best_score}/{q.total_questions}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-text/40 mt-1">Not attempted yet</p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => navigate(`/quiz/${q.id}`)}
+                      className="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
+                    >
+                      <Sparkles size={14} />
+                      <span>Start Practice</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const QuizButtonList = ({ courseId, navigate, user }) => {
   const [quizzes, setQuizzes] = useState([]);

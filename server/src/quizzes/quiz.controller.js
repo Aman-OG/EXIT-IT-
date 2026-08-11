@@ -139,8 +139,8 @@ exports.submitQuiz = async (req, res) => {
     }
 
     await pool.query(
-      'INSERT INTO quiz_attempts (user_id, quiz_id, score, total_questions) VALUES ($1, $2, $3, $4)',
-      [userId, id, score, totalQuestions]
+      'INSERT INTO quiz_attempts (user_id, quiz_id, score, total_questions, answers_json) VALUES ($1, $2, $3, $4, $5)',
+      [userId, id, score, totalQuestions, JSON.stringify(answers_map)]
     );
 
     // Update total score in users table (same as exams)

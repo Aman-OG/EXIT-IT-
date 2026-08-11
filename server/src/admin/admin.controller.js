@@ -92,10 +92,10 @@ const getCourseDetail = async (req, res) => {
         SELECT 
           qa.id as attempt_id,
           ques.id as question_id,
-          (qa.answers_json IS NOT NULL) as has_answers
+          ((qa.answers_json->(ques.id::text))->>'isCorrect')::boolean as is_correct
         FROM quiz_attempts qa
         JOIN questions ques ON ques.quiz_id = qa.quiz_id
-        WHERE qa.answers_json IS NOT NULL
+        WHERE qa.answers_json IS NOT NULL AND qa.answers_json->(ques.id::text) IS NOT NULL
       ) qa_detail ON qa_detail.question_id = q.id
       WHERE qz.course_id = $1
       GROUP BY q.id, q.question_text
@@ -129,4 +129,41 @@ const getCourseDetail = async (req, res) => {
   }
 };
 
-module.exports = { getStats, getUsers, getCourseAnalytics, getCourseDetail };
+const getStudentAnalytics = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.created_at,
+        u.last_active_date,
+        COALESCE(u.current_streak, 0) as streak_days,
+        COALESCE(u.total_score, 0) as total_xp,
+        COUNT(DISTINCT CASE WHEN up.percentage = 100 THEN up.material_id END) as completed_materials,
+        (SELECT COUNT(*) FROM materials) as total_materials,
+        COALESCE(ROUND(
+          COUNT(DISTINCT CASE WHEN up.percentage = 100 THEN up.material_id END) * 100.0 / 
+          NULLIF((SELECT COUNT(*) FROM materials), 0)
+        ), 0) as overall_progress,
+        COUNT(DISTINCT qa.id) as quiz_attempts_count,
+        COALESCE(ROUND(AVG(qa.score * 100.0 / NULLIF(qa.total_questions, 0))), 0) as avg_quiz_score,
+        COUNT(DISTINCT ea.id) as exam_attempts_count,
+        COALESCE(ROUND(AVG(ea.score * 100.0 / NULLIF(ea.total_questions, 0))), 0) as avg_exam_score
+      FROM users u
+      LEFT JOIN user_progress up ON up.user_id = u.id
+      LEFT JOIN quiz_attempts qa ON qa.user_id = u.id
+      LEFT JOIN exam_attempts ea ON ea.user_id = u.id
+      WHERE u.role = 'user'
+      GROUP BY u.id, u.name, u.email, u.created_at, u.last_active_date, u.current_streak, u.total_score
+      ORDER BY u.created_at DESC
+    `);
+    
+    res.json(result.rows);
+  } catch(e) {
+    console.error(e);
+    res.status(500).json({ message: 'Failed to retrieve student analytics' });
+  }
+};
+
+module.exports = { getStats, getUsers, getCourseAnalytics, getCourseDetail, getStudentAnalytics };

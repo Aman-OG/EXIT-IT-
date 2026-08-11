@@ -260,7 +260,7 @@ exports.getFriendsLeaderboard = async (req, res) => {
            COUNT(DISTINCT up.material_id) as completed_materials,
            COALESCE(u.current_streak, 0) as current_streak,
            COALESCE(u.max_streak, 0) as longest_streak,
-           COALESCE(SUM(ss.duration_minutes), 0) as total_study_minutes
+           COALESCE(ROUND(SUM(ss.duration_seconds) / 60.0), 0) as total_study_minutes
          FROM users u
          LEFT JOIN user_progress up ON u.id = up.user_id
          LEFT JOIN study_sessions ss ON u.id = ss.user_id

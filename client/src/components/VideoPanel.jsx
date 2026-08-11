@@ -3,14 +3,18 @@ import { PlayCircle, Plus, Trash2, Sparkles, X, ExternalLink, Play, Loader2, Lin
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 
-export default function VideoPanel({ materialId, materialTitle }) {
+export default function VideoPanel({ materialId, materialTitle, defaultExpanded = false }) {
   const { user } = useContext(AuthContext);
   const isAdmin = user?.role === 'admin';
 
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
+  useEffect(() => {
+    setExpanded(defaultExpanded);
+  }, [defaultExpanded]);
 
   // Admin: manual add
   const [showAddForm, setShowAddForm] = useState(false);

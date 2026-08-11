@@ -19,7 +19,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Courses', icon: BookOpen, path: '/courses', isMatch: isCoursesMode },
     { name: 'Roadmap', icon: Map, path: '/roadmap' },
     { name: 'Notes', icon: FileText, path: '/notes', isMatch: isNotesMode },
-    { name: 'Quizzes', icon: CheckSquare, path: '/quizzes', isMatch: isQuizMode },
     { name: 'Flashcards', icon: Brain, path: '/flashcards', isMatch: isFlashcardsMode },
     { name: 'Friends', icon: UserPlus, path: '/friends', isMatch: isFriendsMode },
     { name: 'Exam Mode', icon: Award, path: '/exam' },

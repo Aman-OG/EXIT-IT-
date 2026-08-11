@@ -211,35 +211,68 @@ exports.aiGenerateCards = async (req, res) => {
   if (!topic?.trim()) return res.status(400).json({ message: 'Topic is required' });
 
   try {
-    const OpenAI = require('openai');
-    const nvidia = new OpenAI({
-      apiKey: process.env.NVIDIA_API_KEY,
-      baseURL: 'https://integrate.api.nvidia.com/v1',
-    });
+    let cards = [];
+    if (process.env.NVIDIA_API_KEY) {
+      const OpenAI = require('openai');
+      const nvidia = new OpenAI({
+        apiKey: process.env.NVIDIA_API_KEY,
+        baseURL: 'https://integrate.api.nvidia.com/v1',
+      });
 
-    const completion = await nvidia.chat.completions.create({
-      model: 'deepseek-ai/deepseek-v4-flash',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an educational flashcard generator. Generate exactly ${count} flashcards as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`
-        },
-        {
-          role: 'user',
-          content: `Generate ${count} flashcards about: ${topic}`
-        }
-      ],
-      temperature: 0.7,
-      top_p: 0.95,
-      max_tokens: 4096,
-      extra_body: { chat_template_kwargs: { thinking: false } },
-      stream: false,
-    });
+      const completion = await nvidia.chat.completions.create({
+        model: 'deepseek-ai/deepseek-v4-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an educational flashcard generator. Generate exactly ${count} flashcards as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`
+          },
+          {
+            role: 'user',
+            content: `Generate ${count} flashcards about: ${topic}`
+          }
+        ],
+        temperature: 0.7,
+        top_p: 0.95,
+        max_tokens: 4096,
+        extra_body: { chat_template_kwargs: { thinking: false } },
+        stream: false,
+      });
 
-    const raw = completion.choices[0].message.content.trim();
-    // Strip markdown code blocks if present
-    const jsonStr = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
-    const cards = JSON.parse(jsonStr);
+      const raw = completion.choices[0].message.content.trim();
+      const jsonStr = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+      cards = JSON.parse(jsonStr);
+    } else if (process.env.GROQ_API_KEY) {
+      const { Groq } = require('groq-sdk');
+      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+      const completion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an educational flashcard generator. Generate exactly ${count} flashcards as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`
+          },
+          {
+            role: 'user',
+            content: `Generate ${count} flashcards about: ${topic}`
+          }
+        ],
+        temperature: 0.7,
+      });
+      const raw = completion.choices[0].message.content.trim();
+      const jsonStr = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+      cards = JSON.parse(jsonStr);
+    } else if (process.env.GEMINI_API_KEY) {
+      const { GoogleGenerativeAI } = require('@google/generative-ai');
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = `You are an educational flashcard generator. Generate exactly ${count} flashcards about: ${topic} as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`;
+      const result = await model.generateContent(prompt);
+      const raw = result.response.text().trim();
+      const jsonStr = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+      cards = JSON.parse(jsonStr);
+    } else {
+      return res.status(400).json({ message: 'AI API Key is missing in server .env (NVIDIA_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY required)' });
+    }
 
     if (!Array.isArray(cards)) throw new Error('Invalid response format');
 

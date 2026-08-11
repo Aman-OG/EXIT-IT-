@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ChevronRight } from 'lucide-react';
+import { Mail, ChevronRight, Shield, GraduationCap, Sparkles } from 'lucide-react';
 import PasswordInput from '../components/PasswordInput';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import ExitItLogo from '../components/ExitItLogo';
@@ -29,6 +29,21 @@ const Login = () => {
     }
   };
 
+  const handleDemoLogin = async (demoEmail, demoPassword) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError('');
+    setIsLoading(true);
+    try {
+      await login(demoEmail, demoPassword);
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Demo login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     // Google OAuth implementation would go here
@@ -43,12 +58,49 @@ const Login = () => {
 
       <div className="max-w-md w-full relative z-10">
         {/* Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <ExitItLogo size={60} />
           </div>
           <h1 className="text-4xl font-bold text-text mb-2">Welcome Back</h1>
           <p className="text-text/60 text-lg">Continue your exam preparation journey</p>
+        </div>
+
+        {/* Demo Accounts Quick Login */}
+        <div className="bg-card/70 border border-primary/20 dark:border-primary/30 p-4 rounded-2xl mb-6 shadow-sm relative overflow-hidden backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Sparkles size={14} className="text-primary animate-pulse" />
+              Quick Demo Access
+            </span>
+            <span className="text-[11px] text-text/50 font-mono bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
+              pass: password123
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleDemoLogin('admin@demo.com', 'password123')}
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary transition-all group font-semibold text-xs sm:text-sm active:scale-95 disabled:opacity-50 shadow-sm"
+              title="Sign in as Admin (admin@demo.com)"
+            >
+              <Shield size={16} className="text-primary group-hover:scale-110 transition-transform" />
+              <span>Demo Admin</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDemoLogin('student@demo.com', 'password123')}
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent transition-all group font-semibold text-xs sm:text-sm active:scale-95 disabled:opacity-50 shadow-sm"
+              title="Sign in as Student (student@demo.com)"
+            >
+              <GraduationCap size={16} className="text-accent group-hover:scale-110 transition-transform" />
+              <span>Demo Student</span>
+            </button>
+          </div>
         </div>
 
         {/* Error Message */}
