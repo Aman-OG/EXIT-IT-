@@ -264,7 +264,7 @@ exports.aiGenerateCards = async (req, res) => {
     } else if (process.env.GEMINI_API_KEY) {
       const { GoogleGenerativeAI } = require('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash-lite' });
       const prompt = `You are an educational flashcard generator. Generate exactly ${count} flashcards about: ${topic} as a JSON array. Each object must have "front" (question) and "back" (answer). Return ONLY valid JSON array, no markdown, no explanation.`;
       const result = await model.generateContent(prompt);
       const raw = result.response.text().trim();

@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+export const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+export const API_BASE_URL = `${SERVER_URL}/api`;
+
 const api = axios.create({
-  baseURL: 'http://localhost:5005/api',
+  baseURL: API_BASE_URL,
   withCredentials: true, // Crucial for sending HTTP-only cookies
 });
 

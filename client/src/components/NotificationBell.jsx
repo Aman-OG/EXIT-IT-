@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, Settings, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios';
 
 export default function NotificationBell() {
   const navigate = useNavigate();
@@ -29,14 +30,9 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/notifications?limit=10', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications);
-        setUnreadCount(data.unreadCount);
-      }
+      const res = await api.get('/notifications?limit=10');
+      setNotifications(res.data.notifications);
+      setUnreadCount(res.data.unreadCount);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -44,13 +40,8 @@ export default function NotificationBell() {
 
   const markAsRead = async (notificationId) => {
     try {
-      const res = await fetch(`http://localhost:5005/api/notifications/${notificationId}/read`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
-      if (res.ok) {
-        fetchNotifications();
-      }
+      await api.put(`/notifications/${notificationId}/read`);
+      fetchNotifications();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -58,13 +49,8 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/notifications/read-all', {
-        method: 'PUT',
-        credentials: 'include',
-      });
-      if (res.ok) {
-        fetchNotifications();
-      }
+      await api.put('/notifications/read-all');
+      fetchNotifications();
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
@@ -72,13 +58,8 @@ export default function NotificationBell() {
 
   const deleteNotification = async (notificationId) => {
     try {
-      const res = await fetch(`http://localhost:5005/api/notifications/${notificationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      if (res.ok) {
-        fetchNotifications();
-      }
+      await api.delete(`/notifications/${notificationId}`);
+      fetchNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
     }

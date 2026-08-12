@@ -66,7 +66,7 @@ exports.explain = async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     // 4. Call Streaming AI
-    console.log('[AI] Requesting Streaming from Groq...');
+    console.log('[AI] Requesting Streaming AI explain...');
     const stream = await aiService.streamExplainText(text);
     let fullResponse = '';
 
@@ -77,7 +77,7 @@ exports.explain = async (req, res) => {
     }
 
     // 5. Update Cache & Usage after stream finishes
-    await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, fullResponse, 'llama-3.1-8b-instant']);
+    await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, fullResponse, 'gemini-3.5-flash-lite']);
     await incrementUsage(userId);
 
     res.write('data: [DONE]\n\n');
@@ -117,7 +117,7 @@ exports.summarize = async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     // 4. Call Streaming AI
-    console.log('[AI] Requesting Streaming from Groq...');
+    console.log('[AI] Requesting Streaming AI summarize...');
     const stream = await aiService.streamSummarizeText(text);
     let fullResponse = '';
 
@@ -128,7 +128,7 @@ exports.summarize = async (req, res) => {
     }
 
     // 5. Update Cache & Usage
-    await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, fullResponse, 'llama-3.1-8b-instant']);
+    await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, fullResponse, 'gemini-3.5-flash-lite']);
     await incrementUsage(userId);
 
     res.write('data: [DONE]\n\n');
@@ -164,12 +164,12 @@ exports.generateQuiz = async (req, res) => {
       console.log('[AI] Checking daily limit...');
       await checkAiLimit(userId);
 
-      console.log('[AI] Requesting Questions from Groq (Qwen)...');
+      console.log('[AI] Requesting Questions from AI service...');
       questions = await aiService.generateQuestions(content, difficulty, count);
 
       if (questions && Array.isArray(questions) && questions.length > 0) {
         console.log('[AI] Saving response to cache and usage...');
-        await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, JSON.stringify(questions), 'qwen-3-32b']);
+        await pool.query('INSERT INTO ai_cache (query_hash, response, model_used) VALUES ($1, $2, $3)', [hash, JSON.stringify(questions), 'gemini-3.5-flash-lite']);
         await incrementUsage(userId);
       } else {
         console.warn('[AI] No questions generated, aborting quiz creation.');

@@ -12,11 +12,10 @@ const startServer = async () => {
     console.log('Connected to PostgreSQL database successfully.');
     client.release();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 EXIT-IT Server fully loaded on port ${PORT}`);
       // Start cron jobs for notifications
       startCronJobs();
-      // Removed Heartbeat Log
     });
   } catch (err) {
     console.error('Failed to start server:', err.message);

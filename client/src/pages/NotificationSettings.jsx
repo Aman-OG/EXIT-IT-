@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, Mail, Smartphone } from 'lucide-react';
+import api from '../api/axios';
 
 export default function NotificationSettings() {
   const [preferences, setPreferences] = useState({
@@ -20,13 +21,8 @@ export default function NotificationSettings() {
 
   const fetchPreferences = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/notifications/preferences', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPreferences(data);
-      }
+      const res = await api.get('/notifications/preferences');
+      setPreferences(res.data);
     } catch (error) {
       console.error('Error fetching preferences:', error);
     }
@@ -36,24 +32,11 @@ export default function NotificationSettings() {
     setSaving(true);
     setSavedMessage('');
     try {
-      const res = await fetch('http://localhost:5005/api/notifications/preferences', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(updatedPreferences),
-      });
-
-      if (res.ok) {
-        setSavedMessage('Saved!');
-        setTimeout(() => setSavedMessage(''), 2000);
-      } else {
-        setSavedMessage('Failed to save');
-        setTimeout(() => setSavedMessage(''), 2000);
-      }
+      const res = await api.put('/notifications/preferences', updatedPreferences);
+      setSavedMessage('Preferences saved successfully!');
+      setTimeout(() => setSavedMessage(''), 3000);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      setSavedMessage('Failed to save');
-      setTimeout(() => setSavedMessage(''), 2000);
     } finally {
       setSaving(false);
     }

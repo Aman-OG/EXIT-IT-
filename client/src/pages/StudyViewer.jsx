@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import api from '../api/axios';
+import api, { SERVER_URL, API_BASE_URL } from '../api/axios';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { ThemeContext } from '../context/ThemeContext';
@@ -150,11 +150,12 @@ const StudyViewer = () => {
       const endpoint = type === 'explain' ? '/ai/explain' : '/ai/summarize';
       
       // Use fetch for streaming support
-      const response = await fetch(`http://localhost:5005/api${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure token is passed
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ text })
       });
@@ -449,7 +450,7 @@ const StudyViewer = () => {
     api.post(`/progress/${id}`, { percentage: savedPct }).catch(e => console.error(e));
   };
 
-  const pdfUrl = material ? `http://localhost:5005${material.file_url}` : null;
+  const pdfUrl = material ? `${SERVER_URL}${material.file_url}` : null;
 
   if (isLoading) return (
     <div className="h-full bg-background flex flex-col">
@@ -799,20 +800,6 @@ const StudyViewer = () => {
                   <span>AI Tools</span>
                 </button>
                 <button
-                  onClick={() => setSidebarTab('quizzes')}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'quizzes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
-                >
-                  <HelpCircle size={16} />
-                  <span>Quizzes</span>
-                </button>
-                <button
-                  onClick={() => setSidebarTab('bookmarks')}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'bookmarks' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
-                >
-                  <Bookmark size={16} />
-                  <span>Marks</span>
-                </button>
-                <button
                   onClick={() => setSidebarTab('videos')}
                   className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
                 >
@@ -1022,101 +1009,8 @@ const StudyViewer = () => {
                     </div>
                   )}
                 </div>
-              ) : sidebarTab === 'bookmarks' ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Bookmarks</p>
-                    <button
-                      onClick={handleAddBookmark}
-                      disabled={bookmarks.some(b => b.page_number === currentPage)}
-                      className="flex items-center space-x-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition disabled:opacity-40"
-                    >
-                      <Bookmark size={12} />
-                      <span>{bookmarks.some(b => b.page_number === currentPage) ? 'Bookmarked' : 'Bookmark Page'}</span>
-                    </button>
-                  </div>
-                  {bookmarks.length === 0 ? (
-                    <div className="py-8 text-center text-text/30">
-                      <Bookmark size={32} className="mx-auto mb-2 opacity-20" />
-                      <p className="text-sm">No bookmarks yet</p>
-                      <p className="text-xs mt-1">Bookmark pages to return to them quickly</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {bookmarks.sort((a,b) => a.page_number - b.page_number).map(bk => (
-                        <div key={bk.id} className="flex items-center justify-between p-3 bg-background rounded-xl border border-neutral-100 dark:border-neutral-800 group">
-                          <button
-                            onClick={() => scrollToPage(bk.page_number)}
-                            className="flex items-center space-x-2 flex-1 text-left hover:text-primary transition-colors"
-                          >
-                            <BookmarkCheck size={14} className="text-primary shrink-0" />
-                            <span className="text-sm font-medium">{bk.label || `Page ${bk.page_number}`}</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBookmark(bk.id)}
-                            className="p-1 text-text/20 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : sidebarTab === 'videos' ? (
-                <VideoPanel materialId={id} materialTitle={material?.title} />
               ) : (
-                <div className="space-y-4">
-                   <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Course Assessments</p>
-                   
-                   {user?.role === 'admin' && (
-                      <button 
-                         onClick={() => navigate(`/admin/quiz/${material?.course_id}`)}
-                         className="w-full flex items-center space-x-3 px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:shadow-lg transition group text-left"
-                      >
-                        <div className="p-2 bg-white/20 rounded-lg group-hover:scale-110 transition-transform">
-                          <Plus size={18} />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">Manage Quizzes</p>
-                          <p className="text-[10px] opacity-70">Admin Access Control</p>
-                        </div>
-                      </button>
-                   )}
-
-                   {quizzes.length === 0 ? (
-                      <div className="p-6 bg-background border border-neutral-200 dark:border-neutral-800 rounded-xl text-center">
-                         <HelpCircle size={32} className="text-text/10 mx-auto mb-2" />
-                         <p className="text-sm text-text/50 mb-1">No quizzes available for this course yet.</p>
-                      </div>
-                   ) : (
-                      <div className="space-y-2">
-                         {quizzes.map(quiz => (
-                            <button 
-                               key={quiz.id}
-                               onClick={() => navigate(`/quiz/${quiz.id}`)}
-                               className={`w-full flex items-center justify-between p-4 bg-background border rounded-xl hover:bg-primary/[0.02] transition group relative overflow-hidden ${quiz.is_official ? 'border-neutral-200 dark:border-neutral-800 hover:border-primary/50' : 'border-emerald-500/20 bg-emerald-500/[0.01] hover:border-emerald-500/50'}`}
-                            >
-                               <div className="flex items-center space-x-3">
-                                  <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${quiz.is_official ? 'bg-accent/10 text-accent' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                                     {quiz.is_official ? <CheckSquare size={16} /> : <Sparkles size={16} />}
-                                  </div>
-                                  <div className="text-left">
-                                     <p className="font-bold text-sm group-hover:text-primary transition-colors line-clamp-1">{quiz.title}</p>
-                                     <div className="flex items-center space-x-2 mt-0.5">
-                                        <span className={`text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded ${quiz.is_official ? 'bg-neutral-100 dark:bg-neutral-800 text-text/40' : 'bg-emerald-500 text-white'}`}>
-                                          {quiz.is_official ? 'Course Official' : 'Personal Practice'}
-                                        </span>
-                                        {quiz.difficulty && <span className="text-[8px] font-bold text-text/30 uppercase">{quiz.difficulty}</span>}
-                                     </div>
-                                  </div>
-                               </div>
-                               <ChevronRight size={16} className="text-text/20 group-hover:text-primary transition-colors" />
-                            </button>
-                         ))}
-                      </div>
-                   )}
-                </div>
+                <VideoPanel materialId={id} materialTitle={material?.title} />
               )}
             </div>
           </div>

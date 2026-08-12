@@ -4,9 +4,9 @@ import { Users, UserPlus, Search, Check, X, UserMinus, Trophy, Clock, BookOpen }
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import UserProfileModal from '../components/UserProfileModal';
+import api from '../api/axios';
 
 export default function Friends() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -37,13 +37,8 @@ export default function Friends() {
 
   const fetchFriends = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/friends', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFriends(data);
-      }
+      const res = await api.get('/friends');
+      setFriends(res.data);
     } catch (error) {
       console.error('Error fetching friends:', error);
     }
@@ -51,13 +46,8 @@ export default function Friends() {
 
   const fetchPendingRequests = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/friends/requests/pending', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPendingRequests(data);
-      }
+      const res = await api.get('/friends/requests/pending');
+      setPendingRequests(res.data);
     } catch (error) {
       console.error('Error fetching pending requests:', error);
     }
@@ -65,13 +55,8 @@ export default function Friends() {
 
   const fetchSentRequests = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/friends/requests/sent', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSentRequests(data);
-      }
+      const res = await api.get('/friends/requests/sent');
+      setSentRequests(res.data);
     } catch (error) {
       console.error('Error fetching sent requests:', error);
     }
@@ -79,13 +64,8 @@ export default function Friends() {
 
   const fetchFriendsLeaderboard = async () => {
     try {
-      const res = await fetch('http://localhost:5005/api/friends/leaderboard', {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFriendsLeaderboard(data);
-      }
+      const res = await api.get('/friends/leaderboard');
+      setFriendsLeaderboard(res.data);
     } catch (error) {
       console.error('Error fetching friends leaderboard:', error);
     }
@@ -99,13 +79,8 @@ export default function Friends() {
 
     setSearchLoading(true);
     try {
-      const res = await fetch(`http://localhost:5005/api/friends/search?query=${encodeURIComponent(query)}`, {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSearchResults(data);
-      }
+      const res = await api.get(`/friends/search?query=${encodeURIComponent(query)}`);
+      setSearchResults(res.data);
     } catch (error) {
       console.error('Error searching users:', error);
     } finally {
@@ -116,25 +91,14 @@ export default function Friends() {
   const sendFriendRequest = async (friendId) => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5005/api/friends/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ friendId }),
-      });
-
-      if (res.ok) {
-        showToast('Friend request sent!', 'success');
-        setSearchResults([]);
-        setSearchQuery('');
-        fetchSentRequests();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to send friend request', 'error');
-      }
+      await api.post('/friends/request', { friendId });
+      showToast('Friend request sent!', 'success');
+      setSearchResults([]);
+      setSearchQuery('');
+      fetchSentRequests();
     } catch (error) {
       console.error('Error sending friend request:', error);
-      showToast('Failed to send friend request', 'error');
+      showToast(error.response?.data?.error || 'Failed to send friend request', 'error');
     } finally {
       setLoading(false);
     }
@@ -143,17 +107,11 @@ export default function Friends() {
   const acceptFriendRequest = async (requestId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5005/api/friends/requests/${requestId}/accept`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
-
-      if (res.ok) {
-        showToast('Friend request accepted!', 'success');
-        fetchPendingRequests();
-        fetchFriends();
-        fetchFriendsLeaderboard();
-      }
+      await api.put(`/friends/requests/${requestId}/accept`);
+      showToast('Friend request accepted!', 'success');
+      fetchPendingRequests();
+      fetchFriends();
+      fetchFriendsLeaderboard();
     } catch (error) {
       console.error('Error accepting friend request:', error);
       showToast('Failed to accept friend request', 'error');
@@ -165,15 +123,9 @@ export default function Friends() {
   const rejectFriendRequest = async (requestId) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5005/api/friends/requests/${requestId}/reject`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
-
-      if (res.ok) {
-        showToast('Friend request rejected', 'info');
-        fetchPendingRequests();
-      }
+      await api.put(`/friends/requests/${requestId}/reject`);
+      showToast('Friend request rejected', 'info');
+      fetchPendingRequests();
     } catch (error) {
       console.error('Error rejecting friend request:', error);
       showToast('Failed to reject friend request', 'error');
@@ -190,16 +142,10 @@ export default function Friends() {
         setConfirmDialog(null);
         setLoading(true);
         try {
-          const res = await fetch(`http://localhost:5005/api/friends/${friendId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-
-          if (res.ok) {
-            showToast('Friend removed', 'info');
-            fetchFriends();
-            fetchFriendsLeaderboard();
-          }
+          await api.delete(`/friends/${friendId}`);
+          showToast('Friend removed', 'info');
+          fetchFriends();
+          fetchFriendsLeaderboard();
         } catch (error) {
           console.error('Error removing friend:', error);
           showToast('Failed to remove friend', 'error');

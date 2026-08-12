@@ -1,5 +1,6 @@
 import { X, Users, UserCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import api from '../api/axios';
 
 export default function UserProfileModal({ userId, userName, userEmail, onClose }) {
   const [stats, setStats] = useState(null);
@@ -11,13 +12,8 @@ export default function UserProfileModal({ userId, userName, userEmail, onClose 
 
   const fetchUserStats = async () => {
     try {
-      const res = await fetch(`http://localhost:5005/api/friends/${userId}/stats`, {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
+      const res = await api.get(`/friends/${userId}/stats`);
+      setStats(res.data);
     } catch (error) {
       console.error('Error fetching user stats:', error);
     } finally {

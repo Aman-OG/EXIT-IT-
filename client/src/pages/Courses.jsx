@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axios';
+import api, { SERVER_URL, API_BASE_URL } from '../api/axios';
 import { 
   BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, 
   CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, 
@@ -309,7 +309,7 @@ const Courses = () => {
                     <div className="flex items-center space-x-3 mb-1">
                       <h2 className="text-xl font-bold truncate">{course.title}</h2>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); window.open(`http://localhost:5005/api/materials/download-course/${course.id}`, '_blank'); }} 
+                        onClick={(e) => { e.stopPropagation(); window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank'); }} 
                         className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-0 group-hover:opacity-100"
                         title="Download Course (ZIP)"
                       >
@@ -418,7 +418,7 @@ const Courses = () => {
                                      </>
                                    )}
                                    <a 
-                                     href={`http://localhost:5005${mat.file_url}`} 
+                                     href={`${SERVER_URL}${mat.file_url}`} 
                                      download={`${mat.title}.pdf`}
                                      onClick={(e) => e.stopPropagation()}
                                      className="bg-card/80 backdrop-blur-sm text-text/40 hover:text-primary p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm border border-neutral-200 dark:border-neutral-800"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ProgressBar from './ProgressBar';
 import { BookOpen, CheckCircle2, Clock, Star, ArrowRight, Play, Download } from 'lucide-react';
+import { API_BASE_URL } from '../api/axios';
 
 const courseGradients = [
   { card: 'from-blue-500/10 to-blue-600/5', icon: 'bg-blue-500/10', accent: 'text-blue-500' },
@@ -104,7 +105,7 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`http://localhost:5005/api/materials/download-course/${course.id}`, '_blank');
+              window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank');
             }}
             className="absolute -top-2 -right-2 p-1.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg text-text/40 hover:text-primary opacity-0 group-hover/icon:opacity-100 transition-all shadow-md z-20"
             title="Download Course (ZIP)"

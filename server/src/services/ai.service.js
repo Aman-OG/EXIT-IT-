@@ -1,34 +1,32 @@
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { Groq } = require('groq-sdk');
 
 /**
  * AI Service for EXIT-IT Intelligence
- * - DeepSeek V4 Flash (NVIDIA) for explain/summarize — high quality
- * - Groq llama-3.3-70b-versatile for quiz generation — fast, low latency
+ * - Primary: Google Gemini 2.0 Flash
+ * - Fallback: Groq (llama-3.1-8b-instant for explain/summarize, qwen3.6-27b for quiz gen)
  */
 
-// NVIDIA client for explain/summarize
-let nvidia;
+// ---------- Gemini client (primary) ----------
+let gemini;
 try {
-  if (process.env.NVIDIA_API_KEY) {
-    nvidia = new OpenAI({
-      apiKey: process.env.NVIDIA_API_KEY,
-      baseURL: 'https://integrate.api.nvidia.com/v1',
-    });
-    console.log('✅ NVIDIA AI (DeepSeek V4 Flash) initialized successfully');
+  if (process.env.GEMINI_API_KEY) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    gemini = genAI.getGenerativeModel({ model: 'gemini-3.5-flash-lite' });
+    console.log('✅ Google Gemini AI (primary) initialized successfully');
   } else {
-    console.warn('⚠️ NVIDIA_API_KEY is missing in .env');
+    console.warn('⚠️ GEMINI_API_KEY is missing in .env');
   }
 } catch (e) {
-  console.error('❌ Failed to initialize NVIDIA AI:', e.message);
+  console.error('❌ Failed to initialize Gemini AI:', e.message);
 }
 
-// Groq client for fast quiz generation
+// ---------- Groq client (fallback) ----------
 let groq;
 try {
   if (process.env.GROQ_API_KEY) {
     groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    console.log('✅ Groq SDK initialized successfully');
+    console.log('✅ Groq SDK (fallback) initialized successfully');
   } else {
     console.warn('⚠️ GROQ_API_KEY is missing in .env');
   }
@@ -36,8 +34,16 @@ try {
   console.error('❌ Failed to initialize Groq SDK:', e.message);
 }
 
-const NVIDIA_MODEL = 'deepseek-ai/deepseek-v4-flash';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+// Groq models
+const GROQ_FAST_MODEL = 'llama-3.1-8b-instant';        // fast for explain/summarize
+const GROQ_SMART_MODEL = 'qwen/qwen3.6-27b';           // smart for quiz generation
+
+// Helper: check that at least one AI backend is available
+function requireAI(forFeature) {
+  if (!gemini && !groq) {
+    throw new Error(`No AI service available for ${forFeature}. Set GEMINI_API_KEY or GROQ_API_KEY in .env`);
+  }
+}
 
 const aiService = {
 
@@ -45,54 +51,63 @@ const aiService = {
    * Explains a specific portion of text for the student.
    */
   async explainText(text) {
-    if (!nvidia) throw new Error('NVIDIA AI not initialized');
-    try {
-      const completion = await nvidia.chat.completions.create({
-        model: NVIDIA_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.',
-          },
-          {
-            role: 'user',
-            content: `Explain the following text: "${text}"`,
-          },
-        ],
-        temperature: 0.7,
-        top_p: 0.95,
-        max_tokens: 1024,
-        extra_body: { chat_template_kwargs: { thinking: false } },
-        stream: false,
-      });
-      return completion.choices[0]?.message?.content || 'No explanation generated.';
-    } catch (err) {
-      console.error('🔴 AI Explain error:', err.message);
-      throw err;
+    requireAI('explain');
+
+    const systemPrompt = 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.';
+    const userPrompt = `Explain the following text: "${text}"`;
+
+    // Primary: Gemini
+    if (gemini) {
+      try {
+        const result = await gemini.generateContent(`${systemPrompt}\n\n${userPrompt}`);
+        return result.response.text() || 'No explanation generated.';
+      } catch (err) {
+        console.warn('⚠️ Gemini explain failed, trying Groq fallback:', err.message);
+      }
     }
+
+    // Fallback: Groq
+    const completion = await groq.chat.completions.create({
+      model: GROQ_FAST_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_completion_tokens: 1024,
+      stream: false,
+    });
+    return completion.choices[0]?.message?.content || 'No explanation generated.';
   },
 
   /**
    * STREAMING: Explains a specific portion of text.
+   * Returns an async iterable that yields chunks with choices[0].delta.content.
    */
   async streamExplainText(text) {
-    if (!nvidia) throw new Error('NVIDIA AI not initialized');
-    return nvidia.chat.completions.create({
-      model: NVIDIA_MODEL,
+    requireAI('stream-explain');
+
+    const systemPrompt = 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.';
+    const userPrompt = `Explain the following text: "${text}"`;
+
+    // Primary: Gemini streaming
+    if (gemini) {
+      try {
+        return await createGeminiStreamAdapter(`${systemPrompt}\n\n${userPrompt}`);
+      } catch (err) {
+        console.warn('⚠️ Gemini stream-explain failed, trying Groq fallback:', err.message);
+      }
+    }
+
+    // Fallback: Groq streaming
+    return groq.chat.completions.create({
+      model: GROQ_FAST_MODEL,
       messages: [
-        {
-          role: 'system',
-          content: 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.',
-        },
-        {
-          role: 'user',
-          content: `Explain the following text: "${text}"`,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-      top_p: 0.95,
-      max_tokens: 1024,
-      extra_body: { chat_template_kwargs: { thinking: false } },
+      max_completion_tokens: 1024,
       stream: true,
     });
   },
@@ -101,54 +116,62 @@ const aiService = {
    * Summarizes a passage of study material.
    */
   async summarizeText(text) {
-    if (!nvidia) throw new Error('NVIDIA AI not initialized');
-    try {
-      const completion = await nvidia.chat.completions.create({
-        model: NVIDIA_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: "Summarize study material concisely. Focus on key concepts and 'must-know' facts.",
-          },
-          {
-            role: 'user',
-            content: `Summarize this text: "${text}"`,
-          },
-        ],
-        temperature: 0.5,
-        top_p: 0.95,
-        max_tokens: 1024,
-        extra_body: { chat_template_kwargs: { thinking: false } },
-        stream: false,
-      });
-      return completion.choices[0]?.message?.content || 'No summary generated.';
-    } catch (err) {
-      console.error('🔴 AI Summarize error:', err.message);
-      throw err;
+    requireAI('summarize');
+
+    const systemPrompt = "Summarize study material concisely. Focus on key concepts and 'must-know' facts.";
+    const userPrompt = `Summarize this text: "${text}"`;
+
+    // Primary: Gemini
+    if (gemini) {
+      try {
+        const result = await gemini.generateContent(`${systemPrompt}\n\n${userPrompt}`);
+        return result.response.text() || 'No summary generated.';
+      } catch (err) {
+        console.warn('⚠️ Gemini summarize failed, trying Groq fallback:', err.message);
+      }
     }
+
+    // Fallback: Groq
+    const completion = await groq.chat.completions.create({
+      model: GROQ_FAST_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.5,
+      max_completion_tokens: 1024,
+      stream: false,
+    });
+    return completion.choices[0]?.message?.content || 'No summary generated.';
   },
 
   /**
    * STREAMING: Summarizes a passage of study material.
    */
   async streamSummarizeText(text) {
-    if (!nvidia) throw new Error('NVIDIA AI not initialized');
-    return nvidia.chat.completions.create({
-      model: MODEL,
+    requireAI('stream-summarize');
+
+    const systemPrompt = "Summarize study material concisely. Focus on key concepts and 'must-know' facts.";
+    const userPrompt = `Summarize this text: "${text}"`;
+
+    // Primary: Gemini streaming
+    if (gemini) {
+      try {
+        return await createGeminiStreamAdapter(`${systemPrompt}\n\n${userPrompt}`);
+      } catch (err) {
+        console.warn('⚠️ Gemini stream-summarize failed, trying Groq fallback:', err.message);
+      }
+    }
+
+    // Fallback: Groq streaming
+    return groq.chat.completions.create({
+      model: GROQ_FAST_MODEL,
       messages: [
-        {
-          role: 'system',
-          content: "Summarize study material concisely. Focus on key concepts and 'must-know' facts.",
-        },
-        {
-          role: 'user',
-          content: `Summarize this text: "${text}"`,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ],
       temperature: 0.5,
-      top_p: 0.95,
-      max_tokens: 1024,
-      extra_body: { chat_template_kwargs: { thinking: false } },
+      max_completion_tokens: 1024,
       stream: true,
     });
   },
@@ -157,51 +180,95 @@ const aiService = {
    * Generates multiple-choice questions from material content.
    */
   async generateQuestions(content, difficulty = 'Medium', count = 5) {
-    if (!groq) throw new Error('Groq AI not initialized');
-    try {
-      const skipChars = 2000;
-      const maxChars = 5000;
-      const startPos = content.length > skipChars ? skipChars : 0;
-      const truncatedContent = content.length > (startPos + maxChars)
-        ? content.substring(startPos, startPos + maxChars)
-        : content.substring(startPos);
+    requireAI('quiz-generation');
 
-      const completion = await groq.chat.completions.create({
-        model: GROQ_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert exam creator. Use ONLY the provided MATERIAL. Return ONLY a valid JSON array. NO extra text.',
-          },
-          {
-            role: 'user',
-            content: `Generate ${count} MCQ questions, difficulty: ${difficulty}. JSON format:
+    const skipChars = 2000;
+    const maxChars = 5000;
+    const startPos = content.length > skipChars ? skipChars : 0;
+    const truncatedContent = content.length > (startPos + maxChars)
+      ? content.substring(startPos, startPos + maxChars)
+      : content.substring(startPos);
+
+    const systemPrompt = 'You are an expert exam creator. Use ONLY the provided MATERIAL. Return ONLY a valid JSON array. NO extra text, NO markdown fences.';
+    const userPrompt = `Generate ${count} MCQ questions, difficulty: ${difficulty}. JSON format:
 [{"question_text":"...","options":[{"text":"...","is_correct":true},{"text":"...","is_correct":false},{"text":"...","is_correct":false},{"text":"...","is_correct":false}],"explanation":"..."}]
-MATERIAL: "${truncatedContent}"`,
-          },
-        ],
-        temperature: 0.2,
-        max_completion_tokens: 3000,
-        top_p: 0.95,
-        stream: false,
-      });
+MATERIAL: "${truncatedContent}"`;
 
-      let output = completion.choices[0]?.message?.content || '[]';
-      const jsonMatch = output.match(/\[\s*\{[\s\S]*\}\s*\]/);
-      if (jsonMatch) output = jsonMatch[0];
-
+    // Primary: Gemini
+    if (gemini) {
       try {
-        const parsed = JSON.parse(output);
-        return Array.isArray(parsed) ? parsed : (parsed.questions || []);
-      } catch (e) {
-        console.error('🟠 AI Quiz JSON Parse error:', output);
-        return [];
+        const result = await gemini.generateContent(`${systemPrompt}\n\n${userPrompt}`);
+        const output = result.response.text() || '[]';
+        return parseQuizJSON(output);
+      } catch (err) {
+        console.warn('⚠️ Gemini quiz generation failed, trying Groq fallback:', err.message);
       }
-    } catch (err) {
-      console.error('🔴 AI Quiz error:', err.message);
-      throw err;
     }
+
+    // Fallback: Groq with smart model
+    const completion = await groq.chat.completions.create({
+      model: GROQ_SMART_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.2,
+      max_completion_tokens: 3000,
+      top_p: 0.95,
+      stream: false,
+    });
+
+    const output = completion.choices[0]?.message?.content || '[]';
+    return parseQuizJSON(output);
   },
 };
+
+/**
+ * Parse quiz JSON from AI response, handling markdown wrappers and edge cases.
+ */
+function parseQuizJSON(output) {
+  let cleaned = output.trim();
+  // Strip markdown code fences if present
+  cleaned = cleaned.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+
+  const jsonMatch = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
+  if (jsonMatch) cleaned = jsonMatch[0];
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed : (parsed.questions || []);
+  } catch (e) {
+    console.error('🟠 AI Quiz JSON Parse error:', cleaned.substring(0, 200));
+    return [];
+  }
+}
+
+/**
+ * Creates an async iterable that wraps Gemini streaming to mimic OpenAI/Groq's
+ * streaming format (chunks with choices[0].delta.content).
+ */
+async function createGeminiStreamAdapter(prompt) {
+  const streamResult = await gemini.generateContentStream(prompt);
+  
+  // Return an async iterable wrapper
+  return {
+    [Symbol.asyncIterator]() {
+      const iterator = streamResult.stream[Symbol.asyncIterator]();
+      return {
+        async next() {
+          const { done, value } = await iterator.next();
+          if (done) return { done: true };
+          const text = value.text();
+          return {
+            done: false,
+            value: {
+              choices: [{ delta: { content: text || '' } }],
+            },
+          };
+        },
+      };
+    },
+  };
+}
 
 module.exports = aiService;

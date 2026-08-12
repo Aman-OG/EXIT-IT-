@@ -375,10 +375,6 @@ const QuizManager = () => {
     ]
   });
 
-  useEffect(() => {
-    fetchCourseAndQuizzes();
-  }, [courseId]);
-
   const fetchCourseAndQuizzes = async () => {
     setLoading(true);
     try {
@@ -392,6 +388,10 @@ const QuizManager = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchCourseAndQuizzes();
+  }, [courseId]);
 
   const handleCreateQuiz = async () => {
     try {

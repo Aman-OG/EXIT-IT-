@@ -85,28 +85,45 @@ exports.aiSuggestVideos = async (req, res) => {
     ];
 
     try {
-      const { Groq } = require('groq-sdk');
-      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-      const aiCompletion = await groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: 'Return ONLY a valid JSON array of 3 YouTube search query strings. No explanation, no markdown.' },
-          { role: 'user', content: `Generate 3 YouTube search queries for educational videos about: "${title}" (course: ${course_title})` }
-        ],
-        temperature: 0.7,
-        max_completion_tokens: 150,
-        stream: false,
-      });
-      const raw = aiCompletion.choices[0]?.message?.content?.trim() || '';
-      const jsonMatch = raw.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          searchQueries = parsed.slice(0, 3);
+      let raw = '';
+      const aiPrompt = `Generate 3 YouTube search queries for educational videos about: "${title}" (course: ${course_title})`;
+      
+      if (process.env.GROQ_API_KEY) {
+        const { Groq } = require('groq-sdk');
+        const groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
+        const aiCompletion = await groqClient.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: 'Return ONLY a valid JSON array of 3 YouTube search query strings. No explanation, no markdown.' },
+            { role: 'user', content: aiPrompt }
+          ],
+          temperature: 0.7,
+          max_completion_tokens: 150,
+          stream: false,
+        });
+        raw = aiCompletion.choices[0]?.message?.content?.trim() || '';
+      } else if (process.env.GEMINI_API_KEY) {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash-lite' });
+        const result = await model.generateContent(
+          `Return ONLY a valid JSON array of 3 YouTube search query strings. No explanation, no markdown.\n\n${aiPrompt}`
+        );
+        raw = result.response.text()?.trim() || '';
+      }
+
+      if (raw) {
+        const cleaned = raw.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+        const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            searchQueries = parsed.slice(0, 3);
+          }
         }
       }
     } catch (aiErr) {
-      console.warn('[Videos] AI query generation failed, using fallback queries');
+      console.warn('[Videos] AI query generation failed, using fallback queries:', aiErr.message);
     }
 
     // Search YouTube for each query
