@@ -2,7 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
-// Generate JWT for HTTP-only cookie
+// Generate JWT — sets HTTP-only cookie AND returns the token string
+// so the client can also store it in localStorage (needed for cross-origin deployments)
 const generateToken = (res, userId, role) => {
   const token = jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
     expiresIn: '30d',
@@ -10,10 +11,12 @@ const generateToken = (res, userId, role) => {
 
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Only require HTTPS in production
-    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
+
+  return token;
 };
 
 const registerUser = async (req, res) => {
@@ -38,8 +41,8 @@ const registerUser = async (req, res) => {
     );
 
     if (newUser.rows.length > 0) {
-      generateToken(res, newUser.rows[0].id, newUser.rows[0].role);
-      res.status(201).json(newUser.rows[0]);
+      const token = generateToken(res, newUser.rows[0].id, newUser.rows[0].role);
+      res.status(201).json({ ...newUser.rows[0], token });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
@@ -58,7 +61,7 @@ const loginUser = async (req, res) => {
       const validPassword = await bcrypt.compare(password, user.rows[0].password);
 
       if (validPassword) {
-        generateToken(res, user.rows[0].id, user.rows[0].role);
+        const token = generateToken(res, user.rows[0].id, user.rows[0].role);
         res.status(200).json({
           id: user.rows[0].id,
           name: user.rows[0].name,
@@ -67,7 +70,8 @@ const loginUser = async (req, res) => {
           role: user.rows[0].role,
           current_streak: user.rows[0].current_streak,
           max_streak: user.rows[0].max_streak,
-          streak_freezes: user.rows[0].streak_freezes
+          streak_freezes: user.rows[0].streak_freezes,
+          token
         });
         return;
       }
