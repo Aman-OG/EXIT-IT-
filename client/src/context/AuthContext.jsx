@@ -19,10 +19,14 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in
   useEffect(() => {
     const checkUser = async () => {
+      const existingToken = localStorage.getItem('token');
+      console.log('[AUTH] checkUser running, token in localStorage:', existingToken ? 'YES (' + existingToken.substring(0, 20) + '...)' : 'NO');
       try {
         const { data } = await api.get('/users/me');
         setUser(data);
       } catch (err) {
+        console.log('[AUTH] checkUser failed:', err.response?.status, err.response?.data?.message);
+        localStorage.removeItem('token');
         setUser(null);
       } finally {
         setLoading(false);
@@ -33,7 +37,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await api.post('/users/login', { email, password });
-    if (data.token) localStorage.setItem('token', data.token);
+    console.log('[AUTH] Login response keys:', Object.keys(data));
+    console.log('[AUTH] Token received:', data.token ? 'YES (' + data.token.substring(0, 20) + '...)' : 'NO - server not returning token!');
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      console.log('[AUTH] Token saved to localStorage');
+    } else {
+      console.warn('[AUTH] ⚠️ No token in login response! Server may not have redeployed yet.');
+    }
     setUser(data);
     return data;
   };
