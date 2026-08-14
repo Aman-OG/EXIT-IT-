@@ -355,9 +355,6 @@ const Courses = () => {
                   {/* ================= MODE 1: PDF TAB ================= */}
                   {contentType === 'pdf' && (
                     <>
-                      <div className="flex flex-wrap gap-3 mb-4">
-                         <QuizButtonList courseId={course.id} navigate={navigate} user={user} />
-                      </div>
 
                       {user?.role === 'admin' && (
                         <div className="flex items-center gap-3 mb-3">
@@ -798,108 +795,5 @@ const QuizSection = ({ courseId, navigate, user }) => {
   );
 };
 
-const QuizButtonList = ({ courseId, navigate, user }) => {
-  const [quizzes, setQuizzes] = useState([]);
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const fetchQuizzes = async () => {
-    try {
-      const res = await api.get(`/quizzes/course/${courseId}`);
-      setQuizzes(res.data);
-    } catch (e) {}
-  };
-
-  useEffect(() => {
-    fetchQuizzes();
-  }, [courseId]);
-
-  if (quizzes.length === 0) return null;
-  
-  const officialQuizzes = quizzes.filter(q => q.is_official);
-  const aiQuizzes = quizzes.filter(q => !q.is_official);
-
-  const deleteQuiz = async (quizId) => {
-    if(window.confirm('Are you sure you want to delete this AI practice quiz?')) {
-      try {
-        await api.delete(`/quizzes/${quizId}`);
-        fetchQuizzes();
-      } catch (e) {
-        alert('Failed to delete quiz');
-      }
-    }
-  };
-
-  return (
-    <div className="flex flex-col w-full bg-background/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4">
-      <button 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full text-left focus:outline-none group"
-      >
-        <span className="text-xs font-black uppercase tracking-widest text-text/50 group-hover:text-primary transition-colors">📑 Course Assessments ({quizzes.length})</span>
-        <ChevronDown size={16} className={`text-text/40 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isExpanded && (
-        <div className="flex flex-col space-y-5 pt-4 animate-in fade-in slide-in-from-top-2">
-          {officialQuizzes.length > 0 && (
-            <div className="space-y-2.5">
-              <h4 className="text-[10px] font-black text-text/50 uppercase tracking-widest pl-1">Official Course Quizzes</h4>
-              <div className="flex flex-wrap gap-2">
-                {officialQuizzes.map(q => (
-                  <button 
-                    key={q.id}
-                    onClick={() => navigate(`/quiz/${q.id}`)}
-                    className="flex items-center space-x-2 px-4 py-2.5 bg-accent/10 text-accent rounded-xl font-bold text-xs hover:bg-accent/20 transition border border-accent/20 shadow-sm relative group overflow-hidden"
-                  >
-                    <HelpCircle size={14} />
-                    <span>{q.title}</span>
-                    {q.best_score != null && (
-                      <span className="ml-2 text-[9px] font-black uppercase tracking-tighter bg-accent text-white px-1.5 py-0.5 rounded opacity-90 group-hover:opacity-100 transition">
-                        ✓ {q.best_score}/{q.total_questions}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {aiQuizzes.length > 0 && (
-            <div className="space-y-2.5">
-              <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Your AI Practice Quizzes</h4>
-              <div className="flex flex-wrap gap-2">
-                {aiQuizzes.map(q => (
-                  <div key={q.id} className="relative group/quiz flex items-center">
-                    <button 
-                      onClick={() => navigate(`/quiz/${q.id}`)}
-                      className="flex items-center space-x-2 pr-9 pl-4 py-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-xs hover:bg-emerald-500/20 transition border border-emerald-500/20 shadow-sm relative overflow-hidden"
-                    >
-                      <Sparkles size={14} />
-                      <span>{q.title}</span>
-                      {q.best_score != null && (
-                        <span className="ml-2 text-[9px] font-black uppercase tracking-tighter bg-emerald-500 text-white px-1.5 py-0.5 rounded opacity-90 group-hover:opacity-100 transition">
-                          {"✓ " + q.best_score + "/" + q.total_questions}
-                        </span>
-                      )}
-                    </button>
-                    {(user?.role === 'admin' || user?.id == q.user_id) && (
-                      <button 
-                        onClick={() => deleteQuiz(q.id)} 
-                        className="absolute right-2 p-1.5 text-warning hover:text-red-500 transition-colors opacity-0 group-hover/quiz:opacity-100"
-                        title="Delete Quiz"
-                      >
-                        <Trash2 size={13} strokeWidth={2.5} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default Courses;
