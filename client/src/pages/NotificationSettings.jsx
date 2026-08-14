@@ -91,7 +91,7 @@ export default function NotificationSettings() {
                 Notification Settings
               </h1>
               <p className="text-text/70">
-                Manage how you receive notifications from EXIT-IT
+                Manage how you receive notifications from EX-IT
               </p>
             </div>
             {savedMessage && (

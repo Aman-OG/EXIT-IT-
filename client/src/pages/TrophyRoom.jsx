@@ -150,7 +150,7 @@ const TrophyRoom = () => {
                                 anchorY="middle"
                                 opacity={0.2}
                             >
-                                EXIT-IT
+                                EX-IT
                             </Text>
                         </Float>
 

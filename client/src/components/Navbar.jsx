@@ -40,12 +40,17 @@ const Navbar = ({ toggleSidebar }) => {
         <button className="text-text p-1.5 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors ml-2" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <Link to="/" className="hidden md:flex items-center space-x-1.5 pl-3 hover:opacity-80 transition-opacity">
-          <ExitItLogo size={30} />
-          <h1 className="text-lg font-bold text-primary leading-tight">EXIT-IT</h1>
+        <Link to="/" className="hidden md:flex items-center space-x-2 pl-3 hover:opacity-80 transition-opacity">
+          <ExitItLogo size={28} />
+          <h1 className="text-lg font-black tracking-tight leading-tight">
+            <span className="text-primary">EX-</span><span className="italic text-accent">IT</span>
+          </h1>
         </Link>
-        <Link to="/" className="md:hidden ml-2">
-          <ExitItLogo size={32} />
+        <Link to="/" className="md:hidden flex items-center space-x-1.5 ml-2 hover:opacity-80 transition-opacity">
+          <ExitItLogo size={28} />
+          <h1 className="text-base font-black tracking-tight leading-tight">
+            <span className="text-primary">EX-</span><span className="italic text-accent">IT</span>
+          </h1>
         </Link>
       </div>
 

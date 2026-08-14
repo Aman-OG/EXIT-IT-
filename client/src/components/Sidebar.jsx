@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LayoutDashboard, BookOpen, Map, FileText, CheckSquare, Award, Trophy, X, Shield, Users as UsersIcon, Flag, User, BarChart2, Brain, UserPlus } from 'lucide-react';
+import ExitItLogo from './ExitItLogo';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const { user } = useContext(AuthContext);
@@ -37,7 +38,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       `}>
         {/* Mobile Header - matches navbar height */}
         <div className={`h-16 flex items-center justify-between px-4 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0 md:hidden`}>
-          <span className="font-bold text-text">Menu</span>
+          <div className="flex items-center space-x-2">
+            <ExitItLogo size={24} />
+            <span className="font-black text-base leading-none">
+              <span className="text-primary">EX-</span><span className="italic text-accent">IT</span>
+            </span>
+          </div>
           <button className="text-text/60 p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" onClick={() => setIsOpen(false)}>
             <X size={24} />
           </button>

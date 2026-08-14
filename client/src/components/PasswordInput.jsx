@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 const PasswordInput = ({ 
   value, 
   onChange, 
   placeholder = 'Enter password',
   className = '',
+  inputClassName = '',
   required = false,
   name = 'password'
 }) => {
@@ -13,6 +14,9 @@ const PasswordInput = ({
 
   return (
     <div className={`relative w-full ${className}`}>
+      {/* Consistent Left Lock Icon */}
+      <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text/40 pointer-events-none" />
+      
       <input
         type={showPassword ? 'text' : 'password'}
         value={value}
@@ -20,18 +24,21 @@ const PasswordInput = ({
         placeholder={placeholder}
         name={name}
         required={required}
-        className="w-full px-4 py-3 pr-12 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-text placeholder-text/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+        className={`w-full pl-11 pr-11 py-3 rounded-xl border border-text/10 bg-background text-text text-sm placeholder-text/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all ${inputClassName}`}
       />
+      
+      {/* Eye Toggle */}
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-text/60 hover:text-primary transition-colors duration-200 p-1"
+        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text/40 hover:text-text transition-colors p-1 rounded-md focus:outline-none"
         tabIndex="-1"
+        title={showPassword ? "Hide password" : "Show password"}
       >
         {showPassword ? (
-          <EyeOff size={20} strokeWidth={2} />
+          <EyeOff size={16} />
         ) : (
-          <Eye size={20} strokeWidth={2} />
+          <Eye size={16} />
         )}
       </button>
     </div>

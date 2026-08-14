@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const pool = require('../config/db');
 
 // Generate JWT — sets HTTP-only cookie AND returns the token string
@@ -268,6 +269,91 @@ const useStreakFreeze = async (req, res) => {
   }
 };
 
+const googleAuth = async (req, res) => {
+  const { token, credential } = req.body;
+  const googleToken = token || credential;
+
+  if (!googleToken) {
+    return res.status(400).json({ message: 'Google authentication token is required' });
+  }
+
+  try {
+    let googleUser = null;
+
+    // Strategy 1: Verify as ID token (JWT from Google Identity Services)
+    try {
+      const tokenInfoRes = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${googleToken}`);
+      if (tokenInfoRes.data && tokenInfoRes.data.email) {
+        googleUser = {
+          email: tokenInfoRes.data.email,
+          name: tokenInfoRes.data.name || tokenInfoRes.data.email.split('@')[0],
+          sub: tokenInfoRes.data.sub,
+        };
+      }
+    } catch (err) {
+      // Strategy 2: Verify as OAuth2 Access Token
+      try {
+        const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${googleToken}` },
+        });
+        if (userInfoRes.data && userInfoRes.data.email) {
+          googleUser = {
+            email: userInfoRes.data.email,
+            name: userInfoRes.data.name || userInfoRes.data.email.split('@')[0],
+            sub: userInfoRes.data.sub,
+          };
+        }
+      } catch (accessErr) {
+        console.error('Google token verification failed:', accessErr.message);
+      }
+    }
+
+    if (!googleUser || !googleUser.email) {
+      return res.status(401).json({ message: 'Invalid or expired Google token' });
+    }
+
+    const email = googleUser.email.toLowerCase().trim();
+    const name = googleUser.name ? googleUser.name.trim() : email.split('@')[0];
+
+    // Check if user already exists
+    let userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    let user = null;
+
+    if (userResult.rows.length === 0) {
+      // Create a secure placeholder password for Google OAuth account
+      const salt = await bcrypt.genSalt(10);
+      const randomPassword = 'G_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+      const newUser = await pool.query(
+        'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes',
+        [name, email, hashedPassword, 2]
+      );
+      user = newUser.rows[0];
+    } else {
+      user = userResult.rows[0];
+    }
+
+    const appToken = generateToken(res, user.id, user.role);
+
+    res.status(200).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      theme: user.theme || 'light',
+      role: user.role || 'user',
+      current_streak: user.current_streak || 0,
+      max_streak: user.max_streak || 0,
+      total_score: user.total_score || 0,
+      streak_freezes: user.streak_freezes ?? 2,
+      token: appToken,
+    });
+  } catch (error) {
+    console.error('Google auth server error:', error);
+    res.status(500).json({ message: 'Failed to authenticate with Google' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -278,4 +364,5 @@ module.exports = {
   updateStreak,
   useStreakFreeze,
   updateName,
+  googleAuth,
 };

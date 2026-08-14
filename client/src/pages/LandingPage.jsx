@@ -6,6 +6,7 @@ import {
   Code, Database, Globe, Network, Cpu, ArrowUpRight, Award 
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
+import ExitItLogo from '../components/ExitItLogo';
 import graduationHat from '../assets/graduation hat.jpg';
 
 const COURSES_LIST = [
@@ -38,9 +39,10 @@ const LandingPage = () => {
       {/* Navigation - Reduced height header */}
       <nav className="fixed top-0 w-full z-[100] px-6 py-3 border-b border-text/5 bg-background/80 backdrop-blur-2xl transition-colors h-16 flex items-center">
         <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center group cursor-pointer">
+          <Link to="/" className="flex items-center space-x-2.5 group cursor-pointer">
+            <ExitItLogo size={32} />
             <h1 className="text-2xl font-black font-outfit tracking-tighter">
-              <span className="text-primary italic">EXIT</span><span className="text-accent">-IT</span>
+              <span className="text-primary">EX-</span><span className="text-accent italic">IT</span>
             </h1>
           </Link>
           
@@ -84,10 +86,10 @@ const LandingPage = () => {
               <span>ETHIOPIAN NATIONAL EXIT EXAM ECOSYSTEM</span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black font-outfit tracking-tighter leading-[0.98]">
-              Your Path to <br />
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black font-outfit tracking-tighter leading-[1.02]">
+              Your IT Exit Exam <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent italic">
-                IT Exit Exam Success.
+                Companion.
               </span>
             </h1>
 
@@ -346,7 +348,7 @@ const LandingPage = () => {
             </p>
             
             <p className="text-base sm:text-lg opacity-80 font-medium leading-relaxed max-w-2xl">
-              EXIT-IT was created to turn the pressure of a 14-course exit exam into a clear, structured path, so students can focus on learning, not just surviving the workload.
+              EX-IT was created to turn the pressure of a 14-course exit exam into a clear, structured path, so students can focus on learning, not just surviving the workload.
             </p>
 
             <div className="pt-4 flex justify-center lg:justify-start">
@@ -377,7 +379,7 @@ const LandingPage = () => {
               Get started today.
             </h2>
             <p className="text-lg text-text/70 font-medium leading-relaxed">
-              Join your classmates on EXIT-IT. Prepare with confidence, track your daily streak, and master every concept required for the Ethiopian National Exit Exam.
+              Join your classmates on EX-IT. Prepare with confidence, track your daily streak, and master every concept required for the Ethiopian National Exit Exam.
             </p>
             <div className="pt-2 flex flex-wrap gap-4 text-xs font-bold text-text/60">
               <span className="flex items-center space-x-2">
@@ -425,9 +427,10 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="py-16 border-t border-text/10 bg-background text-center">
         <div className="max-w-7xl mx-auto px-6 space-y-8">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center space-x-2.5">
+            <ExitItLogo size={32} />
             <h1 className="text-3xl font-black font-outfit tracking-tighter">
-              <span className="text-primary italic">EXIT</span><span className="text-accent">-IT</span>
+              <span className="text-primary">EX-</span><span className="text-accent italic">IT</span>
             </h1>
           </div>
 

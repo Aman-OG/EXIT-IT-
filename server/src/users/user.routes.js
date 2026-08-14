@@ -1,11 +1,14 @@
 const express = require('express');
-const { registerUser, loginUser, getUserProfile, logoutUser, updateTheme, getDashboardStats, updateStreak, useStreakFreeze, updateName } = require('./user.controller');
+const { registerUser, loginUser, getUserProfile, logoutUser, updateTheme, getDashboardStats, updateStreak, useStreakFreeze, updateName, googleAuth } = require('./user.controller');
 const { protect, adminOnly } = require('../middleware/auth');
 
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/google-auth', googleAuth);
+router.post('/google-login', googleAuth);
+router.post('/google-register', googleAuth);
 router.post('/logout', logoutUser);
 router.get('/me', protect, getUserProfile);
 router.put('/theme', protect, updateTheme);
