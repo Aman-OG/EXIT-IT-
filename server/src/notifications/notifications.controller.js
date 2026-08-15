@@ -203,6 +203,59 @@ exports.createNotification = async (userId, type, title, message, link = null) =
   }
 };
 
+// Notify all accepted friends of a user
+exports.notifyAllFriends = async (userId, type, title, message, link = null) => {
+  try {
+    const friendsRes = await pool.query(
+      `SELECT DISTINCT
+         CASE 
+           WHEN user_id = $1 THEN friend_id
+           ELSE user_id
+         END as friend_id
+       FROM friendships 
+       WHERE (user_id = $1 OR friend_id = $1) 
+       AND status = 'accepted'`,
+      [userId]
+    );
+
+    const friends = friendsRes.rows;
+    if (friends.length === 0) return;
+
+    for (const f of friends) {
+      await exports.createNotification(f.friend_id, type, title, message, link);
+    }
+    console.log(`✅ [Notifications] Pushed "${title}" to ${friends.length} friends of user ${userId}`);
+  } catch (error) {
+    console.error('❌ [Notifications] Error notifying friends:', error);
+  }
+};
+
+// Notify all friends when a user unlocks a trophy / badge
+exports.notifyBadgeUnlocked = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { badgeId, badgeName, badgeIcon } = req.body;
+
+    const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const userName = userRes.rows[0]?.name || 'Your friend';
+    const icon = badgeIcon || '🏆';
+    const bName = badgeName || 'Trophy';
+
+    await exports.notifyAllFriends(
+      userId,
+      'friend_activity',
+      `${userName} Unlocked a Trophy! ${icon}`,
+      `${userName} just earned the "${bName}" achievement badge!`,
+      `/trophies`
+    );
+
+    res.json({ success: true, message: 'Friends notified of badge unlock' });
+  } catch (error) {
+    console.error('❌ [Notifications] Error notifying friends of badge:', error);
+    res.status(500).json({ message: 'Server error notifying friends of badge' });
+  }
+};
+
 // Send email notification
 const sendEmail = async (email, name, title, message, link) => {
   if (!transporter) return;

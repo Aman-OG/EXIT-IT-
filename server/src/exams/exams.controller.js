@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { notifyAllFriends } = require('../notifications/notifications.controller');
 
 exports.getOfficialList = async (req, res) => {
   try {
@@ -88,14 +89,32 @@ exports.submitExam = async (req, res) => {
       [userId, score, tq, timeSpentSeconds]
     );
 
+    const percentage = tq > 0 ? Math.round((score / tq) * 100) : 0;
+    const passBonus = percentage >= 70 ? 100 : 0;
+    const pointsEarned = (score * 10) + passBonus;
+
     // Update total score in users table
-    await pool.query(
-      'UPDATE users SET total_score = total_score + $1 WHERE id = $2',
-      [score, userId]
+    if (pointsEarned > 0) {
+      await pool.query(
+        'UPDATE users SET total_score = total_score + $1 WHERE id = $2',
+        [pointsEarned, userId]
+      );
+    }
+
+    // Notify all friends about exam completion
+    const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const userName = userRes.rows[0]?.name || 'Your friend';
+    const minsSpent = Math.max(1, Math.round(timeSpentSeconds / 60));
+
+    await notifyAllFriends(
+      userId,
+      'friend_activity',
+      `${userName} Finished an Exit Exam! 🏆`,
+      `${userName} completed an Exit Exam with a score of ${score}/${tq} (${percentage}%) in ${minsSpent} mins!`,
+      `/exam`
     );
 
-    const percentage = tq > 0 ? Math.round((score / tq) * 100) : 0;
-    res.json({ score, totalQuestions: tq, percentage, answers_map });
+    res.json({ score, totalQuestions: tq, percentage, answers_map, pointsEarned });
   } catch (err) {
     console.error('Error submitting exam:', err);
     res.status(500).json({ message: 'Server error submitting exam' });

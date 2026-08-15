@@ -16,6 +16,9 @@ router.put('/read-all', notificationsController.markAllAsRead);
 // Delete notification
 router.delete('/:notificationId', notificationsController.deleteNotification);
 
+// Badge unlocked friend notification
+router.post('/badge-unlocked', notificationsController.notifyBadgeUnlocked);
+
 // Preferences
 router.get('/preferences', notificationsController.getPreferences);
 router.put('/preferences', notificationsController.updatePreferences);

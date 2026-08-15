@@ -11,10 +11,11 @@ import { AuthContext } from '../context/AuthContext';
 import { 
   ArrowLeft, ZoomIn, ZoomOut, Sparkles, FileQuestion, HelpCircle, CheckSquare, 
   Plus, StickyNote, ChevronLeft, ChevronRight, CheckCircle2, Loader2, Maximize, 
-  Download, Clock, Bookmark, BookmarkCheck, Trash2, PlayCircle
+  Download, Clock, Bookmark, BookmarkCheck, Trash2, PlayCircle, X
 } from 'lucide-react';
 import Skeleton, { StudySkeleton } from '../components/Skeleton';
 import VideoPanel from '../components/VideoPanel';
+import ReactMarkdown from 'react-markdown';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -24,16 +25,21 @@ const StudyViewer = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isNotesMode = searchParams.get('mode') === 'notes';
-  const { user, triggerStreakUpdate, evaluateBadges } = useContext(AuthContext);
+  const { user, triggerStreakUpdate, evaluateBadges, triggerPointsEarned } = useContext(AuthContext);
   const { theme } = useContext(ThemeContext);
   const [material, setMaterial] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
   const [numPages, setNumPages] = useState(null);
-  const [zoom, setZoom] = useState(1); // 1 = 100%
+  const [zoom, setZoom] = useState(1); // 1 = 100% (Fit to width)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState('1');
   const [sidebarTab, setSidebarTab] = useState('notes');
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [noteContent, setNoteContent] = useState('');
@@ -56,6 +62,39 @@ const StudyViewer = () => {
   const pdfContainerRef = useRef(null);
   const touchStartDistRef = useRef(null);
   const initialZoomRef = useRef(zoom);
+  const [containerWidth, setContainerWidth] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const padding = window.innerWidth < 640 ? 16 : 32;
+      return Math.max(280, window.innerWidth - padding);
+    }
+    return 600;
+  });
+
+  // Reset zoom to 100% on material change
+  useEffect(() => {
+    setZoom(1);
+  }, [id]);
+
+  // Measure container width for exact responsive PDF page fitting
+  useEffect(() => {
+    const updateWidth = () => {
+      if (pdfContainerRef.current) {
+        const w = pdfContainerRef.current.clientWidth;
+        if (w > 0) {
+          const padding = window.innerWidth < 640 ? 16 : 32;
+          setContainerWidth(Math.max(280, w - padding));
+        }
+      }
+    };
+
+    updateWidth();
+    const timer = setTimeout(updateWidth, 100);
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, [showSidebar, id]);
 
   useEffect(() => {
     initialZoomRef.current = zoom;
@@ -271,6 +310,46 @@ const StudyViewer = () => {
     }
   };
 
+  const handleAddAiToNotes = async () => {
+    if (!aiResponse) return;
+
+    const formattedLines = aiResponse
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => {
+        let formatted = line
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/^[-*•]\s+/, '• ');
+        return `<p>${formatted}</p>`;
+      })
+      .join('');
+
+    const append = `
+      <div style="background: rgba(59, 130, 246, 0.08); border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-weight: bold; color: #3b82f6;">🤖 AI ${aiResponseMode === 'explain' ? 'Explanation' : 'Summary'}:</p>
+        ${formattedLines}
+      </div>
+      <p><br></p>
+    `;
+
+    const newContent = (noteContent ? noteContent + '<br>' : '') + append;
+    setNoteContent(newContent);
+    setSavingNote(true);
+    setSidebarTab('notes');
+
+    try {
+      await api.post(`/notes/${id}`, { 
+        content: newContent, 
+        title: material?.title || 'My Notes' 
+      });
+    } catch (e) {
+      console.error('Error saving note with AI insight:', e);
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   const handleGeneratePracticeQuiz = async (difficulty = 'Medium') => {
     if (!material) return;
     setIsAiLoading(true);
@@ -432,9 +511,12 @@ const StudyViewer = () => {
                    triggerStreakUpdate();
                 }
                 
-                api.post(`/progress/${id}`, { percentage }).then(() => {
+                api.post(`/progress/${id}`, { percentage }).then((res) => {
                    if (percentage >= 100 && !isCompleted) {
                        setIsCompleted(true);
+                       if (res.data?.pointsEarned > 0) {
+                           triggerPointsEarned(res.data.pointsEarned, 'Chapter Completed!');
+                       }
                        setTimeout(() => evaluateBadges(), 500);
                    }
                 }).catch(console.error);
@@ -451,9 +533,12 @@ const StudyViewer = () => {
       async (entries) => {
         if (entries[0].isIntersecting) {
           try {
-            await api.post(`/progress/${id}`, { percentage: 100 });
+            const res = await api.post(`/progress/${id}`, { percentage: 100 });
             localStorage.setItem(`pdf_pct_${id}`, '100');
             setIsCompleted(true);
+            if (res.data?.pointsEarned > 0) {
+              triggerPointsEarned(res.data.pointsEarned, 'Chapter Completed!');
+            }
             setTimeout(() => evaluateBadges(), 500);
           } catch (e) {
             console.error('Failed to sync progress', e);
@@ -647,11 +732,13 @@ const StudyViewer = () => {
               <Maximize size={18} />
             </button>
             <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
-            <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom Out">
+            <button onClick={() => setZoom(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(2))))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition active:scale-95" title="Zoom Out (-10%)">
               <ZoomOut size={18} />
             </button>
-            <span className="text-xs sm:text-sm font-bold text-text/70 min-w-[2.5rem] sm:min-w-[3rem] text-center hidden sm:inline">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom In">
+            <button onClick={() => setZoom(1)} className="text-xs sm:text-sm font-bold text-text/70 min-w-[2.2rem] sm:min-w-[3rem] text-center hover:text-primary transition cursor-pointer" title="Reset Zoom (100% Fit)">
+              {Math.round(zoom * 100)}%
+            </button>
+            <button onClick={() => setZoom(z => Math.min(3.0, parseFloat((z + 0.1).toFixed(2))))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition active:scale-95" title="Zoom In (+10%)">
               <ZoomIn size={18} />
             </button>
             <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
@@ -670,7 +757,7 @@ const StudyViewer = () => {
       <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer Panel */}
         {!isNotesMode && (
-          <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 overflow-y-auto relative w-full`}>
+          <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 overflow-y-auto overflow-x-auto relative w-full`}>
 
           {/* Floating Page Navigation Pill — fixed bottom center of viewport */}
           {numPages && (
@@ -731,14 +818,16 @@ const StudyViewer = () => {
                     key={`page_${index + 1}`} 
                     id={`pdf-page-${index + 1}`}
                     ref={index === numPages - 1 ? lastPageRef : null}
-                    className={`pdf-page-wrapper mb-6 shadow-xl rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 max-w-full ${pdfThemeClass}`}
+                    className={`pdf-page-wrapper mb-6 shadow-xl rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 transition-all duration-150 ${pdfThemeClass}`}
+                    style={{ width: containerWidth ? `${Math.round(containerWidth * zoom)}px` : 'auto', maxWidth: 'none' }}
                   >
                     <Page 
                       pageNumber={index + 1} 
-                      scale={zoom} 
+                      width={containerWidth ? Math.round(containerWidth * zoom) : undefined}
+                      scale={containerWidth ? undefined : zoom} 
                       renderTextLayer={true}
                       renderAnnotationLayer={true}
-                      className="bg-transparent"
+                      className="bg-transparent flex justify-center"
                     />
                   </div>
                 ))}
@@ -845,36 +934,45 @@ const StudyViewer = () => {
         {showSidebar && !isNotesMode && (
           <>
             <div 
-              className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-200"
+              className="fixed inset-0 top-16 bg-black/50 z-30 md:hidden animate-in fade-in duration-200"
               onClick={() => setShowSidebar(false)}
             />
-            <div className={`fixed md:relative inset-y-0 right-0 z-50 md:z-10 w-full sm:w-80 md:w-80 backdrop-blur-xl bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
+            <div className={`fixed md:relative top-16 md:top-0 bottom-0 right-0 z-40 md:z-10 w-full sm:w-80 md:w-80 bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
               {/* Sidebar Tabs - Hidden in Notes Mode */}
               {!isNotesMode && (
-                <div className="flex border-b border-neutral-200 dark:border-neutral-800">
-                <button
-                  onClick={() => setSidebarTab('notes')}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
-                >
-                  <StickyNote size={16} />
-                  <span>Notes</span>
-                </button>
-                <button
-                  onClick={() => setSidebarTab('ai')}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
-                >
-                  <Sparkles size={16} />
-                  <span>AI Tools</span>
-                </button>
-                <button
-                  onClick={() => setSidebarTab('videos')}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
-                >
-                  <PlayCircle size={16} />
-                  <span>Videos</span>
-                </button>
-              </div>
-            )}
+                <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pr-2">
+                  <div className="flex flex-1">
+                    <button
+                      onClick={() => setSidebarTab('notes')}
+                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                    >
+                      <StickyNote size={16} />
+                      <span>Notes</span>
+                    </button>
+                    <button
+                      onClick={() => setSidebarTab('ai')}
+                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                    >
+                      <Sparkles size={16} />
+                      <span>AI Tools</span>
+                    </button>
+                    <button
+                      onClick={() => setSidebarTab('videos')}
+                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
+                    >
+                      <PlayCircle size={16} />
+                      <span>Videos</span>
+                    </button>
+                  </div>
+                  <button 
+                    onClick={() => setShowSidebar(false)}
+                    className="md:hidden p-2 text-text/60 hover:text-text hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition shrink-0 ml-1"
+                    title="Close Drawer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
 
             {/* Tab Content - Changed to overflow-visible for rich text dropdowns */}
             <div className={`flex-1 ${isNotesMode ? 'overflow-visible' : 'overflow-y-auto'} p-4`}>
@@ -1017,23 +1115,14 @@ const StudyViewer = () => {
                         <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
                           {aiResponseMode === 'explain' ? 'Concept Explanation' : aiResponseMode === 'summarize' ? 'Executive Summary' : 'AI Notification'}
                         </p>
-                        <div className="text-sm leading-relaxed text-text/80 whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
-                          {aiResponse}
+                        <div className="text-sm leading-relaxed text-text/90 prose prose-sm dark:prose-invert max-w-none [&_strong]:text-text [&_strong]:font-bold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1">
+                          <ReactMarkdown>{aiResponse}</ReactMarkdown>
                         </div>
                         
                         {(aiResponseMode === 'explain' || aiResponseMode === 'summarize') && (
                           <button 
-                             onClick={() => {
-                               const append = `<br/>🤖 <b>AI ${aiResponseMode}:</b><br/><i>${aiResponse}</i><br/>`;
-                               const q = quillRef.current?.getEditor();
-                               if (q) {
-                                 const len = q.getLength();
-                                 q.clipboard.dangerouslyPasteHTML(len - 1, append);
-                                 setNoteContent(q.root.innerHTML);
-                                 setSidebarTab('notes');
-                               }
-                             }}
-                             className="mt-6 w-full flex items-center justify-center space-x-2 py-2.5 bg-primary text-white rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                             onClick={handleAddAiToNotes}
+                             className="mt-6 w-full flex items-center justify-center space-x-2 py-2.5 bg-primary text-white rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
                           >
                              <Plus size={14} />
                              <span>Add AI Insights to Notes</span>

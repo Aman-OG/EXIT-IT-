@@ -147,8 +147,20 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(storageKey, JSON.stringify(currentUnlocked));
         
         if (newlyUnlocked.length > 0) {
-            newlyUnlocked.forEach(id => {
+            newlyUnlocked.forEach(async (id) => {
+                // 1. Show celebration modal to current user
                 enqueueNotification({ category: 'badge', ...badgeDetails[id] });
+
+                // 2. Dispatch push notification to all friends
+                try {
+                  await api.post('/notifications/badge-unlocked', {
+                    badgeId: id,
+                    badgeName: badgeDetails[id]?.name,
+                    badgeIcon: badgeDetails[id]?.icon
+                  });
+                } catch (e) {
+                  console.error('Failed to notify friends of badge unlock:', e);
+                }
             });
         }
     } catch (err) {

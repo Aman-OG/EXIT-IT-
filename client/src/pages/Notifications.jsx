@@ -65,6 +65,8 @@ export default function Notifications() {
     switch (type) {
       case 'friend_request':
         return <span className="bg-blue-500/20 rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0"><UserPlus className="w-6 h-6 text-blue-500" /></span>;
+      case 'friend_activity':
+        return <span className="bg-emerald-500/20 rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0 text-2xl">🎉</span>;
       case 'streak_warnings':
         return <span className="text-2xl bg-orange-500/20 rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0">🔥</span>;
       case 'exam_reminders':
@@ -79,9 +81,17 @@ export default function Notifications() {
   };
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return 'Just now';
+    let iso = String(timestamp).trim();
+    // If timestamp from DB lacks 'Z' or offset, parse as UTC
+    if (!iso.endsWith('Z') && !iso.includes('+') && (iso.includes('T') || iso.includes(' '))) {
+      iso = iso.replace(' ', 'T') + 'Z';
+    } else if (!iso.endsWith('Z') && !iso.includes('+')) {
+      iso = iso + 'Z';
+    }
     const now = new Date();
-    const time = new Date(timestamp);
-    const diff = Math.floor((now - time) / 1000); // seconds
+    const time = new Date(iso);
+    const diff = Math.max(0, Math.floor((now.getTime() - time.getTime()) / 1000)); // seconds
 
     if (diff < 60) return 'Just now';
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;

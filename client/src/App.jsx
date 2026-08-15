@@ -62,6 +62,7 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Navigate to="/" replace />} />
         <Route path="courses" element={<Courses />} />
         <Route path="roadmap" element={<RoadmapPage />} />
         <Route path="quizzes" element={<Quizzes />} />
@@ -82,6 +83,9 @@ function App() {
         <Route path="admin/quiz/:courseId" element={<AdminRoute><QuizManager /></AdminRoute>} />
         <Route path="admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
         <Route path="admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+
+        {/* Catch-all fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
     </>

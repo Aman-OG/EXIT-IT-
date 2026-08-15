@@ -3,7 +3,7 @@ const pool = require('../config/db');
 exports.getAllNotes = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT n.id, n.material_id, n.content, n.title as note_title, n.updated_at, m.title as material_title, c.title as course_title, c.code as course_code
+      SELECT n.id, n.material_id, n.content, n.title as note_title, n.updated_at, m.title as material_title, c.id as course_id, c.title as course_title, c.code as course_code
       FROM user_notes n
       JOIN materials m ON n.material_id = m.id
       JOIN courses c ON m.course_id = c.id

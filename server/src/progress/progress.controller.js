@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { notifyAllFriends } = require('../notifications/notifications.controller');
 
 const markCompleted = async (req, res) => {
     try {
@@ -8,6 +9,13 @@ const markCompleted = async (req, res) => {
         
         const pct = percentage !== undefined ? percentage : 100;
         const status = pct === 100 ? 'completed' : 'in_progress';
+
+        // Check previous completion state
+        const prevRes = await pool.query(
+          `SELECT percentage, status FROM user_progress WHERE user_id = $1 AND material_id = $2`,
+          [userId, materialId]
+        );
+        const wasCompleted = prevRes.rows.length > 0 && prevRes.rows[0].percentage === 100;
         
         await pool.query(
             `INSERT INTO user_progress (user_id, material_id, status, percentage, last_accessed_at) 
@@ -19,9 +27,70 @@ const markCompleted = async (req, res) => {
                last_accessed_at = CURRENT_TIMESTAMP`,
             [userId, materialId, status, pct]
         );
-        res.json({ success: true, message: 'Progress recorded' });
+
+        let pointsEarned = 0;
+
+        // If completed now for the first time, award points & notify all friends!
+        if (pct === 100 && !wasCompleted) {
+          pointsEarned += 50; // 50 XP for chapter completion
+
+          const infoRes = await pool.query(
+            `SELECT u.name as user_name, m.title as material_title, c.title as course_title, c.id as course_id
+             FROM users u, materials m
+             JOIN courses c ON m.course_id = c.id
+             WHERE u.id = $1 AND m.id = $2`,
+            [userId, materialId]
+          );
+
+          if (infoRes.rows.length > 0) {
+            const { user_name, material_title, course_title, course_id } = infoRes.rows[0];
+
+            // 1. Notify friends about chapter completion
+            await notifyAllFriends(
+              userId,
+              'friend_activity',
+              `${user_name} Completed a Chapter! 📖`,
+              `${user_name} just completed "${material_title}" in ${course_title}!`,
+              `/courses`
+            );
+
+            // 2. Check if all materials in the entire course are now finished
+            const totalInCourse = await pool.query(`SELECT COUNT(*) as count FROM materials WHERE course_id = $1`, [course_id]);
+            const completedInCourse = await pool.query(
+              `SELECT COUNT(DISTINCT up.material_id) as count 
+               FROM user_progress up 
+               JOIN materials m ON up.material_id = m.id 
+               WHERE m.course_id = $1 AND up.user_id = $2 AND up.percentage = 100`,
+              [course_id, userId]
+            );
+
+            const totalCnt = parseInt(totalInCourse.rows[0]?.count || 0);
+            const compCnt = parseInt(completedInCourse.rows[0]?.count || 0);
+
+            if (totalCnt > 0 && compCnt >= totalCnt) {
+              pointsEarned += 100; // 100 XP bonus for completing the entire course!
+              await notifyAllFriends(
+                userId,
+                'friend_activity',
+                `${user_name} Finished an Entire Course! 🎓`,
+                `Major achievement! ${user_name} has completed 100% of "${course_title}"!`,
+                `/courses`
+              );
+            }
+          }
+
+          // Update user's total_score in database
+          if (pointsEarned > 0) {
+            await pool.query(
+              'UPDATE users SET total_score = total_score + $1 WHERE id = $2',
+              [pointsEarned, userId]
+            );
+          }
+        }
+
+        res.json({ success: true, message: 'Progress recorded', pointsEarned });
     } catch(e) {
-        console.error(e);
+        console.error('Error recording progress:', e);
         res.status(500).json({message: 'Failed to record progress'});
     }
 }

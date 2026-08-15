@@ -5,85 +5,104 @@ exports.getDashboardOverview = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Fetch all dashboard data in optimized queries
-    const result = await pool.query(`
-      WITH user_stats AS (
-        SELECT 
-          (SELECT COUNT(*) FROM user_progress WHERE user_id = $1) as completed_materials,
-          (SELECT COUNT(*) FROM materials) as total_materials,
-          (SELECT AVG(score * 100.0 / total_questions) FROM quiz_attempts WHERE user_id = $1) as avg_accuracy,
-          (SELECT COUNT(DISTINCT DATE(completed_at)) FROM user_progress WHERE user_id = $1 AND completed_at > NOW() - INTERVAL '7 days') as streak_days,
-          (SELECT current_streak FROM users WHERE id = $1) as current_streak,
-          (SELECT streak_freezes FROM users WHERE id = $1) as streak_freeze
-      ),
-      weakest_subject AS (
-        SELECT c.title, AVG(qa.score * 100.0 / qa.total_questions) as avg_score
-        FROM quiz_attempts qa
-        JOIN quizzes q ON qa.quiz_id = q.id
-        JOIN courses c ON q.course_id = c.id
-        WHERE qa.user_id = $1
-        GROUP BY c.id, c.title
-        HAVING AVG(qa.score * 100.0 / qa.total_questions) < 70
-        ORDER BY avg_score ASC
-        LIMIT 1
-      ),
-      last_material AS (
-        SELECT p.material_id, p.percentage, m.title as material_title, c.title as course_title, c.id as course_id
-        FROM user_progress p
-        JOIN materials m ON p.material_id = m.id
-        JOIN courses c ON m.course_id = c.id
-        WHERE p.user_id = $1
-        ORDER BY p.last_accessed_at DESC
-        LIMIT 1
-      ),
-      exam_info AS (
-        SELECT value as exam_date FROM system_settings WHERE key = 'exam_date' LIMIT 1
-      )
+    // 1. Overall Progress (%)
+    // Calculate total materials and weighted sum of completed progress
+    const progressRes = await pool.query(`
       SELECT 
-        us.completed_materials,
-        us.total_materials,
-        ROUND((us.completed_materials::numeric / GREATEST(us.total_materials, 1)) * 100) as overall_progress,
-        ROUND(COALESCE(us.avg_accuracy, 0)) as avg_accuracy,
-        COALESCE(ws.title, 'None Detected') as weakest_subject,
-        us.current_streak,
-        us.streak_freeze,
-        lm.material_id,
-        lm.percentage,
-        lm.material_title,
-        lm.course_title,
-        lm.course_id,
-        ei.exam_date
-      FROM user_stats us
-      LEFT JOIN weakest_subject ws ON true
-      LEFT JOIN last_material lm ON true
-      LEFT JOIN exam_info ei ON true
+        (SELECT COUNT(*) FROM materials) as total_materials,
+        COALESCE((SELECT SUM(percentage) FROM user_progress WHERE user_id = $1), 0) as total_progress_sum,
+        (SELECT COUNT(*) FROM user_progress WHERE user_id = $1 AND percentage = 100) as completed_materials
     `, [userId]);
 
-    const row = result.rows[0];
-    const examDate = new Date(row.exam_date || '2026-05-30');
+    const totalMaterials = parseInt(progressRes.rows[0]?.total_materials || 0);
+    const progressSum = parseFloat(progressRes.rows[0]?.total_progress_sum || 0);
+    const completedMaterials = parseInt(progressRes.rows[0]?.completed_materials || 0);
+    const overallProgress = totalMaterials > 0 
+      ? Math.min(100, Math.round(progressSum / (totalMaterials * 100) * 100))
+      : 0;
+
+    // 2. Quiz & Exam Accuracy (%)
+    const accuracyRes = await pool.query(`
+      SELECT 
+        COALESCE(ROUND(AVG(accuracy)), 0) as avg_accuracy,
+        COUNT(*) as total_attempts
+      FROM (
+        SELECT (score * 100.0 / GREATEST(total_questions, 1)) as accuracy 
+        FROM quiz_attempts 
+        WHERE user_id = $1 AND total_questions > 0
+        UNION ALL
+        SELECT (score * 100.0 / GREATEST(total_questions, 1)) as accuracy 
+        FROM exam_attempts 
+        WHERE user_id = $1 AND total_questions > 0
+      ) all_attempts
+    `, [userId]);
+
+    const avgAccuracy = parseInt(accuracyRes.rows[0]?.avg_accuracy || 0);
+    const totalAttempts = parseInt(accuracyRes.rows[0]?.total_attempts || 0);
+
+    // 3. Weakest Area (Course with lowest average quiz score)
+    const weakRes = await pool.query(`
+      SELECT c.title, ROUND(AVG(qa.score * 100.0 / GREATEST(qa.total_questions, 1))) as avg_score
+      FROM quiz_attempts qa
+      JOIN quizzes q ON qa.quiz_id = q.id
+      JOIN courses c ON q.course_id = c.id
+      WHERE qa.user_id = $1 AND qa.total_questions > 0
+      GROUP BY c.id, c.title
+      ORDER BY avg_score ASC
+      LIMIT 1
+    `, [userId]);
+
+    let weakestSubject = 'None Detected';
+    if (weakRes.rows.length > 0) {
+      const lowestScore = parseInt(weakRes.rows[0].avg_score);
+      if (lowestScore < 75) {
+        weakestSubject = `${weakRes.rows[0].title} (${lowestScore}%)`;
+      } else {
+        weakestSubject = 'Great Job! (All ≥ 75%)';
+      }
+    } else if (totalAttempts === 0) {
+      weakestSubject = 'No Quizzes Yet';
+    }
+
+    // 4. User Streak & Freezes & Last Material & Exam Date
+    const userRes = await pool.query(`
+      SELECT current_streak, streak_freezes FROM users WHERE id = $1
+    `, [userId]);
+
+    const lastMatRes = await pool.query(`
+      SELECT p.material_id, p.percentage, m.title as material_title, c.title as course_title, c.id as course_id
+      FROM user_progress p
+      JOIN materials m ON p.material_id = m.id
+      JOIN courses c ON m.course_id = c.id
+      WHERE p.user_id = $1
+      ORDER BY p.last_accessed_at DESC
+      LIMIT 1
+    `, [userId]);
+
+    const examInfoRes = await pool.query(`
+      SELECT value as exam_date FROM system_settings WHERE key = 'exam_date' LIMIT 1
+    `);
+
+    const currentStreak = userRes.rows[0]?.current_streak || 0;
+    const streakFreeze = userRes.rows[0]?.streak_freezes || 0;
+    const examDate = new Date(examInfoRes.rows[0]?.exam_date || '2026-05-30');
     const today = new Date();
     const daysUntilExam = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
     const examWarning = daysUntilExam <= 7 && daysUntilExam > 0;
 
     res.json({
-      overallProgress: `${row.overall_progress}%`,
-      avgAccuracy: `${row.avg_accuracy}%`,
-      weakestSubject: row.weakest_subject,
-      currentStreak: row.current_streak || 0,
-      streakFreeze: row.streak_freeze || 0,
-      lastMaterial: row.material_id ? {
-        material_id: row.material_id,
-        percentage: row.percentage,
-        material_title: row.material_title,
-        course_title: row.course_title,
-        course_id: row.course_id
-      } : null,
-      examDate: row.exam_date,
+      overallProgress: `${overallProgress}%`,
+      avgAccuracy: `${avgAccuracy}%`,
+      weakestSubject,
+      currentStreak,
+      streakFreeze,
+      lastMaterial: lastMatRes.rows.length > 0 ? lastMatRes.rows[0] : null,
+      examDate: examInfoRes.rows[0]?.exam_date || '2026-05-30',
       daysUntilExam,
       examWarning
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching dashboard overview:', err);
     res.status(500).json({ message: 'Server error fetching dashboard overview' });
   }
 };
@@ -93,48 +112,68 @@ exports.getOverviewStats = async (req, res) => {
     const userId = req.user.id;
 
     // 1. Overall Progress (%)
-    // (Materials completed by user / Total materials in system) * 100
     const progressRes = await pool.query(`
       SELECT 
-        (SELECT COUNT(*) FROM user_progress WHERE user_id = $1) as completed,
-        (SELECT COUNT(*) FROM materials) as total
+        (SELECT COUNT(*) FROM materials) as total_materials,
+        COALESCE((SELECT SUM(percentage) FROM user_progress WHERE user_id = $1), 0) as total_progress_sum
     `, [userId]);
     
-    const completed = parseInt(progressRes.rows[0].completed);
-    const total = parseInt(progressRes.rows[0].total);
-    const overallProgress = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const totalMaterials = parseInt(progressRes.rows[0]?.total_materials || 0);
+    const progressSum = parseFloat(progressRes.rows[0]?.total_progress_sum || 0);
+    const overallProgress = totalMaterials > 0 
+      ? Math.min(100, Math.round(progressSum / (totalMaterials * 100) * 100))
+      : 0;
 
-    // 2. Quiz Accuracy (Average Score %)
-    const quizRes = await pool.query(`
-      SELECT AVG(score * 100.0 / total_questions) as avg_accuracy
-      FROM quiz_attempts
-      WHERE user_id = $1
+    // 2. Quiz & Exam Accuracy (%)
+    const accuracyRes = await pool.query(`
+      SELECT 
+        COALESCE(ROUND(AVG(accuracy)), 0) as avg_accuracy,
+        COUNT(*) as total_attempts
+      FROM (
+        SELECT (score * 100.0 / GREATEST(total_questions, 1)) as accuracy 
+        FROM quiz_attempts 
+        WHERE user_id = $1 AND total_questions > 0
+        UNION ALL
+        SELECT (score * 100.0 / GREATEST(total_questions, 1)) as accuracy 
+        FROM exam_attempts 
+        WHERE user_id = $1 AND total_questions > 0
+      ) all_attempts
     `, [userId]);
-    
-    const avgAccuracy = quizRes.rows[0].avg_accuracy ? Math.round(parseFloat(quizRes.rows[0].avg_accuracy)) : 0;
 
-    // 3. Weakest Subject (Course with lowest avg quiz score)
+    const avgAccuracy = parseInt(accuracyRes.rows[0]?.avg_accuracy || 0);
+    const totalAttempts = parseInt(accuracyRes.rows[0]?.total_attempts || 0);
+
+    // 3. Weakest Area (Course with lowest average quiz score)
     const weakRes = await pool.query(`
-      SELECT c.title, AVG(qa.score * 100.0 / qa.total_questions) as avg_score
+      SELECT c.title, ROUND(AVG(qa.score * 100.0 / GREATEST(qa.total_questions, 1))) as avg_score
       FROM quiz_attempts qa
       JOIN quizzes q ON qa.quiz_id = q.id
       JOIN courses c ON q.course_id = c.id
-      WHERE qa.user_id = $1
+      WHERE qa.user_id = $1 AND qa.total_questions > 0
       GROUP BY c.id, c.title
-      HAVING AVG(qa.score * 100.0 / qa.total_questions) < 70
       ORDER BY avg_score ASC
       LIMIT 1
     `, [userId]);
 
-    const weakestSubject = weakRes.rows.length > 0 ? weakRes.rows[0].title : 'None Detected';
+    let weakestSubject = 'None Detected';
+    if (weakRes.rows.length > 0) {
+      const lowestScore = parseInt(weakRes.rows[0].avg_score);
+      if (lowestScore < 75) {
+        weakestSubject = `${weakRes.rows[0].title} (${lowestScore}%)`;
+      } else {
+        weakestSubject = 'Great Job! (All ≥ 75%)';
+      }
+    } else if (totalAttempts === 0) {
+      weakestSubject = 'No Quizzes Yet';
+    }
 
-    // 4. Streak (Simplified: Days active in the last 7 days)
+    // 4. Streak (Days active in the last 7 days)
     const streakRes = await pool.query(`
-        SELECT COUNT(DISTINCT DATE(completed_at)) as days
+        SELECT COUNT(DISTINCT DATE(last_accessed_at)) as days
         FROM user_progress
-        WHERE user_id = $1 AND completed_at > NOW() - INTERVAL '7 days'
+        WHERE user_id = $1 AND last_accessed_at > NOW() - INTERVAL '7 days'
     `, [userId]);
-    const streak = streakRes.rows[0].days || 0;
+    const streak = streakRes.rows[0]?.days || 0;
 
     res.json({
       overallProgress: `${overallProgress}%`,
@@ -143,7 +182,7 @@ exports.getOverviewStats = async (req, res) => {
       streak: `${streak} Days`
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching analytics overview:', err);
     res.status(500).json({ message: 'Server error fetching analytics' });
   }
 };

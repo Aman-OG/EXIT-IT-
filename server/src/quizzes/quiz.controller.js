@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { notifyAllFriends } = require('../notifications/notifications.controller');
 
 // --- Student Controllers ---
 
@@ -143,15 +144,39 @@ exports.submitQuiz = async (req, res) => {
       [userId, id, score, totalQuestions, JSON.stringify(answers_map)]
     );
 
-    // Update total score in users table (same as exams)
-    if (score > 0) {
+    // Calculate and award points (10 XP per correct answer + 25 XP perfect bonus)
+    const perfectBonus = (score === totalQuestions && totalQuestions > 0) ? 25 : 0;
+    const pointsEarned = (score * 10) + perfectBonus;
+
+    if (pointsEarned > 0) {
       await pool.query(
         'UPDATE users SET total_score = total_score + $1 WHERE id = $2',
-        [score, userId]
+        [pointsEarned, userId]
       );
     }
 
-    res.json({ score, totalQuestions, answers_map });
+    // Notify all friends about quiz completion
+    const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const quizRes = await pool.query(
+      `SELECT q.title, c.title as course_title 
+       FROM quizzes q 
+       LEFT JOIN courses c ON q.course_id = c.id 
+       WHERE q.id = $1`, 
+      [id]
+    );
+    const userName = userRes.rows[0]?.name || 'Your friend';
+    const quizTitle = quizRes.rows[0]?.title || 'Quiz';
+    const pctScore = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+
+    await notifyAllFriends(
+      userId,
+      'friend_activity',
+      `${userName} Completed a Quiz! 🎯`,
+      `${userName} completed "${quizTitle}" with a score of ${score}/${totalQuestions} (${pctScore}%)!`,
+      `/quizzes`
+    );
+
+    res.json({ score, totalQuestions, answers_map, pointsEarned });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error submitting quiz' });

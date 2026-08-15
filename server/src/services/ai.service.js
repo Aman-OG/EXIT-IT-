@@ -53,8 +53,8 @@ const aiService = {
   async explainText(text) {
     requireAI('explain');
 
-    const systemPrompt = 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.';
-    const userPrompt = `Explain the following text: "${text}"`;
+    const systemPrompt = 'You are a professional educational AI assistant for the EX-IT platform. Provide direct, clean, and concise explanations for students using bolding and bullet points where appropriate. Do not include greetings or introductory pleasantries.';
+    const userPrompt = `Explain the following text directly and concisely: "${text}"`;
 
     // Primary: Gemini
     if (gemini) {
@@ -87,8 +87,8 @@ const aiService = {
   async streamExplainText(text) {
     requireAI('stream-explain');
 
-    const systemPrompt = 'You are a professional educational assistant for the EXIT-IT platform. Explain text concisely for students using bullet points and bolding where appropriate.';
-    const userPrompt = `Explain the following text: "${text}"`;
+    const systemPrompt = 'You are a professional educational AI assistant for the EX-IT platform. Provide direct, clean, and concise explanations for students using bolding and bullet points where appropriate. Do not include greetings or introductory pleasantries.';
+    const userPrompt = `Explain the following text directly and concisely: "${text}"`;
 
     // Primary: Gemini streaming
     if (gemini) {
@@ -118,7 +118,7 @@ const aiService = {
   async summarizeText(text) {
     requireAI('summarize');
 
-    const systemPrompt = "Summarize study material concisely. Focus on key concepts and 'must-know' facts.";
+    const systemPrompt = "You are a professional educational AI assistant for the EX-IT platform. Summarize study material directly and concisely into key concepts and must-know facts using bullet points. Do not include greetings or introductory pleasantries.";
     const userPrompt = `Summarize this text: "${text}"`;
 
     // Primary: Gemini
@@ -151,7 +151,7 @@ const aiService = {
   async streamSummarizeText(text) {
     requireAI('stream-summarize');
 
-    const systemPrompt = "Summarize study material concisely. Focus on key concepts and 'must-know' facts.";
+    const systemPrompt = "You are a professional educational AI assistant for the EX-IT platform. Summarize study material directly and concisely into key concepts and must-know facts using bullet points. Do not include greetings or introductory pleasantries.";
     const userPrompt = `Summarize this text: "${text}"`;
 
     // Primary: Gemini streaming

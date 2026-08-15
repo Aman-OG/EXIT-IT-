@@ -315,8 +315,9 @@ const ExamMode = () => {
       });
       setResult(res.data);
       await triggerStreakUpdate();
-      if (res.data.score > 0) {
-        triggerPointsEarned(res.data.score, 'Exam Completed!');
+      const pts = res.data.pointsEarned !== undefined ? res.data.pointsEarned : (res.data.score * 10);
+      if (pts > 0) {
+        triggerPointsEarned(pts, `Exam Completed! +${pts} XP`);
       }
       setTimeout(() => evaluateBadges(), 500);
     } catch (err) {
@@ -435,64 +436,66 @@ const ExamMode = () => {
         )}
 
         {/* Left: Score Summary + Question Grid */}
-        <div className="w-full md:w-80 border-r border-neutral-200 dark:border-neutral-800 bg-card flex flex-col h-1/3 md:h-full overflow-hidden shrink-0 shadow-lg">
+        <div className="w-full md:w-64 lg:w-72 border-r border-neutral-200 dark:border-neutral-800 bg-card flex flex-col h-1/3 md:h-full overflow-hidden shrink-0 shadow-lg">
           
           {/* Score Card */}
-          <div className="p-5 border-b border-neutral-200 dark:border-neutral-800 text-center space-y-2">
+          <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 text-center space-y-1.5">
             {result.terminated ? (
               <>
-                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
-                  <ShieldAlert size={24} className="text-red-500" />
+                <div className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+                  <ShieldAlert size={20} className="text-red-500" />
                 </div>
-                <h2 className="text-lg font-black text-red-500">Exam Terminated</h2>
+                <h2 className="text-base font-black text-red-500">Exam Terminated</h2>
                 <p className="text-xs text-red-400">{result.terminationReason}</p>
               </>
             ) : (
               <>
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Award size={24} className="text-primary" />
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Award size={20} className="text-primary" />
                 </div>
-                <h2 className="text-lg font-black text-text">Exam Completed!</h2>
+                <h2 className="text-base font-black text-text">Exam Completed!</h2>
               </>
             )}
-            <div className={`text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r ${result.terminated ? 'from-red-500 to-orange-500' : 'from-primary to-accent'}`}>
+            <div className={`text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r ${result.terminated ? 'from-red-500 to-orange-500' : 'from-primary to-accent'}`}>
               {result.percentage}%
             </div>
             <p className="text-xs text-text/60">{result.score} / {result.totalQuestions} correct</p>
-            <p className="text-[11px] text-text/40">Time: {formatTime(result.timeSpentSeconds || ((120 * 60) - timeLeft))}</p>
+            <p className="text-[10px] text-text/40">Time: {formatTime(result.timeSpentSeconds || ((120 * 60) - timeLeft))}</p>
           </div>
 
           {/* 1-100 Review Grid */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-[10px] font-bold text-text/40 uppercase tracking-widest mb-3">Question Review (1 - 100)</p>
-            <div className="grid grid-cols-5 md:grid-cols-6 gap-1.5">
+          <div className="flex-1 overflow-y-auto p-2">
+            <p className="text-[9px] font-bold text-text/40 uppercase tracking-widest mb-1.5 px-1">Question Review (1 - {questions.length})</p>
+            <div className="grid grid-cols-6 gap-1 w-full">
               {questions.map((q, idx) => {
                 const info = answersMap[q.id];
                 const isCorrect = info?.isCorrect;
                 const wasAnswered = !!info;
                 const isReviewing = reviewIndex === idx;
 
-                let btnClass = "relative w-9 h-9 flex items-center justify-center font-bold text-xs rounded-lg border transition-all hover:-translate-y-0.5 ";
+                let btnStyle = "relative flex items-center justify-center font-bold text-[11px] rounded-md border cursor-pointer transition-all duration-150 select-none ";
                 if (isReviewing) {
-                  btnClass += "bg-primary border-primary text-primary-foreground shadow-md ring-2 ring-primary/30";
+                  btnStyle += "bg-primary border-primary text-primary-foreground shadow-md ring-2 ring-primary/30 scale-105 z-10";
                 } else if (wasAnswered && isCorrect) {
-                  btnClass += "bg-emerald-500/10 border-emerald-500/40 text-emerald-600";
+                  btnStyle += "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/20";
                 } else if (wasAnswered && !isCorrect) {
-                  btnClass += "bg-red-500/10 border-red-500/40 text-red-500";
+                  btnStyle += "bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20";
                 } else {
-                  btnClass += "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-text/40";
+                  btnStyle += "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-text/40 hover:border-primary/50";
                 }
 
                 return (
                   <button
                     key={q.id}
                     onClick={() => setReviewIndex(idx)}
-                    className={btnClass}
+                    className={btnStyle}
+                    style={{ aspectRatio: '1 / 1' }}
+                    title={`Question ${idx + 1}`}
                   >
                     {idx + 1}
                     {wasAnswered && (
-                      <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'} border-2 border-card`}>
-                        {isCorrect ? <CheckCircle size={7} className="text-white" /> : <XCircle size={7} className="text-white" />}
+                      <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full flex items-center justify-center ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'} border border-card`}>
+                        {isCorrect ? <CheckCircle size={5} className="text-white" /> : <XCircle size={5} className="text-white" />}
                       </div>
                     )}
                   </button>
@@ -950,30 +953,32 @@ const ExamMode = () => {
 
           {/* LEFT PANEL: 100 Questions Navigator (Visible on Desktop / Drawer on Mobile) */}
           <div className={`${
-            showMobileSidebar ? 'fixed inset-y-0 left-0 z-40 w-72 bg-card shadow-2xl border-r border-neutral-200 dark:border-neutral-800 flex flex-col' : 'hidden md:flex md:w-64 border-r border-neutral-200 dark:border-neutral-800 bg-card flex-col shrink-0'
+            showMobileSidebar 
+              ? 'fixed inset-y-0 left-0 z-40 w-72 bg-card shadow-2xl border-r border-neutral-200 dark:border-neutral-800 flex flex-col' 
+              : 'hidden md:flex md:w-56 lg:w-60 border-r border-neutral-200 dark:border-neutral-800 bg-card flex-col shrink-0'
           }`}>
-             <div className="p-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-               <h3 className="font-black text-xs uppercase tracking-wider text-text/60">Questions (1 - 100)</h3>
+             <div className="p-2.5 px-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+               <h3 className="font-black text-xs uppercase tracking-wider text-text/60">Questions (1 - {questions.length})</h3>
                {showMobileSidebar && (
                  <button onClick={() => setShowMobileSidebar(false)} className="p-1 text-text/40 hover:text-text"><X size={16} /></button>
                )}
              </div>
 
-             {/* 100 Numbers Grid (10 columns x 10 rows) */}
-             <div className="flex-1 overflow-y-auto p-3">
-               <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-1">
+             {/* 100 Numbers Grid (6 per row, tight gap to minimize/eliminate scrolling) */}
+             <div className="flex-1 overflow-y-auto p-2">
+               <div className="grid grid-cols-6 gap-1 w-full">
                  {questions.map((q, idx) => {
                    const isCurrent = idx === currentIndex;
                    const isAnswered = !!answers[q.id];
                    const isFlagged = !!flagged[q.id];
 
-                   let btnClass = "relative w-6.5 h-6.5 md:w-7 md:h-7 text-[10px] md:text-xs font-bold rounded-md border flex items-center justify-center transition-all hover:scale-105 ";
+                   let btnClass = "relative flex items-center justify-center text-[11px] font-bold rounded-md border cursor-pointer transition-all duration-150 select-none ";
                    if (isCurrent) {
-                     btnClass += "bg-primary border-primary text-primary-foreground font-black shadow-sm ring-2 ring-primary/20 scale-105 z-10";
+                     btnClass += "bg-primary border-primary text-primary-foreground font-black shadow-md ring-2 ring-primary/30 scale-105 z-10";
                    } else if (isAnswered) {
-                     btnClass += "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold";
+                     btnClass += "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-500/25";
                    } else {
-                     btnClass += "bg-background border-neutral-200 dark:border-neutral-800 text-text/50 hover:border-primary/50";
+                     btnClass += "bg-background border-neutral-200 dark:border-neutral-800 text-text/60 hover:border-primary/50 hover:text-primary";
                    }
 
                    return (
@@ -982,6 +987,7 @@ const ExamMode = () => {
                        onClick={() => { setCurrentIndex(idx); setShowMobileSidebar(false); }}
                        onContextMenu={(e) => { e.preventDefault(); toggleFlag(q.id); }}
                        className={btnClass}
+                       style={{ aspectRatio: '1 / 1' }}
                        title={`Question ${idx + 1}`}
                      >
                        {idx + 1}
@@ -995,7 +1001,7 @@ const ExamMode = () => {
              </div>
 
              {/* Legend */}
-             <div className="p-3 border-t border-neutral-200 dark:border-neutral-800 bg-background text-[10px] font-bold text-text/60 grid grid-cols-2 gap-1.5">
+             <div className="py-2 px-2.5 border-t border-neutral-200 dark:border-neutral-800 bg-background text-[9px] font-bold text-text/60 grid grid-cols-2 gap-1">
                <div className="flex items-center space-x-1.5"><div className="w-2.5 h-2.5 rounded-full bg-primary" /> <span>Current</span></div>
                <div className="flex items-center space-x-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> <span>Answered</span></div>
                <div className="flex items-center space-x-1.5"><div className="w-2.5 h-2.5 rounded-full border border-neutral-400" /> <span>Unanswered</span></div>

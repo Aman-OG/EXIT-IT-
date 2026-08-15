@@ -516,3 +516,21 @@ html, body {
 .animate-scale-in {
   animation: scale-in 0.2s ease-out;
 }
+
+/* Responsive PDF Page Canvas Rules for Mobile & Zoom */
+.react-pdf__Page {
+  display: flex !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+.react-pdf__Page canvas {
+  height: auto !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+.react-pdf__Page__textLayer,
+.react-pdf__Page__annotationLayer {
+  margin: 0 auto !important;
+}

@@ -109,12 +109,18 @@ const Notes = () => {
                     <Edit3 size={18} />
                   </button>
                   <div className="text-right">
-                     <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest">{note.course_code}</p>
+                     <p 
+                       onClick={(e) => { e.stopPropagation(); navigate('/courses'); }}
+                       className="text-[10px] font-bold text-primary/70 hover:text-primary hover:underline cursor-pointer uppercase tracking-widest"
+                       title="Go to Courses"
+                     >
+                       {note.course_code || note.course_title}
+                     </p>
                      <p className="text-[10px] text-text/50">{new Date(note.updated_at).toLocaleDateString()}</p>
                   </div>
                </div>
                
-               <div className="flex-1 cursor-pointer" onClick={() => navigate(`/study/${note.material_id}?mode=notes`)}>
+               <div className="flex-1 cursor-pointer" onClick={() => navigate(`/study/${note.material_id}?mode=notes`)} title="Open Full Notes Editor">
                  <h3 className="font-bold text-sm mb-1 line-clamp-1 group-hover:text-primary transition-colors">{note.note_title || 'My Notes'}</h3>
                  <h4 className="text-xs font-bold text-text/50 mb-3 truncate">📍 {note.material_title}</h4>
                  
@@ -129,8 +135,9 @@ const Notes = () => {
 
                <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between relative z-10">
                   <button 
-                    onClick={() => navigate(`/study/${note.material_id}?mode=notes`)}
-                    className="text-xs font-bold text-primary hover:text-primary/70 transition flex items-center space-x-1"
+                    onClick={() => navigate(`/study/${note.material_id}`)}
+                    className="text-xs font-bold text-primary hover:text-primary/70 transition flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20"
+                    title="Open Course Chapter & Material"
                   >
                     <span>View Material</span>
                     <BookOpen size={12} />

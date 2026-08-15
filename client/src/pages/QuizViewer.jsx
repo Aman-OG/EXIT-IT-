@@ -58,8 +58,9 @@ const QuizViewer = () => {
       setScore(res.data);
       setIsSubmitted(true);
       await triggerStreakUpdate();
-      if (res.data.score > 0) {
-        triggerPointsEarned(res.data.score, 'Quiz Completed!');
+      const pts = res.data.pointsEarned !== undefined ? res.data.pointsEarned : (res.data.score * 10);
+      if (pts > 0) {
+        triggerPointsEarned(pts, `Quiz Completed! +${pts} XP`);
       }
       setTimeout(() => evaluateBadges(), 500);
     } catch (err) {
