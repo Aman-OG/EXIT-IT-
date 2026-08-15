@@ -53,6 +53,68 @@ const StudyViewer = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   
   const timerIntervalRef = useRef(null);
+  const pdfContainerRef = useRef(null);
+  const touchStartDistRef = useRef(null);
+  const initialZoomRef = useRef(zoom);
+
+  useEffect(() => {
+    initialZoomRef.current = zoom;
+  }, [zoom]);
+
+  // Mouse wheel (Ctrl/Cmd + Wheel) & Touch Pinch Zoom (2 fingers)
+  useEffect(() => {
+    const container = pdfContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        setZoom((prevZoom) => Math.min(3.0, Math.max(0.5, parseFloat((prevZoom + delta).toFixed(2)))));
+      }
+    };
+
+    const getTouchDistance = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        touchStartDistRef.current = getTouchDistance(e.touches);
+        initialZoomRef.current = zoom;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 2 && touchStartDistRef.current) {
+        e.preventDefault();
+        const currentDist = getTouchDistance(e.touches);
+        const scale = currentDist / touchStartDistRef.current;
+        const newZoom = Math.min(3.0, Math.max(0.5, parseFloat((initialZoomRef.current * scale).toFixed(2))));
+        setZoom(newZoom);
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (e.touches.length < 2) {
+        touchStartDistRef.current = null;
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [zoom]);
 
   // Timer tick
   useEffect(() => {
@@ -536,28 +598,27 @@ const StudyViewer = () => {
           <div className="w-4 h-4 bg-card border-r border-b border-neutral-200 dark:border-white/10 rotate-45 mx-auto -mt-2 shadow-sm" />
         </div>
       )}
-
       {/* Study Header - Hidden in Focused Notes Mode */}
       {!isNotesMode && (
-        <div className="flex items-center justify-between backdrop-blur-xl bg-white/60 dark:bg-black/40 border-b border-white/20 dark:border-white/10 px-4 py-3 z-20 shadow-sm">
-          <div className="flex items-center space-x-3">
-            <button onClick={() => navigate(-1)} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Go Back">
-              <ArrowLeft size={20} />
+        <div className="flex items-center justify-between backdrop-blur-xl bg-white/60 dark:bg-black/40 border-b border-white/20 dark:border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 z-20 shadow-sm">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+            <button onClick={() => navigate(-1)} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition shrink-0" title="Go Back">
+              <ArrowLeft size={18} />
             </button>
-            <div className="flex items-center space-x-4">
-              <div>
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="min-w-0">
                 <div className="flex items-center space-x-2">
-                  <h2 className="font-bold text-lg leading-tight truncate max-w-[150px] sm:max-w-[300px] md:max-w-none">{material?.title || 'Loading...'}</h2>
+                  <h2 className="font-bold text-sm sm:text-lg leading-tight truncate max-w-[120px] sm:max-w-[300px] md:max-w-none">{material?.title || 'Loading...'}</h2>
                   <a 
                     href={pdfUrl} 
                     download={`${material?.title || 'material'}.pdf`}
-                    className="p-1.5 text-text/40 hover:text-primary hover:bg-primary/5 rounded-lg transition" 
+                    className="p-1 text-text/40 hover:text-primary hover:bg-primary/5 rounded-lg transition shrink-0" 
                     title="Download Chapter"
                   >
-                    <Download size={16} />
+                    <Download size={15} />
                   </a>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 hidden md:flex">
                    <p className="text-[10px] text-text/50 uppercase tracking-widest font-bold">University Study Engine</p>
                    {isCompleted && (
                      <span className="flex items-center space-x-1 bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-500/20">
@@ -581,22 +642,22 @@ const StudyViewer = () => {
               </button>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <button onClick={handleFullscreen} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Slideshow Fullscreen">
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+            <button onClick={handleFullscreen} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Slideshow Fullscreen">
               <Maximize size={18} />
             </button>
-            <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-1" />
-            <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom Out">
+            <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
+            <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom Out">
               <ZoomOut size={18} />
             </button>
-            <span className="text-sm font-bold text-text/70 min-w-[3rem] text-center">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom In">
+            <span className="text-xs sm:text-sm font-bold text-text/70 min-w-[2.5rem] sm:min-w-[3rem] text-center hidden sm:inline">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-1.5 sm:p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Zoom In">
               <ZoomIn size={18} />
             </button>
-            <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-1" />
+            <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
             <button 
               onClick={() => setShowSidebar(!showSidebar)} 
-              className={`p-2 rounded-lg transition ${showSidebar ? 'bg-primary/10 text-primary' : 'text-text/60 hover:text-primary hover:bg-primary/5'}`}
+              className={`p-1.5 sm:p-2 rounded-lg transition ${showSidebar ? 'bg-primary/10 text-primary' : 'text-text/60 hover:text-primary hover:bg-primary/5'}`}
               title={showSidebar ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               {showSidebar ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
@@ -606,15 +667,15 @@ const StudyViewer = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer Panel */}
         {!isNotesMode && (
-          <div className={`pdf-viewer-area flex-1 overflow-y-auto relative ${showSidebar ? '' : 'w-full'}`}>
+          <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 overflow-y-auto relative w-full`}>
 
           {/* Floating Page Navigation Pill — fixed bottom center of viewport */}
           {numPages && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-              <div className="pointer-events-auto flex items-center space-x-1 px-3 py-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-1 ring-black/5">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 max-w-[calc(100vw-1.5rem)] pointer-events-none">
+              <div className="pointer-events-auto flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-xl border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] ring-1 ring-black/5">
                 <button
                   onClick={() => scrollToPage(currentPage - 1)}
                   disabled={currentPage <= 1}
@@ -623,16 +684,16 @@ const StudyViewer = () => {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <div className="flex items-center space-x-1.5 px-2">
+                <div className="flex items-center space-x-1 px-1 sm:px-2">
                   <input
                     type="text"
                     value={pageInput}
                     onChange={e => setPageInput(e.target.value)}
                     onKeyDown={handlePageInputKeyDown}
                     onBlur={() => { const p = parseInt(pageInput); if (!isNaN(p)) scrollToPage(p); else setPageInput(String(currentPage)); }}
-                    className="w-9 text-center text-sm font-bold bg-transparent border-b-2 border-primary/40 focus:border-primary focus:outline-none transition-colors text-text"
+                    className="w-8 sm:w-9 text-center text-xs sm:text-sm font-bold bg-transparent border-b-2 border-primary/40 focus:border-primary focus:outline-none transition-colors text-text"
                   />
-                  <span className="text-xs text-text/50 font-semibold">/ {numPages}</span>
+                  <span className="text-[11px] sm:text-xs text-text/50 font-semibold">/ {numPages}</span>
                 </div>
                 <button
                   onClick={() => scrollToPage(currentPage + 1)}
@@ -655,7 +716,7 @@ const StudyViewer = () => {
             </div>
           )}
           {pdfUrl ? (
-            <div className="flex flex-col items-center p-4">
+            <div className="flex flex-col items-center p-2 sm:p-4 max-w-full overflow-x-auto">
               <Document
                 file={pdfUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
@@ -670,7 +731,7 @@ const StudyViewer = () => {
                     key={`page_${index + 1}`} 
                     id={`pdf-page-${index + 1}`}
                     ref={index === numPages - 1 ? lastPageRef : null}
-                    className={`pdf-page-wrapper mb-6 shadow-xl rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 ${pdfThemeClass}`}
+                    className={`pdf-page-wrapper mb-6 shadow-xl rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 max-w-full ${pdfThemeClass}`}
                   >
                     <Page 
                       pageNumber={index + 1} 
@@ -698,19 +759,19 @@ const StudyViewer = () => {
 
         {/* === FOCUSED NOTES MODE: Full-page dedicated layout === */}
         {isNotesMode && (
-          <div className="flex-1 flex flex-col overflow-hidden p-6">
+          <div className="flex-1 flex flex-col overflow-hidden p-4 sm:p-6">
             {/* Header row */}
             <div className="flex items-center justify-between mb-4 shrink-0">
-              <div className="flex items-center space-x-3">
-                <button onClick={() => navigate('/notes')} className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg hover:bg-primary/10 hover:text-primary transition">
+              <div className="flex items-center space-x-3 min-w-0">
+                <button onClick={() => navigate('/notes')} className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg hover:bg-primary/10 hover:text-primary transition shrink-0">
                   <ArrowLeft size={16} />
                 </button>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Document Note</p>
-                  <p className="text-sm font-bold text-text">{material?.title}</p>
+                  <p className="text-sm font-bold text-text truncate">{material?.title}</p>
                 </div>
               </div>
-              {savingNote && <span className="text-[10px] text-primary/60 font-medium animate-pulse bg-primary/5 px-3 py-1 rounded-full">Saving...</span>}
+              {savingNote && <span className="text-[10px] text-primary/60 font-medium animate-pulse bg-primary/5 px-3 py-1 rounded-full shrink-0">Saving...</span>}
             </div>
 
             {/* Custom Toolbar */}
@@ -735,14 +796,14 @@ const StudyViewer = () => {
               <button type="button" title="Strikethrough" onClick={() => { const q = quillRef.current?.getEditor(); if (q) { const f = q.getFormat(); q.format('strike', !f.strike); }}} className="w-8 h-8 rounded-lg hover:bg-primary/10 hover:text-primary transition line-through text-sm flex items-center justify-center cursor-pointer">S</button>
               <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 self-center mx-1" />
               {/* Text Colors */}
-              <span className="text-[10px] text-text/40 font-bold self-center">Color</span>
+              <span className="text-[10px] text-text/40 font-bold self-center hidden sm:inline">Color</span>
               {['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#111827'].map(color => (
                 <button key={color} type="button" title={`Text: ${color}`} onClick={() => { const q = quillRef.current?.getEditor(); if (q) q.format('color', color); }} className="w-5 h-5 rounded-full border-2 border-white dark:border-neutral-700 hover:scale-125 transition-transform shadow cursor-pointer" style={{ backgroundColor: color }} />
               ))}
               <button type="button" title="Default color" onClick={() => { const q = quillRef.current?.getEditor(); if (q) q.format('color', false); }} className="w-5 h-5 rounded-full border-2 border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:scale-125 transition-transform text-[9px] flex items-center justify-center cursor-pointer">✕</button>
               <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 self-center mx-1" />
               {/* Highlights */}
-              <span className="text-[10px] text-text/40 font-bold self-center">HL</span>
+              <span className="text-[10px] text-text/40 font-bold self-center hidden sm:inline">HL</span>
               {['#fef08a','#bbf7d0','#bfdbfe','#fecaca','#e9d5ff','#fed7aa'].map(color => (
                 <button key={color} type="button" title={`Highlight: ${color}`} onClick={() => { const q = quillRef.current?.getEditor(); if (q) q.format('background', color); }} className="w-5 h-5 rounded-full border-2 border-white dark:border-neutral-700 hover:scale-125 transition-transform shadow cursor-pointer" style={{ backgroundColor: color }} />
               ))}
@@ -763,11 +824,12 @@ const StudyViewer = () => {
                 value={noteContent}
                 onChange={(content) => {
                   setNoteContent(content);
-                  if (window.noteTimeout) clearTimeout(window.noteTimeout);
                   setSavingNote(true);
-                  window.noteTimeout = setTimeout(async () => {
-                    try { await api.post(`/notes/${id}`, { content }); setSavingNote(false); }
-                    catch (e) { setSavingNote(false); }
+                  if (window.noteSaveTimeout) clearTimeout(window.noteSaveTimeout);
+                  window.noteSaveTimeout = setTimeout(() => {
+                    api.post(`/notes/${id}`, { content, title: material?.title || 'My Notes' })
+                      .then(() => setSavingNote(false))
+                      .catch(e => { setSavingNote(false); });
                   }, 1000);
                 }}
                 modules={quillModules}
@@ -779,12 +841,17 @@ const StudyViewer = () => {
           </div>
         )}
 
-        {/* === NORMAL SIDEBAR MODE === */}
+        {/* === SIDEBAR MODE: Slide-over drawer on mobile, static side panel on desktop === */}
         {showSidebar && !isNotesMode && (
-          <div className={`${isNotesMode ? 'flex-1' : 'w-80'} backdrop-blur-xl bg-white/60 dark:bg-black/40 ${isNotesMode ? '' : 'border-l border-white/20 dark:border-white/10 shadow-[-10px_0_30px_rgb(0,0,0,0.05)]'} flex flex-col shrink-0 hidden md:flex z-10`}>
-            {/* Sidebar Tabs - Hidden in Notes Mode */}
-            {!isNotesMode && (
-              <div className="flex border-b border-neutral-200 dark:border-neutral-800">
+          <>
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-200"
+              onClick={() => setShowSidebar(false)}
+            />
+            <div className={`fixed md:relative inset-y-0 right-0 z-50 md:z-10 w-full sm:w-80 md:w-80 backdrop-blur-xl bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
+              {/* Sidebar Tabs - Hidden in Notes Mode */}
+              {!isNotesMode && (
+                <div className="flex border-b border-neutral-200 dark:border-neutral-800">
                 <button
                   onClick={() => setSidebarTab('notes')}
                   className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
@@ -1014,7 +1081,8 @@ const StudyViewer = () => {
               )}
             </div>
           </div>
-        )}
+        </>
+      )}
       </div>
     </div>
   );
