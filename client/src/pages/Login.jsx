@@ -16,7 +16,7 @@ const Login = () => {
   const { login, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1066496819724-5iofv93blinefc2tqhktmnl5a5dm65il.apps.googleusercontent.com';
 
   // Initialize Google Identity Services if client ID is configured
   useEffect(() => {

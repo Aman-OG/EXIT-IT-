@@ -27,10 +27,10 @@ exports.startExam = async (req, res) => {
 
     // Fetch the 100 fixed questions for this quiz, shuffled randomly
     const query = `
-      SELECT q.id, q.question_text, q.question_type, q.quiz_id,
+      SELECT q.id, q.question_text, q.question_type, q.quiz_id, q.explanation,
         COALESCE(
           json_agg(
-            json_build_object('id', o.id, 'option_text', o.option_text)
+            json_build_object('id', o.id, 'option_text', o.option_text, 'is_correct', o.is_correct)
           ) FILTER (WHERE o.id IS NOT NULL), '[]'
         ) as options
       FROM questions q

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
-import { FileText, BookOpen, Clock, Trash2, Search, Edit3 } from 'lucide-react';
+import { FileText, BookOpen, Clock, Trash2, Search, Edit3, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Notes = () => {
@@ -65,9 +65,18 @@ const Notes = () => {
   return (
     <div className="h-full overflow-y-auto p-4 md:p-8 space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Knowledge Base</h1>
-          <p className="text-text/60">Access all the notes you've taken during your study sessions.</p>
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 text-text/60 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition"
+            title="Go Back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Your Knowledge Base</h1>
+            <p className="text-text/60">Access all the notes you've taken during your study sessions.</p>
+          </div>
         </div>
         <div className="relative w-full md:w-64">
            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />

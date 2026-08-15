@@ -648,9 +648,18 @@ const Flashcards = () => {
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1">Flashcards</h1>
-          <p className="text-text/60">Spaced repetition study — review cards at the optimal time.</p>
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 text-text/60 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition"
+            title="Go Back"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-1">Flashcards</h1>
+            <p className="text-text/60">Spaced repetition study — review cards at the optimal time.</p>
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           {totalDue > 0 && (

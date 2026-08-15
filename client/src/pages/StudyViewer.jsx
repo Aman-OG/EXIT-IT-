@@ -541,7 +541,7 @@ const StudyViewer = () => {
       {!isNotesMode && (
         <div className="flex items-center justify-between backdrop-blur-xl bg-white/60 dark:bg-black/40 border-b border-white/20 dark:border-white/10 px-4 py-3 z-20 shadow-sm">
           <div className="flex items-center space-x-3">
-            <button onClick={() => navigate('/courses')} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition">
+            <button onClick={() => navigate(-1)} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition" title="Go Back">
               <ArrowLeft size={20} />
             </button>
             <div className="flex items-center space-x-4">

@@ -307,16 +307,16 @@ const Courses = () => {
                   </div>
                   <div className="flex-1 min-w-0 mr-4">
                     <div className="flex items-center space-x-3 mb-1">
-                      <h2 className="text-xl font-bold truncate">{course.title}</h2>
+                      <h2 className="text-xl font-bold break-words">{course.title}</h2>
                       <button 
                         onClick={(e) => { e.stopPropagation(); window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank'); }} 
-                        className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-0 group-hover:opacity-100"
+                        className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-0 group-hover:opacity-100 shrink-0"
                         title="Download Course (ZIP)"
                       >
                         <Download size={14} />
                       </button>
                       {user?.role === 'admin' && (
-                         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                             <button onClick={(e) => { e.stopPropagation(); setCourseForm({title: course.title, code: course.code, description: course.description}); setCourseModal({mode: 'edit', data: course}); }} className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10">
                                <Pencil size={14} />
                             </button>
@@ -326,7 +326,7 @@ const Courses = () => {
                          </div>
                       )}
                     </div>
-                    <p className="text-sm text-text/60 font-medium truncate">{course.code} • {course.description || 'University Course'}</p>
+                    <p className="text-sm text-text/60 font-medium break-words leading-relaxed">{course.code} • {course.description || 'University Course'}</p>
                     
                     {/* Progress Bar */}
                     <div className="mt-3 max-w-xs">
@@ -439,7 +439,7 @@ const Courses = () => {
                                   <FileText size={32} strokeWidth={1.5} />
                                 </div>
                                 
-                                <h3 className="font-bold text-sm mb-1 line-clamp-2 min-h-[2.5rem] flex items-center justify-center group-hover:text-primary transition-colors leading-tight">
+                                <h3 className="font-bold text-sm mb-1 break-words flex items-center justify-center text-center group-hover:text-primary transition-colors leading-tight min-h-[2.5rem]">
                                   {mat.title}
                                 </h3>
                                 
@@ -467,8 +467,8 @@ const Courses = () => {
                           {materials[course.id].map((mat) => (
                             <div key={mat.id} className="bg-background border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
                               <div className="flex items-center space-x-2 mb-2 pb-2 border-b border-neutral-100 dark:border-neutral-800">
-                                <FileText size={16} className="text-primary" />
-                                <h4 className="font-bold text-sm text-text truncate">{mat.title}</h4>
+                                <FileText size={16} className="text-primary shrink-0" />
+                                <h4 className="font-bold text-sm text-text break-words leading-snug">{mat.title}</h4>
                               </div>
                               <VideoPanel materialId={mat.id} materialTitle={mat.title} defaultExpanded={true} />
                             </div>
@@ -724,8 +724,8 @@ const QuizSection = ({ courseId, navigate, user }) => {
                           </span>
                         )}
                       </div>
-                      <h5 className="font-bold text-sm text-text group-hover:text-accent transition-colors line-clamp-1">{q.title}</h5>
-                      <p className="text-xs text-text/50 line-clamp-2 mt-1">{q.description || 'Practice quiz for this course'}</p>
+                      <h5 className="font-bold text-sm text-text group-hover:text-accent transition-colors break-words leading-snug">{q.title}</h5>
+                      <p className="text-xs text-text/50 break-words mt-1 leading-relaxed">{q.description || 'Practice quiz for this course'}</p>
                     </div>
 
                     <button
@@ -767,7 +767,7 @@ const QuizSection = ({ courseId, navigate, user }) => {
                           </button>
                         )}
                       </div>
-                      <h5 className="font-bold text-sm text-text group-hover:text-emerald-600 transition-colors line-clamp-1">{q.title}</h5>
+                      <h5 className="font-bold text-sm text-text group-hover:text-emerald-600 transition-colors break-words leading-snug">{q.title}</h5>
                       {q.best_score != null ? (
                         <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                           Best Score: {q.best_score}/{q.total_questions}

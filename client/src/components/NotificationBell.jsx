@@ -108,7 +108,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-text hover:bg-card rounded-lg transition-colors"
+        className="relative p-2 text-text hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -119,10 +119,18 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-xl z-50 max-h-[600px] overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-text/10 flex items-center justify-between">
-            <h3 className="font-semibold text-text">Notifications</h3>
+        <>
+          {/* Mobile Overlay Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/40 z-40 sm:hidden animate-in fade-in duration-200"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Container */}
+          <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-96 bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl z-50 max-h-[calc(100vh-5rem)] sm:max-h-[600px] overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between">
+              <h3 className="font-bold text-text">Notifications</h3>
             <div className="flex gap-2">
               {unreadCount > 0 && (
                 <button
@@ -222,6 +230,7 @@ export default function NotificationBell() {
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );

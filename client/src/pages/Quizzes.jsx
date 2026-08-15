@@ -160,8 +160,8 @@ const CourseQuizGroup = ({ courseKey, courseQuizzes, navigate, user, handleDelet
                 </div>
               )}
               
-              <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors pr-8">{quiz.title}</h3>
-              <p className="text-xs text-text/50 line-clamp-2 mb-4 h-8">{quiz.description || (quiz.is_official ? 'Verify your official course knowledge.' : 'AI generated personal practice.')}</p>
+              <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors pr-8 break-words leading-snug">{quiz.title}</h3>
+              <p className="text-xs text-text/50 break-words mb-4 leading-relaxed min-h-[2.5rem]">{quiz.description || (quiz.is_official ? 'Verify your official course knowledge.' : 'AI generated personal practice.')}</p>
               
               <div className="flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-800 relative z-10">
                 <div className="flex items-center space-x-1.5 text-text/40">
