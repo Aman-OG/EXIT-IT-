@@ -277,42 +277,42 @@ const DeckDetail = ({ deck, onBack }) => {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button onClick={onBack} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <button onClick={onBack} className="p-2 text-text/60 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition" title="Go Back">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold">{deck.title}</h1>
-            {deck.course_title && <p className="text-sm text-text/50">{deck.course_title}</p>}
+            <h1 className="text-xl sm:text-2xl font-bold break-words">{deck.title}</h1>
+            {deck.course_title && <p className="text-xs sm:text-sm text-text/50">{deck.course_title}</p>}
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => { setShowCSVImport(v => !v); setShowAIGenerate(false); setShowAddCard(false); }}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-accent/40 transition"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-xs sm:text-sm hover:border-accent/40 transition"
           >
-            <Upload size={16} /><span>CSV Import</span>
+            <Upload size={15} /><span>CSV</span>
           </button>
           <button
             onClick={() => { setShowAIGenerate(v => !v); setShowCSVImport(false); setShowAddCard(false); }}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-primary/40 transition"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-xs sm:text-sm hover:border-primary/40 transition"
           >
-            <Sparkles size={16} className="text-primary" /><span>AI Generate</span>
+            <Sparkles size={15} className="text-primary" /><span>AI Generate</span>
           </button>
           <button
             onClick={() => { setShowAddCard(true); setShowAIGenerate(false); setShowCSVImport(false); }}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-sm hover:border-primary/40 transition"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl font-bold text-xs sm:text-sm hover:border-primary/40 transition"
           >
-            <Plus size={16} /><span>Add Card</span>
+            <Plus size={15} /><span>Add Card</span>
           </button>
           {cards.length > 0 && (
             <button
               onClick={() => setStudying(true)}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 transition shadow-md"
+              className="flex items-center space-x-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold text-xs sm:text-sm hover:opacity-90 transition shadow-md"
             >
-              <Brain size={16} />
-              <span>Study {dueCards.length > 0 ? `(${dueCards.length} due)` : 'All'}</span>
+              <Brain size={15} />
+              <span>Study {dueCards.length > 0 ? `(${dueCards.length})` : 'All'}</span>
             </button>
           )}
         </div>
