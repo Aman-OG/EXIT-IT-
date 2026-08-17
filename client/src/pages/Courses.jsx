@@ -314,53 +314,55 @@ const Courses = () => {
                 {/* Course Header */}
                 <div
                   onClick={() => toggleCourse(course.id)}
-                  className={`w-full text-left p-6 bg-gradient-to-r ${courseColors[idx % courseColors.length]} flex items-center justify-between group hover:shadow-md transition-all cursor-pointer`}
+                  className={`w-full text-left p-4 sm:p-6 bg-gradient-to-r ${courseColors[idx % courseColors.length]} flex items-start sm:items-center justify-between gap-3 sm:gap-4 group hover:shadow-md transition-all cursor-pointer overflow-hidden`}
                 >
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className={`p-3 rounded-xl bg-card/80 shadow-sm transition-transform duration-300 ${isExpanded ? 'scale-110' : ''} ${iconColors[idx % iconColors.length]}`}>
+                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                    <div className={`p-2.5 sm:p-3 rounded-xl bg-card/80 shadow-sm shrink-0 transition-transform duration-300 ${isExpanded ? 'scale-105 sm:scale-110' : ''} ${iconColors[idx % iconColors.length]}`}>
                       {contentType === 'video' ? (
-                        <YoutubeIcon size={24} className="text-red-600" />
+                        <YoutubeIcon size={22} className="text-red-600 sm:w-6 sm:h-6" />
                       ) : contentType === 'quiz' ? (
-                        <CheckSquare size={24} className="text-accent" />
+                        <CheckSquare size={22} className="text-accent sm:w-6 sm:h-6" />
                       ) : (
-                        <BookOpen size={24} strokeWidth={2.5} />
+                        <BookOpen size={22} strokeWidth={2.5} className="sm:w-6 sm:h-6" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 mr-4">
-                      <div className="flex items-center space-x-3 mb-1">
-                        <h2 className="text-xl font-bold break-words flex items-center gap-2">
-                          <span>{course.title}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                        <h2 className="text-base sm:text-xl font-bold text-text break-words flex flex-wrap items-center gap-2">
+                          <span className="break-words">{course.title}</span>
                           {isExpanded && (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary text-primary-foreground shadow-sm animate-in fade-in">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-primary text-primary-foreground shadow-sm animate-in fade-in shrink-0">
                               Viewing
                             </span>
                           )}
                         </h2>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank'); }} 
-                          className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-0 group-hover:opacity-100 shrink-0"
-                          title="Download Course (ZIP)"
-                        >
-                          <Download size={14} />
-                        </button>
-                        {user?.role === 'admin' && (
-                           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                              <button onClick={(e) => { e.stopPropagation(); setCourseForm({title: course.title, code: course.code, description: course.description}); setCourseModal({mode: 'edit', data: course}); }} className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                 <Pencil size={14} />
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'course', id: course.id, title: course.title }); }} className="p-1.5 text-text/40 hover:text-warning transition rounded-lg hover:bg-warning/10">
-                                 <Trash2 size={14} />
-                              </button>
-                           </div>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank'); }} 
+                            className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
+                            title="Download Course (ZIP)"
+                          >
+                            <Download size={14} />
+                          </button>
+                          {user?.role === 'admin' && (
+                             <div className="flex items-center space-x-0.5 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                                <button onClick={(e) => { e.stopPropagation(); setCourseForm({title: course.title, code: course.code, description: course.description}); setCourseModal({mode: 'edit', data: course}); }} className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10">
+                                   <Pencil size={14} />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'course', id: course.id, title: course.title }); }} className="p-1.5 text-text/40 hover:text-warning transition rounded-lg hover:bg-warning/10">
+                                   <Trash2 size={14} />
+                                </button>
+                             </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-text/60 font-medium break-words leading-relaxed">{course.code} • {course.description || 'University Course'}</p>
+                      <p className="text-xs sm:text-sm text-text/60 font-medium break-words leading-relaxed">{course.code} • {course.description || 'University Course'}</p>
                       
                       {/* Progress Bar */}
-                      <div className="mt-3 max-w-xs">
-                          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                      <div className="mt-2.5 w-full max-w-[220px] sm:max-w-xs">
+                          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-1">
                              <span className="text-text/40">Progress</span>
-                             <span className="text-primary">{Math.round((course.completed_materials / (course.total_materials || 1)) * 100)}%</span>
+                             <span className="text-primary font-mono">{Math.round((course.completed_materials / (course.total_materials || 1)) * 100)}%</span>
                           </div>
                           <div className="w-full h-1.5 bg-background rounded-full overflow-hidden border border-neutral-100 dark:border-neutral-800">
                              <div 
@@ -371,14 +373,14 @@ const Courses = () => {
                       </div>
                     </div>
                   </div>
-                  <div className={`text-text/40 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-primary' : ''}`}>
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                  <div className={`p-1 text-text/40 shrink-0 self-start sm:self-center transition-transform duration-300 ${isExpanded ? 'rotate-180 text-primary' : ''}`}>
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                   </div>
                 </div>
 
               {/* Expanded Content View */}
               {expandedCourse === course.id && (
-                <div className={`p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 bg-gradient-to-r ${courseColors[idx % courseColors.length]}`}>
+                <div className={`p-4 sm:p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 bg-gradient-to-r ${courseColors[idx % courseColors.length]} overflow-hidden`}>
                   
                   {/* ================= MODE 1: PDF TAB ================= */}
                   {contentType === 'pdf' && (
@@ -716,7 +718,7 @@ const QuizSection = ({ courseId, navigate, user }) => {
   const aiQuizzes = quizzes.filter(q => !q.is_official);
 
   return (
-    <div className="space-y-6 bg-background/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
+    <div className="space-y-4 sm:space-y-6 bg-background/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5 shadow-sm overflow-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-base flex items-center gap-2">
