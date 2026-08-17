@@ -328,13 +328,8 @@ const Courses = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-                        <h2 className="text-base sm:text-xl font-bold text-text break-words flex flex-wrap items-center gap-2">
-                          <span className="break-words">{course.title}</span>
-                          {isExpanded && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-primary text-primary-foreground shadow-sm animate-in fade-in shrink-0">
-                              Viewing
-                            </span>
-                          )}
+                        <h2 className="text-base sm:text-xl font-bold text-text break-words">
+                          {course.title}
                         </h2>
                         <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
                           <button 
@@ -741,33 +736,34 @@ const QuizSection = ({ courseId, navigate, user }) => {
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-text/50">Official Course Quizzes</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {officialQuizzes.map(q => (
-                  <div
-                    key={q.id}
-                    className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-accent/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-md">Official</span>
-                        {q.best_score != null && (
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                            Best: {q.best_score}/{q.total_questions}
-                          </span>
-                        )}
-                      </div>
-                      <h5 className="font-bold text-sm text-text group-hover:text-accent transition-colors break-words leading-snug">{q.title}</h5>
-                      <p className="text-xs text-text/50 break-words mt-1 leading-relaxed">{q.description || 'Practice quiz for this course'}</p>
-                    </div>
-
-                    <button
+                {officialQuizzes.map(q => {
+                  const cleanedDesc = q.description ? q.description.replace(/:\s*#\d+\s*-\s*#\d+/g, '').replace(/#\d+\s*-\s*#\d+/g, '').trim() : 'Practice quiz for this course';
+                  return (
+                    <div
+                      key={q.id}
                       onClick={() => navigate(`/quiz/${q.id}`, { state: { from: '/courses', courseId } })}
-                      className="w-full bg-accent/10 hover:bg-accent text-accent hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
+                      className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-accent/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group cursor-pointer hover:shadow-md hover:-translate-y-0.5"
                     >
-                      <PlayCircle size={14} />
-                      <span>Start Quiz</span>
-                    </button>
-                  </div>
-                ))}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-md">Official</span>
+                          {q.best_score != null && (
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                              Best: {q.best_score}/{q.total_questions}
+                            </span>
+                          )}
+                        </div>
+                        <h5 className="font-bold text-sm text-text group-hover:text-accent transition-colors break-words leading-snug">{q.title}</h5>
+                        <p className="text-xs text-text/50 break-words mt-1 leading-relaxed">{cleanedDesc}</p>
+                      </div>
+
+                      <div className="w-full bg-accent/10 group-hover:bg-accent text-accent group-hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5">
+                        <PlayCircle size={14} />
+                        <span>Start Quiz</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -777,46 +773,47 @@ const QuizSection = ({ courseId, navigate, user }) => {
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">AI Generated Practice Quizzes</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {aiQuizzes.map(q => (
-                  <div
-                    key={q.id}
-                    className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <Sparkles size={10} />
-                          AI Practice
-                        </span>
-                        {(user?.role === 'admin' || user?.id == q.user_id) && (
-                          <button
-                            onClick={() => deleteQuiz(q.id, q.title)}
-                            className="text-text/30 hover:text-red-500 transition p-1 rounded-md"
-                            title="Delete Quiz"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                {aiQuizzes.map(q => {
+                  const cleanedDesc = q.description ? q.description.replace(/:\s*#\d+\s*-\s*#\d+/g, '').replace(/#\d+\s*-\s*#\d+/g, '').trim() : '';
+                  return (
+                    <div
+                      key={q.id}
+                      onClick={() => navigate(`/quiz/${q.id}`, { state: { from: '/courses', courseId } })}
+                      className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/50 p-4 rounded-xl shadow-sm transition-all flex flex-col justify-between space-y-3 group cursor-pointer hover:shadow-md hover:-translate-y-0.5"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <Sparkles size={10} />
+                            AI Practice
+                          </span>
+                          {(user?.role === 'admin' || user?.id == q.user_id) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteQuiz(q.id, q.title); }}
+                              className="text-text/30 hover:text-red-500 transition p-1 rounded-md"
+                              title="Delete Quiz"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                        <h5 className="font-bold text-sm text-text group-hover:text-emerald-600 transition-colors break-words leading-snug">{q.title}</h5>
+                        {q.best_score != null ? (
+                          <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                            Best Score: {q.best_score}/{q.total_questions}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-text/40 mt-1">{cleanedDesc || 'Not attempted yet'}</p>
                         )}
                       </div>
-                      <h5 className="font-bold text-sm text-text group-hover:text-emerald-600 transition-colors break-words leading-snug">{q.title}</h5>
-                      {q.best_score != null ? (
-                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-                          Best Score: {q.best_score}/{q.total_questions}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-text/40 mt-1">Not attempted yet</p>
-                      )}
-                    </div>
 
-                    <button
-                      onClick={() => navigate(`/quiz/${q.id}`, { state: { from: '/courses', courseId } })}
-                      className="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
-                    >
-                      <Sparkles size={14} />
-                      <span>Start Practice</span>
-                    </button>
-                  </div>
-                ))}
+                      <div className="w-full bg-emerald-500/10 group-hover:bg-emerald-500 text-emerald-600 group-hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5">
+                        <Sparkles size={14} />
+                        <span>Start Practice</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
