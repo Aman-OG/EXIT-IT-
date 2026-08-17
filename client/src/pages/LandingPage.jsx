@@ -1,10 +1,10 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, Brain, Trophy, ArrowRight, Sparkles, Zap, Target, 
   Sun, Moon, FlaskConical, CheckCircle2, ShieldCheck, 
   Code, Database, Globe, Network, Cpu, ArrowUpRight, Award,
-  Layers, Check, ChevronRight
+  Star, ChevronRight
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ExitItLogo from '../components/ExitItLogo';
@@ -33,6 +33,25 @@ const CATEGORIES = ['All', 'Software Dev', 'Networking', 'Databases', 'Hardware 
 const LandingPage = () => {
   const { theme, setTheme } = useContext(ThemeContext);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [starCount, setStarCount] = useState(null);
+
+  // Fetch live GitHub Stars count
+  useEffect(() => {
+    fetch('https://api.github.com/repos/Aman-OG/EXIT-IT-')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch repo data');
+        return res.json();
+      })
+      .then(data => {
+        if (typeof data.stargazers_count === 'number') {
+          setStarCount(data.stargazers_count);
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully
+        setStarCount(null);
+      });
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -61,11 +80,31 @@ const LandingPage = () => {
             </span>
           </Link>
           
-          <div className="flex items-center space-x-2.5 sm:space-x-4">
-            {/* Theme Toggle Button */}
+          <div className="flex items-center space-x-2 sm:space-x-3.5">
+            {/* GitHub Star Button */}
+            <a
+              href="https://github.com/Aman-OG/EXIT-IT-"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-[11px] sm:text-xs font-bold transition-all active:scale-95 group shadow-sm"
+              title="Star EXIT-IT on GitHub"
+            >
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path>
+              </svg>
+              <span className="hidden xs:inline">Star</span>
+              <Star size={12} className="text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
+              {starCount !== null && (
+                <span className="px-1.5 py-0.5 bg-text/10 rounded-full text-[10px] font-black text-text/80">
+                  {starCount}
+                </span>
+              )}
+            </a>
+
+            {/* Theme Toggle Button - HIDDEN on mobile, visible on sm+ */}
             <button 
               onClick={toggleTheme}
-              className="p-2 sm:p-2.5 bg-text/5 hover:bg-text/10 rounded-full transition-all active:scale-90 border border-text/10"
+              className="hidden sm:flex p-2 sm:p-2.5 bg-text/5 hover:bg-text/10 rounded-full transition-all active:scale-90 border border-text/10 items-center justify-center"
               title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
               aria-label="Toggle Color Theme"
             >
@@ -74,7 +113,7 @@ const LandingPage = () => {
 
             <Link 
               to="/login" 
-              className="text-[11px] sm:text-xs font-black opacity-70 hover:opacity-100 transition-all uppercase tracking-widest px-2.5 sm:px-3 py-2"
+              className="text-[11px] sm:text-xs font-black opacity-70 hover:opacity-100 transition-all uppercase tracking-widest px-2 sm:px-3 py-2"
             >
               Log in
             </Link>
@@ -138,7 +177,7 @@ const LandingPage = () => {
               </div>
               <div className="flex items-center space-x-1.5">
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
-                <span>850+ Questions</span>
+                <span>860+ Questions</span>
               </div>
               <div className="flex items-center space-x-1.5">
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
@@ -371,7 +410,7 @@ const LandingPage = () => {
                 <div className="space-y-2">
                   <h3 className="text-xl sm:text-2xl font-black font-outfit tracking-tight">Practice & Learn.</h3>
                   <p className="text-xs sm:text-sm text-text/70 font-medium leading-relaxed">
-                    Test yourself with over 850 practice questions with comprehensive explanations for both right and wrong choices.
+                    Test yourself with over 860 practice questions with comprehensive explanations for both right and wrong choices.
                   </p>
                 </div>
               </div>
@@ -438,15 +477,23 @@ const LandingPage = () => {
 
             <div className="pt-2 flex justify-center lg:justify-start">
               <a 
-                href="https://github.com/aman-og" 
+                href="https://github.com/Aman-OG/EXIT-IT-" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className={`inline-flex items-center space-x-3.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl hover:scale-105 transition-all shadow-xl active:scale-95 ${theme === 'dark' ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}
               >
                 <svg className="w-6 h-6 sm:w-7 sm:h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path></svg>
                 <div className="text-left">
-                  <p className="text-[9px] sm:text-[10px] font-black opacity-50 uppercase tracking-widest leading-none mb-1">Github Repository</p>
-                  <p className="text-xs sm:text-sm font-black tracking-tight leading-none uppercase">AMAN-OG</p>
+                  <div className="flex items-center space-x-1.5">
+                    <p className="text-[9px] sm:text-[10px] font-black opacity-50 uppercase tracking-widest leading-none">GitHub Repo</p>
+                    {starCount !== null && (
+                      <span className="flex items-center space-x-0.5 text-[9px] font-black text-amber-400">
+                        <Star size={10} fill="currentColor" />
+                        <span>{starCount}</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm font-black tracking-tight leading-none uppercase mt-0.5">AMAN-OG / EXIT-IT</p>
                 </div>
               </a>
             </div>

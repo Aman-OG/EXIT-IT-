@@ -4,32 +4,63 @@ import api from '../api/axios';
 
 export const ThemeContext = createContext();
 
+const getSystemTheme = () => {
+  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
+};
+
+const getInitialTheme = () => {
+  const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('exitit-theme') : null;
+  if (savedTheme) {
+    return savedTheme;
+  }
+  return getSystemTheme();
+};
+
 export const ThemeProvider = ({ children }) => {
   const { user, setUser } = useContext(AuthContext);
-  const [theme, setThemeState] = useState('light'); // light, dark, study, eye
+  const [theme, setThemeState] = useState(getInitialTheme); // light, dark, study, eye
 
-  // Sync theme with user state
+  // Sync theme with user account settings or system default
   useEffect(() => {
     if (user && user.theme) {
       setThemeState(user.theme);
+      localStorage.setItem('exitit-theme', user.theme);
     } else {
       const savedTheme = localStorage.getItem('exitit-theme');
       if (savedTheme) {
         setThemeState(savedTheme);
       } else {
-        // [System Detection] Default to OS preference if no profile/storage theme exists
-        const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        setThemeState(systemPreference);
-        localStorage.setItem('exitit-theme', systemPreference);
+        const sysTheme = getSystemTheme();
+        setThemeState(sysTheme);
       }
     }
   }, [user]);
 
-  // Apply theme to HTML
+  // Listen for system theme changes if no manual override
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = (e) => {
+      const savedTheme = localStorage.getItem('exitit-theme');
+      // If user hasn't manually set a non-system theme in profile
+      if (!user?.theme && !savedTheme) {
+        setThemeState(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [user]);
+
+  // Apply theme class to HTML root element
   useEffect(() => {
     const html = document.documentElement;
-    html.className = ''; // remove old
-    if (theme !== 'light') {
+    html.className = ''; // remove previous theme classes
+    if (theme && theme !== 'light') {
       html.classList.add(`theme-${theme}`);
     }
   }, [theme]);
