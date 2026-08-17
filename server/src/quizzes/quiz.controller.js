@@ -109,7 +109,7 @@ exports.getAllQuizzes = async (req, res) => {
 
 exports.submitQuiz = async (req, res) => {
   const { id } = req.params;
-  const { answers } = req.body; // { questionId: optionId }
+  const answers = req.body.answers || {}; // { questionId: optionId }
   const userId = req.user.id;
 
   try {
@@ -120,21 +120,35 @@ exports.submitQuiz = async (req, res) => {
 
     // Get all correct options at once
     const questionIds = questionsRes.rows.map(q => q.id);
-    const correctOptionsRes = await pool.query(
-      'SELECT question_id, id FROM options WHERE is_correct = TRUE AND question_id = ANY($1::int[])',
-      [questionIds]
-    );
-    const correctMap = {};
-    correctOptionsRes.rows.forEach(r => { correctMap[r.question_id] = r.id; });
+    let correctMap = {};
+    if (questionIds.length > 0) {
+      const correctOptionsRes = await pool.query(
+        'SELECT question_id, id FROM options WHERE is_correct = TRUE AND question_id = ANY($1::int[])',
+        [questionIds]
+      );
+      correctOptionsRes.rows.forEach(r => {
+        if (!correctMap[r.question_id]) {
+          correctMap[r.question_id] = [];
+        }
+        correctMap[r.question_id].push(r.id);
+      });
+    }
 
     for (const q of questionsRes.rows) {
-      const correctOptionId = correctMap[q.id];
+      const correctOptionIds = correctMap[q.id] || [];
       const selectedOptionId = answers[q.id];
-      const isCorrect = selectedOptionId == correctOptionId;
+      
+      let isCorrect = false;
+      if (Array.isArray(selectedOptionId)) {
+        isCorrect = selectedOptionId.length > 0 && selectedOptionId.every(oid => correctOptionIds.includes(Number(oid)));
+      } else if (selectedOptionId !== undefined && selectedOptionId !== null) {
+        isCorrect = correctOptionIds.includes(Number(selectedOptionId));
+      }
+
       if (isCorrect) score++;
       answers_map[q.id] = {
-        selectedOptionId: selectedOptionId || null,
-        correctOptionId: correctOptionId || null,
+        selectedOptionId: selectedOptionId !== undefined ? selectedOptionId : null,
+        correctOptionId: correctOptionIds.length === 1 ? correctOptionIds[0] : correctOptionIds,
         isCorrect
       };
     }
@@ -150,35 +164,39 @@ exports.submitQuiz = async (req, res) => {
 
     if (pointsEarned > 0) {
       await pool.query(
-        'UPDATE users SET total_score = total_score + $1 WHERE id = $2',
+        'UPDATE users SET total_score = COALESCE(total_score, 0) + $1 WHERE id = $2',
         [pointsEarned, userId]
       );
     }
 
-    // Notify all friends about quiz completion
-    const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
-    const quizRes = await pool.query(
-      `SELECT q.title, c.title as course_title 
-       FROM quizzes q 
-       LEFT JOIN courses c ON q.course_id = c.id 
-       WHERE q.id = $1`, 
-      [id]
-    );
-    const userName = userRes.rows[0]?.name || 'Your friend';
-    const quizTitle = quizRes.rows[0]?.title || 'Quiz';
-    const pctScore = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
+    // Notify all friends about quiz completion (non-blocking / error-safe)
+    try {
+      const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+      const quizRes = await pool.query(
+        `SELECT q.title, c.title as course_title 
+         FROM quizzes q 
+         LEFT JOIN courses c ON q.course_id = c.id 
+         WHERE q.id = $1`, 
+        [id]
+      );
+      const userName = userRes.rows[0]?.name || 'Your friend';
+      const quizTitle = quizRes.rows[0]?.title || 'Quiz';
+      const pctScore = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
-    await notifyAllFriends(
-      userId,
-      'friend_activity',
-      `${userName} Completed a Quiz! 🎯`,
-      `${userName} completed "${quizTitle}" with a score of ${score}/${totalQuestions} (${pctScore}%)!`,
-      `/quizzes`
-    );
+      await notifyAllFriends(
+        userId,
+        'friend_activity',
+        `${userName} Completed a Quiz! 🎯`,
+        `${userName} completed "${quizTitle}" with a score of ${score}/${totalQuestions} (${pctScore}%)!`,
+        `/quizzes`
+      );
+    } catch (notifErr) {
+      console.warn('⚠️ Friend notification skipped on quiz submit:', notifErr.message);
+    }
 
     res.json({ score, totalQuestions, answers_map, pointsEarned });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Error submitting quiz:', err);
     res.status(500).json({ message: 'Server error submitting quiz' });
   }
 };
