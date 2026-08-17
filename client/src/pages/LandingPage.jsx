@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, Brain, Trophy, ArrowRight, Sparkles, Zap, Target, 
-  Sun, Moon, FlaskConical, CheckCircle2, ShieldCheck, 
+  FlaskConical, CheckCircle2, ShieldCheck, 
   Code, Database, Globe, Network, Cpu, ArrowUpRight, Award,
   Star, ChevronRight
 } from 'lucide-react';
@@ -53,10 +53,6 @@ const LandingPage = () => {
       });
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   const filteredCourses = activeCategory === 'All' 
     ? COURSES_LIST 
     : COURSES_LIST.filter(c => c.category.toLowerCase().includes(activeCategory.toLowerCase()) || (activeCategory === 'Software Dev' && (c.category === 'Web Dev' || c.category === 'Mobile & Web')));
@@ -86,30 +82,20 @@ const LandingPage = () => {
               href="https://github.com/Aman-OG/EXIT-IT-"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-[11px] sm:text-xs font-bold transition-all active:scale-95 group shadow-sm"
+              className="flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-xs font-bold transition-all active:scale-95 group shadow-sm"
               title="Star EXIT-IT on GitHub"
             >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path>
               </svg>
-              <span className="hidden xs:inline">Star</span>
-              <Star size={12} className="text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
+              <span className="hidden xs:inline font-bold">Star</span>
+              <Star size={13} className="text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
               {starCount !== null && (
-                <span className="px-1.5 py-0.5 bg-text/10 rounded-full text-[10px] font-black text-text/80">
+                <span className="px-1.5 py-0.5 bg-text/10 rounded-full text-[10px] sm:text-[11px] font-black text-text/80">
                   {starCount}
                 </span>
               )}
             </a>
-
-            {/* Theme Toggle Button - HIDDEN on mobile, visible on sm+ */}
-            <button 
-              onClick={toggleTheme}
-              className="hidden sm:flex p-2 sm:p-2.5 bg-text/5 hover:bg-text/10 rounded-full transition-all active:scale-90 border border-text/10 items-center justify-center"
-              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              aria-label="Toggle Color Theme"
-            >
-              {theme === 'dark' ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-indigo-600" />}
-            </button>
 
             <Link 
               to="/login" 
