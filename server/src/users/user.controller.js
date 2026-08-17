@@ -409,6 +409,30 @@ const googleAuth = async (req, res) => {
   }
 };
 
+const deleteMyAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const userCheck = await pool.query('SELECT id, role, email FROM users WHERE id = $1', [userId]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Account not found' });
+    }
+
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    res.cookie('jwt', '', {
+      httpOnly: true,
+      expires: new Date(0),
+      sameSite: 'strict',
+    });
+
+    res.json({ message: 'Account permanently deleted' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ message: 'Failed to delete account' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -422,4 +446,5 @@ module.exports = {
   updateProfile,
   uploadAvatar,
   googleAuth,
+  deleteMyAccount,
 };

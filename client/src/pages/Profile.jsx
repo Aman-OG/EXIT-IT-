@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare } from 'lucide-react';
+import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare, AlertTriangle, Trash2, ShieldAlert } from 'lucide-react';
 import ActivityHeatmapGitHub from '../components/ActivityHeatmapGitHub';
 import Trophy3D from '../components/Trophy3D';
 import { getAvatarUrl } from '../utils/avatar';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { user: authUser, setUser, evaluateBadges } = useContext(AuthContext);
+    const { user: authUser, setUser, logout, evaluateBadges } = useContext(AuthContext);
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedBadge, setSelectedBadge] = useState(null);
@@ -22,6 +22,10 @@ const Profile = () => {
     const [avatarUrlInput, setAvatarUrlInput] = useState("");
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -131,6 +135,28 @@ const Profile = () => {
             console.error("Failed to reset avatar", err);
         } finally {
             setUploadingAvatar(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+            setDeleteError('Please type DELETE to confirm account deletion.');
+            return;
+        }
+
+        try {
+            setIsDeletingAccount(true);
+            setDeleteError(null);
+            await api.delete('/users/profile');
+            if (logout) {
+                logout();
+            }
+            navigate('/welcome');
+        } catch (err) {
+            console.error('Failed to delete account', err);
+            setDeleteError(err.response?.data?.message || 'Failed to delete account. Please try again.');
+        } finally {
+            setIsDeletingAccount(false);
         }
     };
 
@@ -567,6 +593,89 @@ const Profile = () => {
                     })}
                 </div>
             </div>
+
+            {/* DANGER ZONE: DELETE ACCOUNT */}
+            <div className="bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20 rounded-[2rem] p-6 md:p-8 shadow-sm mt-8 transition-colors">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-start space-x-4">
+                        <div className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl shrink-0 mt-1">
+                            <ShieldAlert size={24} />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400">Danger Zone</h3>
+                            <p className="text-sm text-text/70 font-normal">
+                                Permanently remove your student account, test scores, bookmarks, progress, and study statistics.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => { setIsDeleteModalOpen(true); setDeleteConfirmText(""); setDeleteError(null); }}
+                        className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 shrink-0"
+                    >
+                        <Trash2 size={16} />
+                        <span>Delete Account</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Delete Account Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center space-x-3 text-rose-500">
+                            <div className="p-3 bg-rose-500/10 rounded-2xl">
+                                <AlertTriangle size={28} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-text">Delete Your Account?</h3>
+                                <p className="text-xs text-text/60">This action is permanent and irreversible.</p>
+                            </div>
+                        </div>
+
+                        {deleteError && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-xl">
+                                {deleteError}
+                            </div>
+                        )}
+
+                        <p className="text-xs text-text/70 leading-relaxed font-normal">
+                            All your quiz attempts, official exam scores, chapter completion progress, and personal streaks will be erased immediately.
+                        </p>
+
+                        <div className="space-y-1.5 pt-1">
+                            <label className="text-xs font-semibold text-text/70">
+                                Type <span className="font-bold text-rose-600 dark:text-rose-400">DELETE</span> to confirm:
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="DELETE"
+                                value={deleteConfirmText}
+                                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background border border-text/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-semibold uppercase tracking-wider"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-end space-x-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={isDeletingAccount}
+                                className="px-4 py-2.5 text-xs font-semibold text-text/70 hover:text-text bg-text/5 hover:bg-text/10 rounded-xl transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={isDeletingAccount || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2"
+                            >
+                                <span>{isDeletingAccount ? 'Deleting...' : 'Permanently Delete'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

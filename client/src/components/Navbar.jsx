@@ -257,10 +257,10 @@ const Navbar = ({ toggleSidebar }) => {
                 </button>
                 <button 
                   onClick={() => { setDropdownOpen(false); logout(); }} 
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-warning/90 hover:bg-warning/10 hover:text-warning rounded-xl transition-colors flex items-center space-x-3 group"
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center space-x-3 group"
                 >
-                  <LogOut size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>Log out securely</span>
+                  <LogOut size={18} className="group-hover:scale-110 transition-transform text-rose-500" />
+                  <span>Log out</span>
                 </button>
               </div>
               

@@ -78,15 +78,6 @@ const LandingPage = () => {
           </Link>
           
           <div className="flex items-center space-x-2 sm:space-x-3.5">
-            {/* Feedback Button in Header */}
-            <button
-              onClick={() => setFeedbackOpen(true)}
-              className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-xs font-medium text-text/80 transition-all active:scale-95"
-            >
-              <MessageSquare size={13} className="text-primary" />
-              <span>Feedback</span>
-            </button>
-
             {/* GitHub Star Button */}
             <a
               href="https://github.com/Aman-OG/EXIT-IT-"
