@@ -73,6 +73,43 @@ const Profile = () => {
         }
     };
 
+    const compressImageToBase64 = (file, maxWidth = 280, maxHeight = 280, quality = 0.85) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(dataUrl);
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    };
+
     const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -82,14 +119,10 @@ const Profile = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('avatar', file);
-
         try {
             setUploadingAvatar(true);
-            const res = await api.post('/users/avatar', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const compressedBase64 = await compressImageToBase64(file, 280, 280, 0.85);
+            const res = await api.put('/users/profile', { avatar_url: compressedBase64 });
             setProfileData(prev => ({ ...prev, user: { ...prev.user, avatar_url: res.data.avatar_url } }));
             setUser(prev => ({ ...prev, avatar_url: res.data.avatar_url }));
             setIsAvatarModalOpen(false);
