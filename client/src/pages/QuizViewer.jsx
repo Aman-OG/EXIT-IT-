@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import {
   CheckCircle2, XCircle, ArrowRight, ArrowLeft, RotateCcw,
@@ -10,6 +10,7 @@ import { AuthContext } from '../context/AuthContext';
 const QuizViewer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { triggerStreakUpdate, triggerPointsEarned, evaluateBadges } = useContext(AuthContext);
   const [quiz, setQuiz] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -20,6 +21,25 @@ const QuizViewer = () => {
   const [loading, setLoading] = useState(true);
   const [showHint, setShowHint] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(null);
+
+  const handleBack = () => {
+    const fromPath = location.state?.from;
+    const courseId = location.state?.courseId || quiz?.course_id;
+
+    if (fromPath === '/courses') {
+      if (courseId) {
+        localStorage.setItem('expanded_course_id', courseId);
+      }
+      localStorage.setItem('courses_content_type', 'quiz');
+      navigate('/courses');
+    } else if (fromPath) {
+      navigate(fromPath);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/quizzes');
+    }
+  };
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -84,7 +104,7 @@ const QuizViewer = () => {
           <HelpCircle size={48} className="mx-auto mb-4 text-warning" />
           <h2 className="text-2xl font-bold mb-2">Empty Quiz</h2>
           <p className="text-text/50 mb-6">This quiz has no questions yet.</p>
-          <button onClick={() => navigate(-1)} className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-xl">Go Back</button>
+          <button onClick={handleBack} className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-xl">Go Back</button>
         </div>
       </div>
     );
@@ -151,8 +171,8 @@ const QuizViewer = () => {
               <button onClick={() => window.location.reload()} className="flex-1 flex items-center justify-center space-x-2 py-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 font-bold rounded-xl text-sm transition">
                 <RotateCcw size={16} /><span>Retry</span>
               </button>
-              <button onClick={() => navigate('/quizzes')} className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:opacity-90 transition">
-                Quizzes
+              <button onClick={handleBack} className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:opacity-90 transition flex items-center justify-center space-x-1.5">
+                <span>{location.state?.from === '/courses' ? 'Back to Course' : 'Quiz Repository'}</span>
               </button>
             </div>
           </div>
@@ -246,8 +266,15 @@ const QuizViewer = () => {
   return (
     <div className="h-full flex flex-col p-4 md:p-8 animate-in fade-in duration-500 overflow-y-auto">
       <div className="flex items-center justify-between mb-8">
-        <button onClick={() => navigate(-1)} className="p-2 text-text/40 hover:text-text transition">
+        <button
+          onClick={handleBack}
+          className="p-2 text-text/40 hover:text-primary transition flex items-center space-x-1 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          title={location.state?.from === '/courses' ? "Back to Course" : "Back to Quizzes"}
+        >
           <ChevronLeft size={24} />
+          <span className="text-xs font-bold hidden sm:inline">
+            {location.state?.from === '/courses' ? "Courses" : "Quizzes"}
+          </span>
         </button>
         <div className="flex-1 px-8 text-center">
           <h1 className="font-bold text-lg truncate mb-1">{quiz.title}</h1>

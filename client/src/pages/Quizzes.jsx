@@ -135,7 +135,7 @@ const CourseQuizGroup = ({ courseKey, courseQuizzes, navigate, user, handleDelet
             <div
               key={quiz.id}
               className="bg-card hover:bg-background hover:border-primary/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/quiz/${quiz.id}`)}
+              onClick={() => navigate(`/quiz/${quiz.id}`, { state: { from: '/quizzes' } })}
             >
               <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <ChevronRight className="text-primary" size={20} />

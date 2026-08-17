@@ -27,7 +27,10 @@ const Courses = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [materials, setMaterials] = useState({});
-  const [contentType, setContentType] = useState('pdf'); // 'pdf' | 'video' | 'quiz'
+  const [contentType, setContentType] = useState(() => {
+    const saved = localStorage.getItem('courses_content_type');
+    return saved || 'pdf';
+  }); // 'pdf' | 'video' | 'quiz'
   const [expandedCourse, setExpandedCourse] = useState(() => {
     const saved = localStorage.getItem('expanded_course_id');
     return saved ? parseInt(saved) : null;
@@ -237,7 +240,7 @@ const Courses = () => {
         {/* Middle Tab Switcher (PDFs vs Videos vs Quizzes) */}
         <div className="flex items-center bg-neutral-100 dark:bg-neutral-800/60 p-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-700/50 self-start md:self-auto shadow-sm">
           <button
-            onClick={() => setContentType('pdf')}
+            onClick={() => { setContentType('pdf'); localStorage.setItem('courses_content_type', 'pdf'); }}
             className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               contentType === 'pdf'
                 ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
@@ -249,7 +252,7 @@ const Courses = () => {
           </button>
           
           <button
-            onClick={() => setContentType('video')}
+            onClick={() => { setContentType('video'); localStorage.setItem('courses_content_type', 'video'); }}
             className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               contentType === 'video'
                 ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
@@ -261,7 +264,7 @@ const Courses = () => {
           </button>
 
           <button
-            onClick={() => setContentType('quiz')}
+            onClick={() => { setContentType('quiz'); localStorage.setItem('courses_content_type', 'quiz'); }}
             className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               contentType === 'quiz'
                 ? 'bg-card text-primary shadow-sm border border-neutral-200/50 dark:border-neutral-700'
@@ -755,7 +758,7 @@ const QuizSection = ({ courseId, navigate, user }) => {
                     </div>
 
                     <button
-                      onClick={() => navigate(`/quiz/${q.id}`)}
+                      onClick={() => navigate(`/quiz/${q.id}`, { state: { from: '/courses', courseId } })}
                       className="w-full bg-accent/10 hover:bg-accent text-accent hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
                     >
                       <PlayCircle size={14} />
@@ -804,7 +807,7 @@ const QuizSection = ({ courseId, navigate, user }) => {
                     </div>
 
                     <button
-                      onClick={() => navigate(`/quiz/${q.id}`)}
+                      onClick={() => navigate(`/quiz/${q.id}`, { state: { from: '/courses', courseId } })}
                       className="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white font-bold py-2 px-3 rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5"
                     >
                       <Sparkles size={14} />
