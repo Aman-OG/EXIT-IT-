@@ -247,13 +247,6 @@ const Navbar = ({ toggleSidebar }) => {
                   <span>Friends</span>
                 </button>
                 <button 
-                  onClick={() => { setDropdownOpen(false); navigate('/trophies'); }}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
-                >
-                  <Trophy size={18} className="text-amber-500 group-hover:scale-110 transition-transform" />
-                  <span>Trophy Hall</span>
-                </button>
-                <button 
                   onClick={() => { setDropdownOpen(false); logout(); }} 
                   className="w-full text-left px-4 py-2.5 text-sm font-medium text-warning/90 hover:bg-warning/10 hover:text-warning rounded-xl transition-colors flex items-center space-x-3 group"
                 >

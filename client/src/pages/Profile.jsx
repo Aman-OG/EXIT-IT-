@@ -497,24 +497,16 @@ const Profile = () => {
                  </div>
             </div>
 
-            {/* TROPHIES WALL SECTION */}
+            {/* BADGES & ACHIEVEMENTS SECTION */}
             <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-[2rem] p-6 text-center md:p-8 shadow-sm mt-8">
                 <div className="flex items-center space-x-3 mb-8">
                     <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
                         <Award size={20} />
                     </div>
                     <div className="text-left">
-                        <h3 className="text-2xl font-black text-text">Trophies & Achievements</h3>
+                        <h3 className="text-2xl font-black text-text">Badges & Achievements</h3>
                         <p className="text-xs font-bold uppercase tracking-widest text-text/40">Unlock milestones by taking action</p>
                     </div>
-                    <div className="flex-1" />
-                    <button 
-                        onClick={() => navigate('/trophies')}
-                        className="flex items-center space-x-2 bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-95"
-                    >
-                        <Trophy size={18} />
-                        <span>Enter Trophy Hall</span>
-                    </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     {badgeMap.map((b) => {
