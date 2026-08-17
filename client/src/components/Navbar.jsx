@@ -2,9 +2,10 @@ import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { AuthContext } from '../context/AuthContext';
-import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy, Users } from 'lucide-react';
+import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy, Users, MessageSquare } from 'lucide-react';
 import ExitItLogo from './ExitItLogo';
 import NotificationBell from './NotificationBell';
+import FeedbackModal from './FeedbackModal';
 import { getAvatarUrl } from '../utils/avatar';
 
 const Navbar = ({ toggleSidebar }) => {
@@ -12,6 +13,7 @@ const Navbar = ({ toggleSidebar }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const dropdownRef = useRef(null);
   
   const [streakOpen, setStreakOpen] = useState(false);
@@ -247,6 +249,13 @@ const Navbar = ({ toggleSidebar }) => {
                   <span>Friends</span>
                 </button>
                 <button 
+                  onClick={() => { setDropdownOpen(false); setFeedbackOpen(true); }}
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
+                >
+                  <MessageSquare size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>Give Feedback</span>
+                </button>
+                <button 
                   onClick={() => { setDropdownOpen(false); logout(); }} 
                   className="w-full text-left px-4 py-2.5 text-sm font-medium text-warning/90 hover:bg-warning/10 hover:text-warning rounded-xl transition-colors flex items-center space-x-3 group"
                 >
@@ -260,6 +269,7 @@ const Navbar = ({ toggleSidebar }) => {
           )}
         </div>
       </div>
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </header>
   );
 };

@@ -32,6 +32,25 @@ const getUsers = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const userCheck = await pool.query('SELECT id, role, email FROM users WHERE id = $1', [id]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    if (userCheck.rows[0].role === 'admin') {
+      return res.status(403).json({ message: 'Cannot delete an administrator account' });
+    }
+
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ message: `Student ${userCheck.rows[0].email} successfully removed.` });
+  } catch (err) {
+    console.error('Error deleting student:', err);
+    res.status(500).json({ message: 'Failed to delete student from database' });
+  }
+};
+
 const getCourseAnalytics = async (req, res) => {
   try {
     // Per-course: total materials, avg completion %, total students who started, avg quiz score
@@ -166,4 +185,4 @@ const getStudentAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { getStats, getUsers, getCourseAnalytics, getCourseDetail, getStudentAnalytics };
+module.exports = { getStats, getUsers, deleteUser, getCourseAnalytics, getCourseDetail, getStudentAnalytics };

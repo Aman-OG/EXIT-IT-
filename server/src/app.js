@@ -55,11 +55,13 @@ const flashcardsRoutes = require('./flashcards/flashcards.routes');
 const friendsRoutes = require('./friends/friends.routes');
 const notificationsRoutes = require('./notifications/notifications.routes');
 const videosRoutes = require('./videos/videos.routes');
+const feedbackRoutes = require('./feedback/feedback.routes');
 
 // Routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/materials', materialsRoutes);

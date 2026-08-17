@@ -4,10 +4,11 @@ import {
   BookOpen, Brain, Trophy, ArrowRight, Sparkles, Zap, Target, 
   FlaskConical, CheckCircle2, ShieldCheck, 
   Code, Database, Globe, Network, Cpu, ArrowUpRight, Award,
-  Star, ChevronRight
+  Star, ChevronRight, MessageSquare
 } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import ExitItLogo from '../components/ExitItLogo';
+import FeedbackModal from '../components/FeedbackModal';
 import graduationHat from '../assets/graduation hat.jpg';
 
 const COURSES_LIST = [
@@ -31,9 +32,10 @@ const COURSES_LIST = [
 const CATEGORIES = ['All', 'Software Dev', 'Networking', 'Databases', 'Hardware & Systems', 'Management', 'Security'];
 
 const LandingPage = () => {
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const [activeCategory, setActiveCategory] = useState('All');
   const [starCount, setStarCount] = useState(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Fetch live GitHub Stars count
   useEffect(() => {
@@ -48,7 +50,6 @@ const LandingPage = () => {
         }
       })
       .catch(() => {
-        // Fallback gracefully
         setStarCount(null);
       });
   }, []);
@@ -67,31 +68,40 @@ const LandingPage = () => {
       </div>
 
       {/* Navigation Header */}
-      <nav className="fixed top-0 w-full z-50 px-4 sm:px-6 md:px-12 py-3 border-b border-text/5 bg-background/85 backdrop-blur-xl transition-all h-16 flex items-center">
+      <nav className="fixed top-0 w-full z-40 px-4 sm:px-6 md:px-12 py-3 border-b border-text/5 bg-background/85 backdrop-blur-xl transition-all h-16 flex items-center">
         <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2.5 group cursor-pointer">
             <ExitItLogo size={30} />
-            <span className="text-xl sm:text-2xl font-black font-outfit tracking-tighter">
+            <span className="text-xl sm:text-2xl font-bold font-outfit tracking-tight">
               <span className="text-primary">EX-</span><span className="text-accent italic">IT</span>
             </span>
           </Link>
           
           <div className="flex items-center space-x-2 sm:space-x-3.5">
+            {/* Feedback Button in Header */}
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-xs font-medium text-text/80 transition-all active:scale-95"
+            >
+              <MessageSquare size={13} className="text-primary" />
+              <span>Feedback</span>
+            </button>
+
             {/* GitHub Star Button */}
             <a
               href="https://github.com/Aman-OG/EXIT-IT-"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-xs font-bold transition-all active:scale-95 group shadow-sm"
+              className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-text/5 hover:bg-text/10 border border-text/10 text-xs font-medium transition-all active:scale-95 group shadow-xs"
               title="Star EXIT-IT on GitHub"
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                 <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path>
               </svg>
-              <span className="hidden sm:inline font-bold">Star</span>
+              <span className="hidden sm:inline">Star</span>
               <Star size={13} className="text-amber-400 fill-amber-400 group-hover:scale-110 transition-transform" />
               {starCount !== null && (
-                <span className="px-1.5 py-0.5 bg-text/10 rounded-full text-[10px] sm:text-[11px] font-black text-text/80">
+                <span className="px-1.5 py-0.2 bg-text/10 rounded-full text-[10px] sm:text-[11px] font-semibold text-text/80">
                   {starCount}
                 </span>
               )}
@@ -100,14 +110,14 @@ const LandingPage = () => {
             {/* Login button - hidden on mobile to keep navbar clean */}
             <Link 
               to="/login" 
-              className="hidden sm:inline-flex text-xs font-black opacity-70 hover:opacity-100 transition-all uppercase tracking-widest px-3 py-2"
+              className="hidden sm:inline-flex text-xs font-semibold opacity-75 hover:opacity-100 transition-all uppercase tracking-wider px-3 py-2"
             >
               Log in
             </Link>
 
             <Link 
               to="/register" 
-              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-text text-background text-[11px] sm:text-xs font-black rounded-full hover:opacity-90 transition-all active:scale-95 uppercase tracking-wider shadow-md flex items-center space-x-1.5"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-text text-background text-[11px] sm:text-xs font-bold rounded-full hover:opacity-90 transition-all active:scale-95 uppercase tracking-wider shadow-md flex items-center space-x-1.5"
             >
               <span>Get Started</span>
               <ArrowRight size={13} className="hidden sm:inline" />
@@ -123,26 +133,26 @@ const LandingPage = () => {
           {/* Left Column: Headline & Action */}
           <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
             
-            <div className="inline-flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-text/5 border border-text/10 text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-text/70">
+            <div className="inline-flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-text/5 border border-text/10 text-[10px] sm:text-[11px] font-medium tracking-wider uppercase text-text/70">
               <Sparkles size={13} className="text-primary animate-pulse" />
-              <span>ETHIOPIAN NATIONAL EXIT EXAM ECOSYSTEM</span>
+              <span>Ethiopian National Exit Exam Ecosystem</span>
             </div>
             
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black font-outfit tracking-tighter leading-[1.08] sm:leading-[1.02]">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-outfit tracking-tight leading-[1.08] sm:leading-[1.02]">
               Your IT Exit Exam <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent italic">
                 Companion.
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base md:text-lg text-text/70 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base md:text-lg text-text/70 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
               Complete study companion for all 15 Ministry of Education exit exam courses. Interactive quizzes, official mock exams, and chapter breakdowns designed for high scores.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
               <Link 
                 to="/register" 
-                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-text text-background font-black text-xs sm:text-sm rounded-full hover:opacity-90 transition-all shadow-xl flex items-center justify-center space-x-2.5 tracking-wider uppercase group active:scale-95"
+                className="w-full sm:w-auto px-7 py-3.5 sm:py-4 bg-text text-background font-bold text-xs sm:text-sm rounded-full hover:opacity-90 transition-all shadow-xl flex items-center justify-center space-x-2.5 tracking-wider uppercase group active:scale-95"
               >
                 <span>Start Practicing Free</span>
                 <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
@@ -150,14 +160,14 @@ const LandingPage = () => {
               
               <a 
                 href="#courses"
-                className="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-text/5 hover:bg-text/10 border border-text/10 text-text font-bold text-xs sm:text-sm rounded-full transition-all flex items-center justify-center space-x-2 tracking-wider uppercase text-center active:scale-95"
+                className="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-text/5 hover:bg-text/10 border border-text/10 text-text font-semibold text-xs sm:text-sm rounded-full transition-all flex items-center justify-center space-x-2 tracking-wider uppercase text-center active:scale-95"
               >
                 <span>Explore 15 Courses</span>
               </a>
             </div>
 
             {/* Micro proof badges */}
-            <div className="pt-3 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs text-text/60 font-semibold flex-wrap">
+            <div className="pt-3 flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs text-text/60 font-normal flex-wrap">
               <div className="flex items-center space-x-1.5">
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
                 <span>15 MOE Courses</span>
@@ -168,7 +178,7 @@ const LandingPage = () => {
               </div>
               <div className="flex items-center space-x-1.5">
                 <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
-                <span>100% Free</span>
+                <span>100% Free Access</span>
               </div>
             </div>
 
@@ -199,14 +209,14 @@ const LandingPage = () => {
           
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-3 border-b border-text/10 pb-5">
             <div>
-              <p className="text-[11px] font-black text-primary uppercase tracking-[0.25em] mb-1">
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-1">
                 TRUSTED BY FUTURE IT GRADUATES
               </p>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black font-outfit tracking-tight">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-outfit tracking-tight">
                 National Benchmarks & Platform Standards
               </h2>
             </div>
-            <p className="text-xs font-bold text-text/50 uppercase tracking-wider">
+            <p className="text-xs font-normal text-text/50 uppercase tracking-wider">
               Mapped To Official Ministry of Education Specs
             </p>
           </div>
@@ -217,14 +227,14 @@ const LandingPage = () => {
             {/* Card 1 */}
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-card border border-text/10 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-5 group">
               <div className="flex items-center justify-between">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit text-primary tracking-tight">15 / 15</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit text-primary tracking-tight">15 / 15</span>
                 <div className="p-3 bg-primary/10 rounded-2xl text-primary group-hover:scale-110 transition-transform">
                   <BookOpen size={22} />
                 </div>
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black font-outfit tracking-tight">All 15 Courses Covered</h3>
-                <p className="text-xs text-text/60 font-medium mt-1 leading-relaxed">
+                <h3 className="text-base sm:text-lg font-semibold font-outfit tracking-tight">All 15 Courses Covered</h3>
+                <p className="text-xs text-text/60 font-normal mt-1 leading-relaxed">
                   100% comprehensive coverage of all Ministry of Education required IT exit exam courses.
                 </p>
               </div>
@@ -233,14 +243,14 @@ const LandingPage = () => {
             {/* Card 2 */}
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-card border border-text/10 shadow-sm hover:shadow-xl hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between space-y-5 group">
               <div className="flex items-center justify-between">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit text-emerald-500 tracking-tight">860+</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit text-emerald-500 tracking-tight">860+</span>
                 <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500 group-hover:scale-110 transition-transform">
                   <Award size={22} />
                 </div>
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black font-outfit tracking-tight">Practice Exam Questions</h3>
-                <p className="text-xs text-text/60 font-medium mt-1 leading-relaxed">
+                <h3 className="text-base sm:text-lg font-semibold font-outfit tracking-tight">Practice Exam Questions</h3>
+                <p className="text-xs text-text/60 font-normal mt-1 leading-relaxed">
                   Carefully segmented quizzes with in-depth rationales for every single option.
                 </p>
               </div>
@@ -249,14 +259,14 @@ const LandingPage = () => {
             {/* Card 3 */}
             <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-card border border-text/10 shadow-sm hover:shadow-xl hover:border-accent/40 transition-all duration-300 flex flex-col justify-between space-y-5 group">
               <div className="flex items-center justify-between">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit text-accent tracking-tight">100%</span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit text-accent tracking-tight">100%</span>
                 <div className="p-3 bg-accent/10 rounded-2xl text-accent group-hover:scale-110 transition-transform">
                   <Brain size={22} />
                 </div>
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black font-outfit tracking-tight">Free For All Students</h3>
-                <p className="text-xs text-text/60 font-medium mt-1 leading-relaxed">
+                <h3 className="text-base sm:text-lg font-semibold font-outfit tracking-tight">Free For All Students</h3>
+                <p className="text-xs text-text/60 font-normal mt-1 leading-relaxed">
                   Open educational access designed specifically for Ethiopian university graduates.
                 </p>
               </div>
@@ -270,11 +280,11 @@ const LandingPage = () => {
       {/* CURRICULUM SECTION: ALL 15 COURSES */}
       <section id="courses" className="py-16 sm:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto space-y-10 sm:space-y-12">
         <div className="flex flex-col items-center text-center space-y-3">
-          <span className="text-[11px] font-black uppercase tracking-[0.3em] text-primary">Full Curriculum</span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit tracking-tight">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-primary">Full Curriculum</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit tracking-tight">
             All 15 Exit Exam Courses
           </h2>
-          <p className="text-sm sm:text-base text-text/60 font-medium max-w-2xl">
+          <p className="text-sm sm:text-base text-text/60 font-normal max-w-2xl">
             Everything required by the Ethiopian Ministry of Education for IT exit examination, organized and ready to practice.
           </p>
         </div>
@@ -285,9 +295,9 @@ const LandingPage = () => {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                 activeCategory === cat 
-                  ? 'bg-primary text-white shadow-md' 
+                  ? 'bg-primary text-white shadow-xs' 
                   : 'bg-text/5 hover:bg-text/10 text-text/70 border border-text/5'
               }`}
             >
@@ -307,7 +317,7 @@ const LandingPage = () => {
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-black px-2.5 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
+                    <span className="text-[10px] font-semibold px-2.5 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
                       {course.code}
                     </span>
                     <div className="p-2 bg-text/5 rounded-xl text-text/60 group-hover:text-primary transition-colors">
@@ -315,18 +325,18 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-black font-outfit tracking-tight group-hover:text-primary transition-colors line-clamp-2">
+                  <h3 className="text-base sm:text-lg font-semibold font-outfit tracking-tight group-hover:text-primary transition-colors line-clamp-2">
                     {course.title}
                   </h3>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-text/5">
-                  <span className="text-[11px] text-text/50 font-bold uppercase tracking-wider">
+                  <span className="text-[11px] text-text/50 font-medium uppercase tracking-wider">
                     {course.category}
                   </span>
                   <Link 
                     to="/register" 
-                    className="text-xs font-bold text-primary flex items-center space-x-1 group-hover:translate-x-0.5 transition-transform"
+                    className="text-xs font-semibold text-primary flex items-center space-x-1 group-hover:translate-x-0.5 transition-transform"
                   >
                     <span>Practice</span>
                     <ChevronRight size={14} />
@@ -343,10 +353,10 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto space-y-12 sm:space-y-16">
           
           <div className="space-y-3 text-center sm:text-left">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit tracking-tight">
               Start your journey.
             </h2>
-            <p className="text-sm sm:text-base text-text/60 font-medium max-w-2xl">
+            <p className="text-sm sm:text-base text-text/60 font-normal max-w-2xl">
               Turn your preparation into high-scoring performance with focused practice and clear explanations.
             </p>
           </div>
@@ -360,13 +370,13 @@ const LandingPage = () => {
                   <BookOpen size={24} />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-black font-outfit tracking-tight">Be inspired.</h3>
-                  <p className="text-xs sm:text-sm text-text/70 font-medium leading-relaxed">
+                  <h3 className="text-xl sm:text-2xl font-bold font-outfit tracking-tight">Be inspired.</h3>
+                  <p className="text-xs sm:text-sm text-text/70 font-normal leading-relaxed">
                     Master all 15 exit exam courses with structured chapter breakdowns, downloadable PDFs, and targeted summary guides.
                   </p>
                 </div>
               </div>
-              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-primary hover:underline pt-2">
+              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-primary hover:underline pt-2">
                 <span>EXPLORE COURSES</span>
                 <ArrowUpRight size={14} />
               </Link>
@@ -379,13 +389,13 @@ const LandingPage = () => {
                   <Brain size={24} />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-black font-outfit tracking-tight">Practice & Learn.</h3>
-                  <p className="text-xs sm:text-sm text-text/70 font-medium leading-relaxed">
+                  <h3 className="text-xl sm:text-2xl font-bold font-outfit tracking-tight">Practice & Learn.</h3>
+                  <p className="text-xs sm:text-sm text-text/70 font-normal leading-relaxed">
                     Test yourself with over 860 practice questions with comprehensive explanations for both right and wrong choices.
                   </p>
                 </div>
               </div>
-              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-primary hover:underline pt-2">
+              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-primary hover:underline pt-2">
                 <span>START QUIZZES</span>
                 <ArrowUpRight size={14} />
               </Link>
@@ -398,13 +408,13 @@ const LandingPage = () => {
                   <FlaskConical size={24} />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl sm:text-2xl font-black font-outfit tracking-tight">Equip yourself.</h3>
-                  <p className="text-xs sm:text-sm text-text/70 font-medium leading-relaxed">
+                  <h3 className="text-xl sm:text-2xl font-bold font-outfit tracking-tight">Equip yourself.</h3>
+                  <p className="text-xs sm:text-sm text-text/70 font-normal leading-relaxed">
                     Simulate official MOE timed exams, measure real accuracy percentiles, and track your streak and progress nationwide.
                   </p>
                 </div>
               </div>
-              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-primary hover:underline pt-2">
+              <Link to="/register" className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-primary hover:underline pt-2">
                 <span>TAKE MOCK EXAMS</span>
                 <ArrowUpRight size={14} />
               </Link>
@@ -414,11 +424,11 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* SECTION: The Architect (Aman Baye) - PRESERVED EXACT TEXT & PHOTO */}
+      {/* SECTION: The Architect (Aman Baye) - Clean GitHub Profile & Repo Links */}
       <section className={`py-20 sm:py-28 px-4 sm:px-6 md:px-12 relative overflow-hidden transition-colors ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-white text-slate-950'}`}>
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 sm:gap-16 relative z-10">
           
-          {/* Creator Photo - Kept exact photo path & styling */}
+          {/* Creator Photo */}
           <div className="relative shrink-0 group">
             <div className="absolute -inset-3 sm:-inset-4 bg-primary/20 rounded-[36px] sm:rounded-[48px] group-hover:scale-105 transition-transform duration-500 -rotate-2" />
             <img 
@@ -428,45 +438,64 @@ const LandingPage = () => {
             />
           </div>
           
-          {/* Creator Details - Kept exact text */}
+          {/* Creator Details */}
           <div className="flex-1 space-y-6 sm:space-y-8 text-center lg:text-left">
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-[11px] font-black text-primary uppercase tracking-[0.35em]">Designed & Engineered By</p>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black font-outfit tracking-tighter italic">
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.3em]">Designed & Engineered By</p>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-outfit tracking-tight italic">
                 Aman Baye.
               </h2>
               <div className={`h-1.5 w-20 sm:w-24 rounded-full mx-auto lg:mx-0 ${theme === 'dark' ? 'bg-white' : 'bg-slate-950'}`} />
             </div>
 
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight leading-snug">
+            <p className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-snug">
               "IT student building practical tools to make studying simpler and more effective."
             </p>
             
-            <p className="text-sm sm:text-base md:text-lg opacity-80 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base md:text-lg opacity-80 font-normal leading-relaxed max-w-2xl mx-auto lg:mx-0">
               EX-IT was created to turn the pressure of a 15-course exit exam into a clear, structured path, so students can focus on learning, not just surviving the workload.
             </p>
 
-            <div className="pt-2 flex justify-center lg:justify-start">
+            {/* Links & Repository Showcase */}
+            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-4">
+              
+              {/* GitHub Repository Link */}
               <a 
                 href="https://github.com/Aman-OG/EXIT-IT-" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={`inline-flex items-center space-x-3.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl hover:scale-105 transition-all shadow-xl active:scale-95 ${theme === 'dark' ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}
+                className={`inline-flex items-center space-x-3 px-6 py-3.5 rounded-2xl hover:scale-105 transition-all shadow-xl active:scale-95 ${theme === 'dark' ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}
               >
-                <svg className="w-6 h-6 sm:w-7 sm:h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path></svg>
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd"></path></svg>
                 <div className="text-left">
                   <div className="flex items-center space-x-1.5">
-                    <p className="text-[9px] sm:text-[10px] font-black opacity-50 uppercase tracking-widest leading-none">GitHub Repo</p>
+                    <p className="text-[10px] font-semibold opacity-60 uppercase tracking-widest leading-none">GitHub Repo</p>
                     {starCount !== null && (
-                      <span className="flex items-center space-x-0.5 text-[9px] font-black text-amber-400">
+                      <span className="flex items-center space-x-0.5 text-[10px] font-bold text-amber-400">
                         <Star size={10} fill="currentColor" />
                         <span>{starCount}</span>
                       </span>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm font-black tracking-tight leading-none uppercase mt-0.5">AMAN-OG / EXIT-IT</p>
+                  <p className="text-xs sm:text-sm font-bold tracking-tight leading-none uppercase mt-0.5">Aman-OG / EXIT-IT-</p>
                 </div>
               </a>
+
+              {/* GitHub Profile Link */}
+              <a 
+                href="https://github.com/aman-og" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={`inline-flex items-center space-x-2 px-5 py-3.5 rounded-2xl border transition-all text-xs font-semibold ${
+                  theme === 'dark'
+                    ? 'border-white/20 hover:bg-white/10 text-white'
+                    : 'border-slate-300 hover:bg-slate-100 text-slate-900'
+                }`}
+              >
+                <span>GitHub Profile</span>
+                <ArrowUpRight size={14} />
+              </a>
+
             </div>
           </div>
 
@@ -478,13 +507,13 @@ const LandingPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center bg-card p-6 sm:p-10 md:p-14 rounded-3xl border border-text/10 shadow-2xl">
           
           <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center sm:text-left">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black font-outfit tracking-tighter">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-outfit tracking-tight">
               Get started today.
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-text/70 font-medium leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-text/70 font-normal leading-relaxed">
               Join your classmates on EX-IT. Prepare with confidence, track your daily streak, and master every concept required for the Ethiopian National Exit Exam.
             </p>
-            <div className="pt-2 flex flex-col sm:flex-row flex-wrap items-center sm:items-start justify-center sm:justify-start gap-3 sm:gap-5 text-xs sm:text-sm font-bold text-text/70">
+            <div className="pt-2 flex flex-col sm:flex-row flex-wrap items-center sm:items-start justify-center sm:justify-start gap-3 sm:gap-5 text-xs sm:text-sm font-normal text-text/70">
               <span className="flex items-center space-x-2">
                 <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
                 <span>Instant Free Setup</span>
@@ -505,19 +534,19 @@ const LandingPage = () => {
               <Zap size={22} />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-lg sm:text-xl font-black font-outfit tracking-tight">Start Your Journey</h3>
-              <p className="text-xs text-text/60 font-medium">Create your free account and access all study materials immediately.</p>
+              <h3 className="text-lg sm:text-xl font-bold font-outfit tracking-tight">Start Your Journey</h3>
+              <p className="text-xs text-text/60 font-normal">Create your free account and access all study materials immediately.</p>
             </div>
             <div className="space-y-2.5 pt-1">
               <Link 
                 to="/register" 
-                className="w-full py-3.5 bg-text text-background text-xs font-black rounded-xl hover:opacity-90 transition-all uppercase tracking-wider block shadow-md active:scale-95"
+                className="w-full py-3.5 bg-text text-background text-xs font-bold rounded-xl hover:opacity-90 transition-all uppercase tracking-wider block shadow-md active:scale-95"
               >
                 Create Free Account
               </Link>
               <Link 
                 to="/login" 
-                className="w-full py-3 bg-text/5 hover:bg-text/10 text-text text-xs font-bold rounded-xl transition-all uppercase tracking-wider block text-center active:scale-95 border border-text/5"
+                className="w-full py-3 bg-text/5 hover:bg-text/10 text-text text-xs font-semibold rounded-xl transition-all uppercase tracking-wider block text-center active:scale-95 border border-text/5"
               >
                 Log In
               </Link>
@@ -529,19 +558,43 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer className="py-12 sm:py-16 border-t border-text/10 bg-background text-center px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center justify-center space-x-2.5">
             <ExitItLogo size={28} />
-            <span className="text-2xl sm:text-3xl font-black font-outfit tracking-tighter">
+            <span className="text-2xl sm:text-3xl font-bold font-outfit tracking-tight">
               <span className="text-primary">EX-</span><span className="text-accent italic">IT</span>
             </span>
           </div>
 
-          <p className="text-[11px] sm:text-xs font-bold text-text/40 tracking-widest uppercase max-w-xl mx-auto">
+          {/* Feedback & GitHub Links */}
+          <div className="flex items-center justify-center space-x-4 text-xs font-medium text-text/70">
+            <button 
+              onClick={() => setFeedbackOpen(true)}
+              className="hover:text-primary transition-colors flex items-center space-x-1"
+            >
+              <MessageSquare size={13} />
+              <span>Share Feedback</span>
+            </button>
+            <span>&bull;</span>
+            <a 
+              href="https://github.com/Aman-OG/EXIT-IT-" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors flex items-center space-x-1"
+            >
+              <Star size={13} className="text-amber-400 fill-amber-400" />
+              <span>Star on GitHub {starCount !== null ? `(${starCount})` : ''}</span>
+            </a>
+          </div>
+
+          <p className="text-[11px] sm:text-xs font-normal text-text/40 tracking-wider uppercase max-w-xl mx-auto">
             © {new Date().getFullYear()} Aman Baye — High Fidelity Educational Systems for Ethiopian Universities
           </p>
         </div>
       </footer>
+
+      {/* Feedback Modal */}
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
     </div>
   );

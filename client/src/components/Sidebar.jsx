@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { LayoutDashboard, BookOpen, Map, FileText, CheckSquare, Award, Trophy, X, Shield, Users as UsersIcon, Flag, User, BarChart2, Brain, UserPlus } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Map, FileText, CheckSquare, Award, Trophy, X, Shield, Users as UsersIcon, Flag, User, BarChart2, Brain, UserPlus, MessageSquare } from 'lucide-react';
 import ExitItLogo from './ExitItLogo';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -94,6 +94,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               {[
                 { to: '/admin', icon: Shield, label: 'Control', end: true },
                 { to: '/admin/users', icon: UsersIcon, label: 'Students' },
+                { to: '/admin/feedback', icon: MessageSquare, label: 'Feedback' },
                 { to: '/admin/reports', icon: Flag, label: 'Reports' },
                 { to: '/admin/analytics', icon: BarChart2, label: 'Analytics' },
               ].map(({ to, icon: Icon, label, end }) => (

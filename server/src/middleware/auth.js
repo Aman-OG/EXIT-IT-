@@ -29,6 +29,19 @@ const protect = (req, res, next) => {
   }
 };
 
+const optionalAuth = (req, res, next) => {
+  const token = req.cookies.jwt || extractBearerToken(req);
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+    } catch (e) {
+      // ignore invalid token in optionalAuth
+    }
+  }
+  next();
+};
+
 const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
@@ -37,4 +50,4 @@ const adminOnly = (req, res, next) => {
   }
 };
 
-module.exports = { protect, adminOnly };
+module.exports = { protect, optionalAuth, adminOnly };

@@ -12,6 +12,7 @@ import UserManagement from './pages/admin/UserManagement';
 import QuizManager from './pages/admin/QuizManager';
 import AdminReports from './pages/admin/AdminReports';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminFeedback from './pages/admin/AdminFeedback';
 import QuizViewer from './pages/QuizViewer';
 import Quizzes from './pages/Quizzes';
 import Notes from './pages/Notes';
@@ -83,6 +84,7 @@ function App() {
         <Route path="admin/quiz/:courseId" element={<AdminRoute><QuizManager /></AdminRoute>} />
         <Route path="admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
         <Route path="admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+        <Route path="admin/feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
 
         {/* Catch-all fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
