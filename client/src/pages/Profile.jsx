@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy } from 'lucide-react';
+import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare } from 'lucide-react';
 import ActivityHeatmapGitHub from '../components/ActivityHeatmapGitHub';
 import Trophy3D from '../components/Trophy3D';
+import { getAvatarUrl } from '../utils/avatar';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -15,13 +16,21 @@ const Profile = () => {
     const [selectedBadge, setSelectedBadge] = useState(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState("");
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [editBioValue, setEditBioValue] = useState("");
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+    const [avatarUrlInput, setAvatarUrlInput] = useState("");
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [savingProfile, setSavingProfile] = useState(false);
     const [certificates, setCertificates] = useState([]);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const res = await api.get('/analytics/profile');
                 setProfileData(res.data);
+                setEditBioValue(res.data?.user?.bio || "");
 
                 // ── Badge unlock detection ──
                 if (authUser?.id) {
@@ -49,12 +58,88 @@ const Profile = () => {
             return setIsEditingName(false);
         }
         try {
-            const res = await api.put('/users/name', { name: editNameValue });
-            setProfileData({...profileData, user: {...profileData.user, name: res.data.name}});
-            setUser((prev) => ({...prev, name: res.data.name}));
+            setSavingProfile(true);
+            const res = await api.put('/users/profile', { name: editNameValue });
+            setProfileData(prev => ({ ...prev, user: { ...prev.user, name: res.data.name } }));
+            setUser(prev => ({ ...prev, name: res.data.name }));
             setIsEditingName(false);
         } catch (err) {
             console.error("Failed to update name", err);
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
+    const handleUpdateBio = async () => {
+        try {
+            setSavingProfile(true);
+            const res = await api.put('/users/profile', { bio: editBioValue.trim() });
+            setProfileData(prev => ({ ...prev, user: { ...prev.user, bio: res.data.bio } }));
+            setUser(prev => ({ ...prev, bio: res.data.bio }));
+            setIsEditingBio(false);
+        } catch (err) {
+            console.error("Failed to update bio", err);
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            setUploadingAvatar(true);
+            const res = await api.post('/users/avatar', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setProfileData(prev => ({ ...prev, user: { ...prev.user, avatar_url: res.data.avatar_url } }));
+            setUser(prev => ({ ...prev, avatar_url: res.data.avatar_url }));
+            setIsAvatarModalOpen(false);
+        } catch (err) {
+            console.error("Failed to upload avatar", err);
+            alert(err.response?.data?.message || 'Failed to upload profile picture');
+        } finally {
+            setUploadingAvatar(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleCustomUrlSave = async () => {
+        if (!avatarUrlInput.trim()) return;
+        try {
+            setUploadingAvatar(true);
+            const res = await api.put('/users/profile', { avatar_url: avatarUrlInput.trim() });
+            setProfileData(prev => ({ ...prev, user: { ...prev.user, avatar_url: res.data.avatar_url } }));
+            setUser(prev => ({ ...prev, avatar_url: res.data.avatar_url }));
+            setIsAvatarModalOpen(false);
+            setAvatarUrlInput("");
+        } catch (err) {
+            console.error("Failed to set avatar URL", err);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
+    const handleResetAvatar = async () => {
+        try {
+            setUploadingAvatar(true);
+            const res = await api.put('/users/profile', { avatar_url: null });
+            setProfileData(prev => ({ ...prev, user: { ...prev.user, avatar_url: null } }));
+            setUser(prev => ({ ...prev, avatar_url: null }));
+            setIsAvatarModalOpen(false);
+        } catch (err) {
+            console.error("Failed to reset avatar", err);
+        } finally {
+            setUploadingAvatar(false);
         }
     };
 
@@ -67,9 +152,6 @@ const Profile = () => {
     }
 
     const { user, stats, radarData, timeline, badges } = profileData;
-
-    // Dicebear avatar base
-    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
 
     const badgeMap = [
         { id: 'initiator', name: 'The Initiator', desc: 'Started your first practice quiz', icon: '🚀', color: 'from-purple-500 to-indigo-500', shadow: 'shadow-indigo-500/30' },
@@ -89,11 +171,26 @@ const Profile = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-card/30 to-transparent opacity-80" />
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-                    <div className={`w-28 h-28 md:w-32 md:h-32 rounded-[2rem] shadow-2xl overflow-hidden bg-neutral-200/50 dark:bg-neutral-800 rotate-3 hover:rotate-0 transition-transform duration-300 ring-4 ring-card`}>
-                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    {/* AVATAR WITH CHANGE OVERLAY */}
+                    <div className="relative group/avatar cursor-pointer" onClick={() => setIsAvatarModalOpen(true)}>
+                        <div className="w-28 h-28 md:w-32 md:h-32 rounded-[2rem] shadow-2xl overflow-hidden bg-neutral-200/50 dark:bg-neutral-800 rotate-2 group-hover/avatar:rotate-0 transition-transform duration-300 ring-4 ring-card border-2 border-primary/20">
+                            <img 
+                                src={getAvatarUrl(user)} 
+                                alt={user.name} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
+                                }}
+                            />
+                        </div>
+                        <div className="absolute inset-0 rounded-[2rem] bg-black/50 opacity-0 group-hover/avatar:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200 backdrop-blur-xs">
+                            <Camera size={24} className="mb-1" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Change</span>
+                        </div>
                     </div>
                     
-                    <div className="flex-1 space-y-2 mt-2 md:mt-4">
+                    <div className="flex-1 space-y-3 mt-1 md:mt-2">
                         <div className="flex flex-col md:flex-row md:items-center gap-3">
                             {isEditingName ? (
                                 <div className="flex items-center space-x-2">
@@ -105,7 +202,7 @@ const Profile = () => {
                                         autoFocus
                                         onKeyDown={(e) => e.key === 'Enter' && handleUpdateName()}
                                     />
-                                    <button onClick={handleUpdateName} className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow">
+                                    <button onClick={handleUpdateName} disabled={savingProfile} className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow">
                                         <Check size={18} strokeWidth={3} />
                                     </button>
                                     <button onClick={() => setIsEditingName(false)} className="p-2 bg-black/10 dark:bg-neutral-800 text-text/60 rounded-lg hover:bg-black/20 dark:hover:bg-neutral-700 transition-colors">
@@ -114,7 +211,7 @@ const Profile = () => {
                                 </div>
                             ) : (
                                 <div className="flex items-center space-x-2 group h-12">
-                                    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-text">{user.name}</h1>
+                                    <h1 className="text-3xl md:text-5xl font-black tracking-tight text-text">{user.name}</h1>
                                     <button 
                                         onClick={() => { setEditNameValue(user.name); setIsEditingName(true); }}
                                         className="opacity-0 group-hover:opacity-100 p-1.5 text-text/40 hover:text-primary transition-all bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg translate-y-1 group-hover:translate-y-0 ml-1"
@@ -129,8 +226,67 @@ const Profile = () => {
                                 <span>{stats.avg_accuracy >= 80 ? 'Elite Scholar' : stats.questions_solved > 50 ? 'Dedicated Learner' : 'Novice Explorer'}</span>
                             </span>
                         </div>
-                        <p className="text-text/50 font-medium text-lg">{user.email}</p>
-                        <p className="text-sm font-bold text-text/40 tracking-widest uppercase mt-4">
+                        
+                        <p className="text-text/50 font-medium text-sm md:text-base">{user.email}</p>
+
+                        {/* BIO SECTION */}
+                        <div className="pt-1">
+                            {isEditingBio ? (
+                                <div className="space-y-2 max-w-xl">
+                                    <textarea
+                                        className="w-full bg-background border-2 border-primary/40 focus:border-primary rounded-xl p-3 text-sm font-medium text-text focus:outline-none resize-none"
+                                        rows={3}
+                                        maxLength={180}
+                                        value={editBioValue}
+                                        onChange={(e) => setEditBioValue(e.target.value)}
+                                        placeholder="Tell other scholars about your goals, study habits, or favorite subjects..."
+                                        autoFocus
+                                    />
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-text/40">
+                                            {editBioValue.length} / 180 characters
+                                        </span>
+                                        <div className="flex items-center space-x-2">
+                                            <button 
+                                                onClick={handleUpdateBio} 
+                                                disabled={savingProfile}
+                                                className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors flex items-center space-x-1 shadow-sm"
+                                            >
+                                                <Check size={14} />
+                                                <span>Save Bio</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => { setIsEditingBio(false); setEditBioValue(user.bio || ""); }}
+                                                className="px-3 py-1.5 bg-neutral-200 dark:bg-neutral-800 text-text/70 text-xs font-bold rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="group/bio flex items-start space-x-2 max-w-xl">
+                                    {user.bio ? (
+                                        <p className="text-sm font-medium text-text/80 bg-card/70 border border-neutral-200 dark:border-neutral-800/80 rounded-xl px-3.5 py-2 italic shadow-xs">
+                                            "{user.bio}"
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-text/40 italic py-1">
+                                            No bio added yet. Add a short bio to introduce yourself on the leaderboard!
+                                        </p>
+                                    )}
+                                    <button
+                                        onClick={() => { setEditBioValue(user.bio || ""); setIsEditingBio(true); }}
+                                        className="opacity-0 group-hover/bio:opacity-100 p-1.5 text-text/40 hover:text-primary transition-all bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg shrink-0 mt-0.5"
+                                        title={user.bio ? "Edit bio" : "Add bio"}
+                                    >
+                                        <Edit2 size={14} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-xs font-bold text-text/40 tracking-widest uppercase pt-2">
                             Enrolled {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                         </p>
                     </div>
@@ -140,6 +296,88 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* AVATAR UPLOAD / CHANGE MODAL */}
+            {isAvatarModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-150">
+                        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                            <div className="flex items-center space-x-2">
+                                <Camera className="text-primary" size={20} />
+                                <h3 className="font-black text-lg text-text">Change Profile Picture</h3>
+                            </div>
+                            <button onClick={() => setIsAvatarModalOpen(false)} className="p-1.5 text-text/40 hover:text-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col items-center space-y-4">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-xl bg-neutral-100 dark:bg-neutral-800">
+                                <img 
+                                    src={getAvatarUrl(user)} 
+                                    alt="Preview" 
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <p className="text-xs text-text/50 text-center font-medium">
+                                Upload a new photo from your device, paste an image link, or reset to your default avatar.
+                            </p>
+                        </div>
+
+                        {/* UPLOAD FILE OPTION */}
+                        <div className="space-y-3">
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileUpload} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingAvatar}
+                                className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-all flex items-center justify-center space-x-2 shadow-md disabled:opacity-50"
+                            >
+                                <Upload size={18} />
+                                <span>{uploadingAvatar ? 'Uploading...' : 'Upload Image from Computer'}</span>
+                            </button>
+
+                            {/* CUSTOM URL OPTION */}
+                            <div className="space-y-1.5 pt-2">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-text/40">Or paste image URL</label>
+                                <div className="flex space-x-2">
+                                    <input 
+                                        type="url" 
+                                        value={avatarUrlInput} 
+                                        onChange={(e) => setAvatarUrlInput(e.target.value)}
+                                        placeholder="https://example.com/avatar.png"
+                                        className="flex-1 bg-background border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-primary font-medium"
+                                    />
+                                    <button 
+                                        onClick={handleCustomUrlSave}
+                                        disabled={!avatarUrlInput.trim() || uploadingAvatar}
+                                        className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 hover:bg-primary hover:text-white text-text font-bold text-xs rounded-xl transition-colors disabled:opacity-40"
+                                    >
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* RESET TO DEFAULT DICEBEAR */}
+                            {user.avatar_url && (
+                                <button
+                                    onClick={handleResetAvatar}
+                                    disabled={uploadingAvatar}
+                                    className="w-full py-2 px-4 rounded-xl border border-neutral-200 dark:border-neutral-800 text-text/70 hover:text-text font-bold text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <RefreshCw size={14} />
+                                    <span>Reset to Default Avatar</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* QUICK STATS BENTO ROW */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

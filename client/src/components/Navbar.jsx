@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { LogOut, Sun, Moon, Book, Eye, Menu, User, Flame, Snowflake, Trophy, Users } from 'lucide-react';
 import ExitItLogo from './ExitItLogo';
 import NotificationBell from './NotificationBell';
+import { getAvatarUrl } from '../utils/avatar';
 
 const Navbar = ({ toggleSidebar }) => {
   const { theme, setTheme } = useContext(ThemeContext);
@@ -131,8 +132,16 @@ const Navbar = ({ toggleSidebar }) => {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className={`flex items-center space-x-2 p-1 sm:pr-4 rounded-full transition-all border ${dropdownOpen ? 'bg-primary/10 border-primary/20 shadow-sm' : 'border-transparent hover:bg-primary/5 hover:border-primary/10'}`}
           >
-            <div className="h-9 w-9 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-              {user?.name ? user.name.charAt(0).toUpperCase() : <User size={18} />}
+            <div className="h-9 w-9 rounded-full overflow-hidden bg-primary/10 border-2 border-primary/30 shadow-sm shrink-0 flex items-center justify-center">
+              <img 
+                src={getAvatarUrl(user)} 
+                alt={user?.name || "Profile"} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user?.email || user?.name || 'User')}`;
+                }}
+              />
             </div>
             <span className={`hidden sm:inline text-sm font-semibold transition-colors ${dropdownOpen ? 'text-primary' : 'text-text/80'}`}>
               {user?.name ? user.name.split(' ')[0] : 'Profile'}
@@ -150,8 +159,30 @@ const Navbar = ({ toggleSidebar }) => {
               
               {/* Profile Header */}
               <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800/50 bg-background/50 dark:bg-white/5">
-                <p className="text-sm font-bold text-text mb-0.5">{user?.name}</p>
-                <p className="text-xs text-text/60 truncate font-medium mb-2">{user?.email}</p>
+                <div className="flex items-center space-x-3 mb-2.5">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-primary/30 bg-primary/10 shadow-sm flex-shrink-0">
+                    <img 
+                      src={getAvatarUrl(user)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user?.email || user?.name || 'User')}`;
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-text truncate">{user?.name}</p>
+                    <p className="text-xs text-text/60 truncate font-medium">{user?.email}</p>
+                  </div>
+                </div>
+
+                {user?.bio && (
+                  <p className="text-xs text-text/75 italic line-clamp-2 mb-2.5 bg-card/80 p-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80">
+                    "{user.bio}"
+                  </p>
+                )}
+
                 <div className="flex items-center space-x-4 mt-2 mb-1">
                   <div className="flex flex-col items-center flex-1 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg py-2 shadow-sm">
                      <span className="text-xs font-bold text-text/40 uppercase tracking-widest mb-0.5">Points</span>

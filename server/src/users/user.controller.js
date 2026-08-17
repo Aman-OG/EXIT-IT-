@@ -37,7 +37,7 @@ const registerUser = async (req, res) => {
     // Create user
     // First registered user gets admin role if specified, otherwise user
     const newUser = await pool.query(
-      'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, streak_freezes',
+      'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, streak_freezes, total_score, avatar_url, bio',
       [name, email, hashedPassword, 2]
     );
 
@@ -71,7 +71,10 @@ const loginUser = async (req, res) => {
           role: user.rows[0].role,
           current_streak: user.rows[0].current_streak,
           max_streak: user.rows[0].max_streak,
+          total_score: user.rows[0].total_score,
           streak_freezes: user.rows[0].streak_freezes,
+          avatar_url: user.rows[0].avatar_url,
+          bio: user.rows[0].bio,
           token
         });
         return;
@@ -94,7 +97,10 @@ const logoutUser = (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
-    const user = await pool.query('SELECT id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes FROM users WHERE id = $1', [req.user.id]);
+    const user = await pool.query(
+      'SELECT id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio FROM users WHERE id = $1', 
+      [req.user.id]
+    );
     if (user.rows.length > 0) {
       res.status(200).json(user.rows[0]);
     } else {
@@ -128,7 +134,7 @@ const updateName = async (req, res) => {
   }
   try {
     const user = await pool.query(
-      'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes', 
+      'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio', 
       [name.trim(), req.user.id]
     );
     if (user.rows.length > 0) {
@@ -139,6 +145,53 @@ const updateName = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error updating name' });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  const { name, bio, avatar_url } = req.body;
+  try {
+    const current = await pool.query('SELECT name, bio, avatar_url FROM users WHERE id = $1', [req.user.id]);
+    if (current.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const newName = name !== undefined ? name.trim() : current.rows[0].name;
+    const newBio = bio !== undefined ? bio.trim() : current.rows[0].bio;
+    const newAvatarUrl = avatar_url !== undefined ? avatar_url : current.rows[0].avatar_url;
+
+    if (!newName || newName.length === 0) {
+      return res.status(400).json({ message: 'Name cannot be empty' });
+    }
+
+    const updated = await pool.query(
+      'UPDATE users SET name = $1, bio = $2, avatar_url = $3 WHERE id = $4 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
+      [newName, newBio, newAvatarUrl, req.user.id]
+    );
+
+    res.status(200).json(updated.rows[0]);
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
+};
+
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const updated = await pool.query(
+      'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
+      [avatarUrl, req.user.id]
+    );
+
+    res.status(200).json(updated.rows[0]);
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({ message: 'Server error uploading avatar' });
   }
 };
 
@@ -326,7 +379,7 @@ const googleAuth = async (req, res) => {
       const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
       const newUser = await pool.query(
-        'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes',
+        'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
         [name, email, hashedPassword, 2]
       );
       user = newUser.rows[0];
@@ -346,6 +399,8 @@ const googleAuth = async (req, res) => {
       max_streak: user.max_streak || 0,
       total_score: user.total_score || 0,
       streak_freezes: user.streak_freezes ?? 2,
+      avatar_url: user.avatar_url,
+      bio: user.bio,
       token: appToken,
     });
   } catch (error) {
@@ -364,5 +419,7 @@ module.exports = {
   updateStreak,
   useStreakFreeze,
   updateName,
+  updateProfile,
+  uploadAvatar,
   googleAuth,
 };

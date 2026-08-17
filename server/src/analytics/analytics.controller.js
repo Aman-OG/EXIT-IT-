@@ -213,6 +213,7 @@ exports.getCourseProgress = async (req, res) => {
 exports.getLeaderboard = async (req, res) => {
   try {
     const { sort } = req.query;
+    const currentUserId = req.user?.id || 0;
     let orderBy = 'total_score DESC, current_streak DESC';
 
     if (sort === 'streak') orderBy = 'current_streak DESC, total_score DESC';
@@ -225,26 +226,35 @@ exports.getLeaderboard = async (req, res) => {
           u.id, 
           u.name, 
           u.email,
+          u.avatar_url,
+          u.bio,
           u.total_score, 
           u.current_streak,
           (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.user_id = u.id) as total_quizzes,
-          COALESCE((SELECT AVG(score * 100.0 / NULLIF(total_questions, 0)) FROM quiz_attempts qa WHERE qa.user_id = u.id), 0) as avg_accuracy
+          COALESCE((SELECT AVG(score * 100.0 / NULLIF(total_questions, 0)) FROM quiz_attempts qa WHERE qa.user_id = u.id), 0) as avg_accuracy,
+          (SELECT status FROM friendships f WHERE (f.user_id = $1 AND f.friend_id = u.id) OR (f.user_id = u.id AND f.friend_id = $1) LIMIT 1) as friendship_status,
+          (SELECT user_id FROM friendships f WHERE (f.user_id = $1 AND f.friend_id = u.id) OR (f.user_id = u.id AND f.friend_id = $1) LIMIT 1) as friendship_initiator
         FROM users u
       )
       SELECT * FROM user_metrics
       ORDER BY ${orderBy}
       LIMIT 100
-    `);
+    `, [currentUserId]);
     
     // Attach rank to each user
     const leaderboard = result.rows.map((u, index) => ({
       id: u.id,
       name: u.name,
       email: u.email,
+      avatar_url: u.avatar_url,
+      bio: u.bio,
       total_score: parseInt(u.total_score || 0),
       current_streak: parseInt(u.current_streak || 0),
       total_quizzes: parseInt(u.total_quizzes || 0),
       avg_accuracy: Math.round(parseFloat(u.avg_accuracy || 0)),
+      friendship_status: u.friendship_status || null,
+      is_friends: u.friendship_status === 'accepted',
+      is_pending: u.friendship_status === 'pending',
       rank: index + 1
     }));
 
@@ -261,7 +271,7 @@ exports.getProfileStats = async (req, res) => {
 
     // 1. User info
     const userRes = await pool.query(`
-      SELECT name, email, role, created_at, total_score, current_streak
+      SELECT id, name, email, role, created_at, total_score, current_streak, avatar_url, bio
       FROM users WHERE id = $1
     `, [userId]);
     const user = userRes.rows[0];
