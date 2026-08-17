@@ -5,12 +5,11 @@ import api from '../api/axios';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare, AlertTriangle, Trash2, ShieldAlert } from 'lucide-react';
 import ActivityHeatmapGitHub from '../components/ActivityHeatmapGitHub';
-import Trophy3D from '../components/Trophy3D';
 import { getAvatarUrl } from '../utils/avatar';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { user: authUser, setUser, logout, evaluateBadges } = useContext(AuthContext);
+    const { user: authUser, setUser, logout } = useContext(AuthContext);
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedBadge, setSelectedBadge] = useState(null);
@@ -34,11 +33,6 @@ const Profile = () => {
                 const res = await api.get('/analytics/profile');
                 setProfileData(res.data);
                 setEditBioValue(res.data?.user?.bio || "");
-
-                // ── Badge unlock detection ──
-                if (authUser?.id) {
-                    evaluateBadges();
-                }
             } catch (err) {
                 console.error("Failed to fetch profile data", err);
             } finally {
@@ -308,8 +302,8 @@ const Profile = () => {
                         </p>
                     </div>
 
-                    <div className="hidden lg:block w-48 h-48 -mr-8 -mt-8 relative">
-                        <Trophy3D color={stats.avg_accuracy >= 80 ? 'amber' : 'emerald'} size="250px" />
+                    <div className="hidden lg:flex items-center justify-center w-36 h-36 rounded-3xl bg-gradient-to-br from-amber-500/10 to-primary/10 border border-amber-500/20 shadow-md shrink-0 p-4">
+                        <Trophy size={60} className="text-amber-500 drop-shadow-sm" />
                     </div>
                 </div>
             </div>
@@ -442,9 +436,9 @@ const Profile = () => {
                         </div>
                     </div>
                     
-                    <div className="w-full h-[350px]">
+                    <div className="w-full h-[350px] min-w-0">
                         {radarData && radarData.length > 0 && radarData[0].subject !== 'General' ? (
-                            <ResponsiveContainer width="100%" height={350}>
+                            <ResponsiveContainer width="100%" height={350} minWidth={0} minHeight={0}>
                                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                                     <PolarGrid stroke="currentColor" strokeOpacity={0.1} />
                                     <PolarAngleAxis dataKey="subject" tick={{ fill: 'currentColor', opacity: 0.6, fontSize: 12, fontWeight: 700 }} />
@@ -556,15 +550,9 @@ const Profile = () => {
                                 <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl mb-3 flex items-center justify-center shrink-0 relative
                                     ${isUnlocked ? `bg-gradient-to-br ${b.color} shadow-lg ${b.shadow} ${selectedBadge === b.id ? 'animate-bounce' : ''}` : 'bg-neutral-200 dark:bg-neutral-800'}
                                 `}>
-                                    {isUnlocked && b.id === 'examready' ? (
-                                        <div className="scale-150">
-                                            <Trophy3D color="amber" size="64px" />
-                                        </div>
-                                    ) : (
-                                        <span className="text-3xl filter drop-shadow hover:scale-110 transition-transform">
-                                            {b.icon}
-                                        </span>
-                                    )}
+                                    <span className="text-3xl filter drop-shadow hover:scale-110 transition-transform">
+                                        {b.icon}
+                                    </span>
                                 </div>
                                 <h4 className={`font-black text-sm mb-1 ${isUnlocked ? 'text-amber-600 dark:text-amber-400' : 'text-text'}`}>
                                     {b.name}
