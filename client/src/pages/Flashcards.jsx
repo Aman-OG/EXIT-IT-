@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 /* ─── Card Flip Study Session ─── */
-const StudySession = ({ cards, onFinish }) => {
+const StudySession = ({ cards, onFinish, onExit, deckTitle }) => {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState([]);
@@ -36,12 +36,30 @@ const StudySession = ({ cards, onFinish }) => {
   const progress = ((index) / cards.length) * 100;
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+    <div className="h-full flex flex-col items-center justify-center p-4 md:p-6 animate-in fade-in duration-300">
+      {/* Top bar with back button & title */}
+      <div className="w-full max-w-xl flex items-center justify-between mb-4">
+        <button
+          onClick={onExit}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl text-xs font-bold text-text/80 hover:text-primary hover:border-primary/40 transition shadow-xs cursor-pointer"
+          title="Exit study session and return to deck"
+        >
+          <ArrowLeft size={14} />
+          <span>Exit Study</span>
+        </button>
+
+        {deckTitle && (
+          <span className="text-xs font-bold text-text/50 truncate max-w-[200px] sm:max-w-[280px]">
+            {deckTitle}
+          </span>
+        )}
+      </div>
+
       {/* Progress */}
-      <div className="w-full max-w-xl mb-8">
+      <div className="w-full max-w-xl mb-6">
         <div className="flex justify-between text-xs font-bold text-text/40 mb-2">
-          <span>{index + 1} / {cards.length}</span>
-          <span>{Math.round(progress)}% done</span>
+          <span>Card {index + 1} of {cards.length}</span>
+          <span>{Math.round(progress)}% completed</span>
         </div>
         <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
           <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
@@ -232,6 +250,8 @@ const DeckDetail = ({ deck, onBack }) => {
     return (
       <StudySession
         cards={studySet}
+        deckTitle={deck.title}
+        onExit={() => setStudying(false)}
         onFinish={(stats) => {
           setStudying(false);
           setSessionResult(stats);
@@ -586,13 +606,17 @@ const DeckDetail = ({ deck, onBack }) => {
 
 /* ─── Main Flashcards Page ─── */
 const Flashcards = () => {
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [showNewDeck, setShowNewDeck] = useState(false);
-  const [deckForm, setDeckForm] = useState({ title: '', course_id: '' });
+  const [deckForm, setDeckForm] = useState({ title: '', course_id: '', is_public: false });
   const [courses, setCourses] = useState([]);
   const [totalDue, setTotalDue] = useState(0);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'official', 'custom'
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchAll();
@@ -620,9 +644,10 @@ const Flashcards = () => {
     try {
       await api.post('/flashcards/decks', {
         title: deckForm.title.trim(),
-        course_id: deckForm.course_id || null
+        course_id: deckForm.course_id || null,
+        is_public: user?.role === 'admin' ? deckForm.is_public : false
       });
-      setDeckForm({ title: '', course_id: '' });
+      setDeckForm({ title: '', course_id: '', is_public: false });
       setShowNewDeck(false);
       fetchAll();
     } catch (e) {
@@ -630,23 +655,46 @@ const Flashcards = () => {
     }
   };
 
-  const handleDeleteDeck = async (id, e) => {
+  const handleDeleteDeck = async (deck, e) => {
     e.stopPropagation();
-    if (!window.confirm('Delete this deck and all its cards?')) return;
+    if (deck.is_public && user?.role !== 'admin') {
+      alert('Official course decks can only be managed by administrators.');
+      return;
+    }
+    if (!window.confirm(`Delete deck "${deck.title}" and all its cards?`)) return;
     try {
-      await api.delete(`/flashcards/decks/${id}`);
+      await api.delete(`/flashcards/decks/${deck.id}`);
       fetchAll();
     } catch (e) {
       console.error(e);
     }
   };
 
+  const filteredDecks = decks.filter(deck => {
+    const matchesFilter = 
+      activeFilter === 'all' ? true :
+      activeFilter === 'official' ? (deck.is_public || !deck.user_id) :
+      (deck.user_id === user?.id && !deck.is_public);
+
+    const matchesSearch = 
+      !searchQuery.trim() ||
+      deck.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (deck.course_title && deck.course_title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (deck.course_code && deck.course_code.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return matchesFilter && matchesSearch;
+  });
+
+  const officialDecksCount = decks.filter(d => d.is_public || !d.user_id).length;
+  const customDecksCount = decks.filter(d => d.user_id === user?.id && !d.is_public).length;
+
   if (selectedDeck) {
     return <DeckDetail deck={selectedDeck} onBack={() => { setSelectedDeck(null); fetchAll(); }} />;
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
+    <div className="h-full overflow-y-auto p-4 md:p-6 space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <button 
@@ -657,8 +705,13 @@ const Flashcards = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1">Flashcards</h1>
-            <p className="text-text/60">Spaced repetition study — review cards at the optimal time.</p>
+            <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-2.5">
+              <span>Flashcards</span>
+              <span className="text-xs bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                Spaced Repetition
+              </span>
+            </h1>
+            <p className="text-text/60 text-sm">Study official course decks and custom cards at optimal recall intervals.</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
@@ -670,18 +723,75 @@ const Flashcards = () => {
           )}
           <button
             onClick={() => setShowNewDeck(true)}
-            className="flex items-center space-x-2 bg-primary text-primary-foreground px-5 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+            className="flex items-center space-x-2 bg-primary text-primary-foreground px-5 py-3 rounded-xl font-bold shadow-md hover:shadow-lg hover:opacity-90 transition-all text-sm"
           >
-            <Plus size={20} /><span>New Deck</span>
+            <Plus size={18} /><span>New Deck</span>
           </button>
+        </div>
+      </div>
+
+      {/* Filter Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-text/10 pb-3">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shrink-0 ${
+              activeFilter === 'all'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card text-text/70 hover:text-text border border-text/5'
+            }`}
+          >
+            <span>All Decks</span>
+            <span className="px-1.5 py-0.2 bg-black/20 text-current rounded-full text-[10px]">{decks.length}</span>
+          </button>
+          <button
+            onClick={() => setActiveFilter('official')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shrink-0 ${
+              activeFilter === 'official'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card text-text/70 hover:text-text border border-text/5'
+            }`}
+          >
+            <span>⭐ Ready-Made Decks</span>
+            <span className="px-1.5 py-0.2 bg-black/20 text-current rounded-full text-[10px]">{officialDecksCount}</span>
+          </button>
+          <button
+            onClick={() => setActiveFilter('custom')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shrink-0 ${
+              activeFilter === 'custom'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card text-text/70 hover:text-text border border-text/5'
+            }`}
+          >
+            <span>My Custom Decks</span>
+            <span className="px-1.5 py-0.2 bg-black/20 text-current rounded-full text-[10px]">{customDecksCount}</span>
+          </button>
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search decks & courses..."
+            className="w-full pl-3 pr-8 py-2 bg-card border border-neutral-200 dark:border-neutral-800 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text/40 hover:text-text"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 
       {/* New deck form */}
       {showNewDeck && (
-        <div className="bg-card border border-primary/20 rounded-2xl p-5 space-y-4 animate-in slide-in-from-top-4 duration-200">
+        <div className="bg-card border border-primary/20 rounded-2xl p-5 space-y-4 animate-in slide-in-from-top-4 duration-200 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">New Flashcard Deck</h3>
+            <h3 className="font-bold text-lg">New Flashcard Deck</h3>
             <button onClick={() => setShowNewDeck(false)} className="text-text/40 hover:text-text transition"><X size={18} /></button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -691,8 +801,8 @@ const Flashcards = () => {
                 type="text"
                 value={deckForm.title}
                 onChange={e => setDeckForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. OOP Concepts"
-                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g. OOP Concepts & Polymorphism"
+                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               />
             </div>
             <div>
@@ -700,17 +810,31 @@ const Flashcards = () => {
               <select
                 value={deckForm.course_id}
                 onChange={e => setDeckForm(f => ({ ...f, course_id: e.target.value }))}
-                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 bg-background border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm"
               >
-                <option value="">No course</option>
+                <option value="">No specific course</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.code}: {c.title}</option>)}
               </select>
             </div>
           </div>
+          {user?.role === 'admin' && (
+            <div className="flex items-center space-x-2 pt-1">
+              <input
+                type="checkbox"
+                id="is_public"
+                checked={deckForm.is_public}
+                onChange={e => setDeckForm(f => ({ ...f, is_public: e.target.checked }))}
+                className="rounded border-neutral-300 text-primary focus:ring-primary w-4 h-4"
+              />
+              <label htmlFor="is_public" className="text-xs font-semibold text-text/80 cursor-pointer">
+                Make this deck an Official Ready-Made Deck for all students
+              </label>
+            </div>
+          )}
           <button
             onClick={handleCreateDeck}
             disabled={!deckForm.title.trim()}
-            className="flex items-center space-x-2 px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50"
+            className="flex items-center space-x-2 px-5 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition disabled:opacity-50 text-sm shadow-sm"
           >
             <Save size={16} /><span>Create Deck</span>
           </button>
@@ -720,58 +844,88 @@ const Flashcards = () => {
       {/* Decks grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1,2,3].map(i => <div key={i} className="h-40 bg-neutral-100 dark:bg-neutral-800 rounded-2xl animate-pulse" />)}
+          {[1,2,3].map(i => <div key={i} className="h-44 bg-neutral-100 dark:bg-neutral-800 rounded-2xl animate-pulse" />)}
         </div>
-      ) : decks.length === 0 ? (
+      ) : filteredDecks.length === 0 ? (
         <div className="bg-card border border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl p-16 text-center space-y-4">
           <div className="w-20 h-20 bg-primary/5 text-primary rounded-3xl flex items-center justify-center mx-auto">
             <Brain size={40} />
           </div>
-          <h2 className="text-xl font-bold">No flashcard decks yet</h2>
-          <p className="text-text/40 max-w-sm mx-auto">Create your first deck to start using spaced repetition for smarter studying.</p>
-          <button onClick={() => setShowNewDeck(true)} className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition">
+          <h2 className="text-xl font-bold">No flashcard decks found</h2>
+          <p className="text-text/40 max-w-sm mx-auto">
+            {searchQuery ? 'Try clearing your search query' : 'Create your first deck to start using spaced repetition for smarter studying.'}
+          </p>
+          <button onClick={() => setShowNewDeck(true)} className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:opacity-90 transition shadow-md">
             <Plus size={18} /><span>Create First Deck</span>
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {decks.map(deck => (
-            <div
-              key={deck.id}
-              onClick={() => setSelectedDeck(deck)}
-              className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 cursor-pointer hover:border-primary/50 hover:-translate-y-1 transition-all group shadow-sm"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-2.5 bg-primary/10 text-primary rounded-xl group-hover:scale-110 transition-transform">
-                  <Brain size={20} />
-                </div>
-                <div className="flex items-center space-x-2">
-                  {deck.due_count > 0 && (
-                    <span className="text-[10px] font-black bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                      {deck.due_count} due
-                    </span>
+          {filteredDecks.map(deck => {
+            const isOfficial = deck.is_public || !deck.user_id;
+            return (
+              <div
+                key={deck.id}
+                onClick={() => setSelectedDeck(deck)}
+                className={`bg-card border rounded-2xl p-5 cursor-pointer transition-all group shadow-sm flex flex-col justify-between ${
+                  isOfficial 
+                    ? 'border-primary/30 hover:border-primary hover:shadow-md hover:-translate-y-1' 
+                    : 'border-neutral-200 dark:border-neutral-800 hover:border-text/30 hover:-translate-y-1'
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${
+                      isOfficial ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'
+                    }`}>
+                      <Brain size={20} />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {isOfficial && (
+                        <span className="text-[10px] font-black bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          ⭐ Official Deck
+                        </span>
+                      )}
+                      {deck.due_count > 0 && (
+                        <span className="text-[10px] font-black bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                          {deck.due_count} due
+                        </span>
+                      )}
+                      {(!isOfficial || user?.role === 'admin') && (
+                        <button
+                          onClick={(e) => handleDeleteDeck(deck, e)}
+                          title="Delete deck"
+                          className="p-1.5 text-text/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {deck.course_title && (
+                    <p className="text-[11px] font-bold text-primary mb-1 line-clamp-1">
+                      {deck.course_code ? `[${deck.course_code}] ` : ''}{deck.course_title}
+                    </p>
                   )}
-                  <button
-                    onClick={(e) => handleDeleteDeck(deck.id, e)}
-                    className="p-1.5 text-text/20 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <h3 className="font-bold text-base mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                    {deck.title}
+                  </h3>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800/60 mt-4">
+                  <div className="flex items-center space-x-1.5 text-text/50">
+                    <BookOpen size={13} />
+                    <span className="text-xs font-bold">{deck.card_count} cards</span>
+                  </div>
+                  <span className="text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                    <span>Study Deck</span>
+                    <ChevronRight size={14} />
+                  </span>
                 </div>
               </div>
-              {deck.course_title && (
-                <p className="text-[10px] font-bold text-text/30 uppercase tracking-widest mb-1">{deck.course_title}</p>
-              )}
-              <h3 className="font-bold text-base mb-3 group-hover:text-primary transition-colors">{deck.title}</h3>
-              <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center space-x-1 text-text/40">
-                  <BookOpen size={12} />
-                  <span className="text-xs font-bold">{deck.card_count} cards</span>
-                </div>
-                <ChevronRight size={16} className="text-text/30 group-hover:text-primary transition-colors" />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

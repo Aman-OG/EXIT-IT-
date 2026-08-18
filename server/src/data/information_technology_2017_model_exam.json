@@ -1,0 +1,1299 @@
+[
+  {
+    "id": 1,
+    "question": "Which HTML tag is used to connect external JavaScript into a webpage?",
+    "imageUrl": null,
+    "options": [
+      "Link",
+      "A",
+      "Script",
+      "Style"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The <script> tag with the src attribute is used to connect external JavaScript files into a webpage."
+  },
+  {
+    "id": 2,
+    "question": "Which PHP function is used to execute SQL query?",
+    "imageUrl": null,
+    "options": [
+      "mysql_done()",
+      "mysql_run()",
+      "mysql_query()",
+      "mysql_execute()"
+    ],
+    "correctAnswer": 2,
+    "explanation": "mysql_query() is the PHP function used to execute SQL queries against a MySQL database."
+  },
+  {
+    "id": 3,
+    "question": "Which one is not a rule for PHP variable naming?",
+    "imageUrl": null,
+    "options": [
+      "Space is allowed",
+      "Start with _",
+      "Start with letter",
+      "Contains number"
+    ],
+    "correctAnswer": 0,
+    "explanation": "PHP variable names cannot contain spaces. They must start with a letter or underscore, and can contain numbers, letters, and underscores."
+  },
+  {
+    "id": 4,
+    "question": "Which SQL statement deletes all data from student table?",
+    "imageUrl": null,
+    "options": [
+      "DELETE FROM student",
+      "DELETE * FROM table student",
+      "DELETE * FROM student",
+      "DELETE ALL FROM student"
+    ],
+    "correctAnswer": 0,
+    "explanation": "DELETE FROM student is the correct SQL statement to delete all rows from the student table."
+  },
+  {
+    "id": 5,
+    "question": "Which software is used to execute JavaScript code?",
+    "imageUrl": null,
+    "options": [
+      "PHP",
+      "Browser",
+      "Apache",
+      "XAMPP"
+    ],
+    "correctAnswer": 1,
+    "explanation": "JavaScript code is executed by web browsers, which have built-in JavaScript engines."
+  },
+  {
+    "id": 6,
+    "question": "Which SQL statement updates age of all students to 25?",
+    "imageUrl": null,
+    "options": [
+      "UPDATE table student SET age = 25",
+      "UPDATE ALL student TO age = 25",
+      "UPDATE age = 25 ALL student",
+      "UPDATE student SET age = 25"
+    ],
+    "correctAnswer": 3,
+    "explanation": "UPDATE student SET age = 25 is the correct SQL syntax to update the age column for all rows in the student table."
+  },
+  {
+    "id": 7,
+    "question": "Which operator is used as a concatenation in PHP?",
+    "imageUrl": null,
+    "options": [
+      ".",
+      "+",
+      "&",
+      ","
+    ],
+    "correctAnswer": 0,
+    "explanation": "The dot (.) operator is used for string concatenation in PHP."
+  },
+  {
+    "id": 8,
+    "question": "Which PHP function generates a fatal error?",
+    "imageUrl": null,
+    "options": [
+      "include_all",
+      "require",
+      "include_once",
+      "include"
+    ],
+    "correctAnswer": 1,
+    "explanation": "require() generates a fatal error (E_COMPILE_ERROR) and stops script execution if the file is not found."
+  },
+  {
+    "id": 9,
+    "question": "Which one is not a form attribute?",
+    "imageUrl": null,
+    "options": [
+      "Get",
+      "Name",
+      "Method",
+      "Action"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Get is a method value, not a form attribute. The form attributes are name, method, and action."
+  },
+  {
+    "id": 10,
+    "question": "Which PHP function retrieves the number of affected rows?",
+    "imageUrl": null,
+    "options": [
+      "mysql_rows()",
+      "mysql_rows_num()",
+      "mysql_fetch_rows()",
+      "mysql_num_rows()"
+    ],
+    "correctAnswer": 3,
+    "explanation": "mysql_num_rows() returns the number of rows in a result set."
+  },
+  {
+    "id": 11,
+    "question": "Which keyword is used to display output in PHP?",
+    "imageUrl": null,
+    "options": [
+      "print",
+      "die",
+      "echo",
+      "All"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Both echo, print, and die can be used to display output in PHP, making 'All' the correct answer."
+  },
+  {
+    "id": 12,
+    "question": "Which code is the correct way to add a comment in PHP?",
+    "imageUrl": null,
+    "options": [
+      "/*",
+      "//",
+      "<!-- -->",
+      "#"
+    ],
+    "correctAnswer": 0,
+    "explanation": "/* ... */ is the correct multi-line comment syntax in PHP."
+  },
+  {
+    "id": 13,
+    "question": "Which parameter is not used to connect to MySQL Database server in PHP?",
+    "imageUrl": null,
+    "options": [
+      "Database username",
+      "Database password",
+      "Database name",
+      "Port number"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Port number is optional and has a default value, making it not strictly required for connection."
+  },
+  {
+    "id": 14,
+    "question": "Which Form method is used to gather sensitive and large information?",
+    "imageUrl": null,
+    "options": [
+      "_POST",
+      "Collect",
+      "Get",
+      "Post"
+    ],
+    "correctAnswer": 3,
+    "explanation": "The POST method is used to send sensitive and large amounts of data because it doesn't expose data in the URL and has no size limitations."
+  },
+  {
+    "id": 15,
+    "question": "Which SQL statement selects all fields and all data from student?",
+    "imageUrl": null,
+    "options": [
+      "SELECT FROM student table",
+      "SELECT ALL FROM table student",
+      "SELECT * FROM student",
+      "SELECT * FROM student WHERE student.all"
+    ],
+    "correctAnswer": 2,
+    "explanation": "SELECT * FROM student is the correct SQL syntax to select all columns and all rows from the student table."
+  },
+  {
+    "id": 16,
+    "question": "Given the following array int x[5] = {2,4,6}, what is the value of x[5]?",
+    "imageUrl": null,
+    "options": [
+      "Invalid",
+      "Five",
+      "Zero",
+      "Empty"
+    ],
+    "correctAnswer": 2,
+    "explanation": "In C/C++, uninitialized array elements are set to zero by default, so x[5] would be zero."
+  },
+  {
+    "id": 17,
+    "question": "Which variable declaration is invalid?",
+    "imageUrl": null,
+    "options": [
+      "int int;",
+      "int x, y;",
+      "int x2y;",
+      "int xy2;"
+    ],
+    "correctAnswer": 0,
+    "explanation": "int int; is invalid because 'int' is a reserved keyword and cannot be used as a variable name."
+  },
+  {
+    "id": 18,
+    "question": "Which loop checks the condition at the end of the loop?",
+    "imageUrl": null,
+    "options": [
+      "Do",
+      "For",
+      "All",
+      "While"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The do-while loop checks the condition at the end, ensuring the loop body executes at least once."
+  },
+  {
+    "id": 19,
+    "question": "An array with 5 elements, the last element will have an index:",
+    "imageUrl": null,
+    "options": [
+      "5",
+      "4",
+      "3",
+      "6"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Array indices start at 0, so the last element of a 5-element array has index 4."
+  },
+  {
+    "id": 20,
+    "question": "Array index must start at:",
+    "imageUrl": null,
+    "options": [
+      "Size-1",
+      "Even number",
+      "One",
+      "Zero"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Array indices in most programming languages start at zero (0)."
+  },
+  {
+    "id": 21,
+    "question": "What is the output of the following program?",
+    "imageUrl": null,
+    "options": [
+      "0x",
+      "0 0 0",
+      "0 1",
+      "0 2 4"
+    ],
+    "correctAnswer": 1,
+    "explanation": "The loop runs for i=0,2,4 with res=0, producing '0 0 0' as output."
+  },
+  {
+    "id": 22,
+    "question": "Which array initialization is invalid?",
+    "imageUrl": null,
+    "options": [
+      "int z[]={0,0,0}",
+      "float x[2]={2,4}",
+      "int y[3]={1,2,3,4}",
+      "int x[4]={2,4}"
+    ],
+    "correctAnswer": 2,
+    "explanation": "int y[3]={1,2,3,4} is invalid because the array size is 3 but 4 values are provided."
+  },
+  {
+    "id": 23,
+    "question": "What is the output of the following code?",
+    "imageUrl": null,
+    "options": [
+      "4",
+      "1",
+      "2",
+      "3"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The loop runs for i=1 and i=3, adding x[1]=3 and x[3]=1, giving y=4."
+  },
+  {
+    "id": 24,
+    "question": "All are syntax errors except:",
+    "imageUrl": null,
+    "options": [
+      "Forgetting # in the include statement",
+      "Misspelling of keyword",
+      "Forgetting semicolon",
+      "Using + instead of * arithmetic operator"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Using + instead of * is a logical error, not a syntax error. The code would still compile and run, just with incorrect results."
+  },
+  {
+    "id": 25,
+    "question": "Which loop statement is best if you know the number of iterations?",
+    "imageUrl": null,
+    "options": [
+      "do-while",
+      "do",
+      "while",
+      "for"
+    ],
+    "correctAnswer": 3,
+    "explanation": "The for loop is best when you know the exact number of iterations in advance."
+  },
+  {
+    "id": 26,
+    "question": "A continue statement causes the loop to skip to:",
+    "imageUrl": null,
+    "options": [
+      "End of the loop",
+      "Stop the loop",
+      "Next iteration",
+      "Beginning of the loop"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The continue statement skips the remaining code in the current iteration and moves to the next iteration."
+  },
+  {
+    "id": 27,
+    "question": "What is the output of the following program?",
+    "imageUrl": null,
+    "options": [
+      "1",
+      "1 3 5",
+      "1 2 3 4 5",
+      "2 4 6"
+    ],
+    "correctAnswer": 1,
+    "explanation": "The loop prints odd numbers (1, 3, 5) because even numbers are skipped by the continue statement."
+  },
+  {
+    "id": 28,
+    "question": "A consecutive group of memory locations that have the same name and type is called:",
+    "imageUrl": null,
+    "options": [
+      "Structure",
+      "Array",
+      "Linked list",
+      "Class"
+    ],
+    "correctAnswer": 1,
+    "explanation": "An array is a consecutive group of memory locations that have the same name and data type."
+  },
+  {
+    "id": 29,
+    "question": "What is the output of the following program?",
+    "imageUrl": null,
+    "options": [
+      "1 2 4",
+      "No output",
+      "1 2 3 4 5",
+      "1 3 5"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The loop prints all numbers from 1 to 5 because both if and else branches print the number."
+  },
+  {
+    "id": 30,
+    "question": "Which one is different?",
+    "imageUrl": null,
+    "options": [
+      "i = +1;",
+      "i++;",
+      "i = i + 1;",
+      "i += 1;"
+    ],
+    "correctAnswer": 0,
+    "explanation": "i = +1; assigns positive 1 to i (same as i = 1), while the others increment i by 1."
+  },
+  {
+    "id": 31,
+    "question": "When does overloading NOT occur?",
+    "imageUrl": null,
+    "options": [
+      "More than one method with same name, same signature but different number of signature",
+      "More than one method with same name, same signature, same number of parameters but different type",
+      "More than one method with same name but different method signature and different number or type of parameters",
+      "More than one method with same name, same number of parameters and type but different signature"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Overloading requires different method signatures (parameter lists). Methods with same name, same parameters, and type but different signature is not overloading."
+  },
+  {
+    "id": 32,
+    "question": "Given the following code, which statement is true?",
+    "imageUrl": null,
+    "options": [
+      "The program will fail to compile if break is replaced by return",
+      "The program will fail to compile",
+      "The program will print 3, 3 when run",
+      "The program will print 4, 3 when run if break is replaced by continue"
+    ],
+    "correctAnswer": 3,
+    "explanation": "If break is replaced by continue, the loop continues to i=4, so k becomes 4 and I remains 3."
+  },
+  {
+    "id": 33,
+    "question": "Which of the following is not true?",
+    "imageUrl": null,
+    "options": [
+      "Interface is a solution for multiple inheritance in Java",
+      "An interface can implement another interface",
+      "A class implementing an interface must implement all methods of the interface",
+      "An interface can extend another interface"
+    ],
+    "correctAnswer": 1,
+    "explanation": "An interface cannot implement another interface; it can only extend another interface."
+  },
+  {
+    "id": 34,
+    "question": "To prevent any method from overriding, we declare the method as:",
+    "imageUrl": null,
+    "options": [
+      "final",
+      "abstract",
+      "const",
+      "static"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The 'final' keyword in Java prevents a method from being overridden in subclasses."
+  },
+  {
+    "id": 35,
+    "question": "Which of the following statements is true?",
+    "imageUrl": null,
+    "options": [
+      "The subclass of a non-abstract class can be declared abstract",
+      "All the members of the superclass are inherited by the subclass",
+      "A final class can be abstract",
+      "A class in which all the members are declared private, cannot be declared public"
+    ],
+    "correctAnswer": 0,
+    "explanation": "A subclass of a non-abstract class can be declared abstract, as abstract classes can extend concrete classes."
+  },
+  {
+    "id": 36,
+    "question": "Which concept of Java is achieved by combining methods and attribute into a class?",
+    "imageUrl": null,
+    "options": [
+      "Polymorphism",
+      "Encapsulation",
+      "Inheritance",
+      "Abstraction"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Encapsulation is the concept of bundling data (attributes) and methods together within a class."
+  },
+  {
+    "id": 37,
+    "question": "Multiple inheritance means:",
+    "imageUrl": null,
+    "options": [
+      "All",
+      "More classes inheriting from one super class",
+      "One class inheriting from more super classes",
+      "More classes inheriting from more super classes"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Multiple inheritance is when one class inherits from more than one super class."
+  },
+  {
+    "id": 38,
+    "question": "Which statement is NOT true in Java language?",
+    "imageUrl": null,
+    "options": [
+      "A protected member can be accessed from its derived class",
+      "A public member can be accessed in all the packages",
+      "A private member cannot be accessed from its derived class",
+      "A private member cannot be accessed by the methods of the same class"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Private members can be accessed by methods of the same class, making this statement false."
+  },
+  {
+    "id": 39,
+    "question": "The default value of a static integer variable of a class in Java is:",
+    "imageUrl": null,
+    "options": [
+      "Garbage Value",
+      "1",
+      "0",
+      "-1"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The default value for a static integer variable in Java is 0."
+  },
+  {
+    "id": 40,
+    "question": "Which of the following is true?",
+    "imageUrl": null,
+    "options": [
+      "An overriding method must declare that it throws the same exception classes as the method it overrides",
+      "If an exception is uncaught in a method, the method will terminate and normal execution will resume",
+      "Finally blocks are executed if, and only if, an exception gets thrown while inside the corresponding try block",
+      "The main() method of a program can declare that it throws checked exceptions"
+    ],
+    "correctAnswer": 3,
+    "explanation": "The main() method can declare that it throws checked exceptions using the throws keyword."
+  },
+  {
+    "id": 41,
+    "question": "What is the type and value of the following expression? (Notice the integer division) -4 + 1/2 + 2 * -3 + 5.0",
+    "imageUrl": null,
+    "options": [
+      "double -4.5",
+      "double -5.0",
+      "int -5",
+      "int -4"
+    ],
+    "correctAnswer": 1,
+    "explanation": "1/2 = 0 (integer division), 2*-3 = -6, so -4 + 0 + (-6) + 5.0 = -5.0 (double)."
+  },
+  {
+    "id": 42,
+    "question": "Which of the following variable declaration would NOT compile in a Java program?",
+    "imageUrl": null,
+    "options": [
+      "int VAR;",
+      "int 1_var",
+      "int var;",
+      "int var_1"
+    ],
+    "correctAnswer": 1,
+    "explanation": "int 1_var is invalid because variable names in Java cannot start with a number."
+  },
+  {
+    "id": 43,
+    "question": "When is method overloading determined?",
+    "imageUrl": null,
+    "options": [
+      "At run time",
+      "At coding time",
+      "At execution time",
+      "At compile time"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Method overloading is determined at compile time (static polymorphism)."
+  },
+  {
+    "id": 44,
+    "question": "Which of the following is true?",
+    "imageUrl": null,
+    "options": [
+      "A finally block is executed, only if an exception occurs",
+      "A finally block is executed, only after the catch block is executed",
+      "A finally block is executed whether an exception is thrown or not",
+      "A finally block is executed before the catch block but after the try block"
+    ],
+    "correctAnswer": 2,
+    "explanation": "A finally block always executes whether an exception is thrown or not, making it ideal for cleanup operations."
+  },
+  {
+    "id": 45,
+    "question": "Which one of the following is not true?",
+    "imageUrl": null,
+    "options": [
+      "An abstract class cannot have non-abstract methods",
+      "A class must be qualified as 'abstract' class, if it contains one abstract method",
+      "Abstract methods should be implemented in the derived class",
+      "A class containing abstract methods is called an abstract class"
+    ],
+    "correctAnswer": 0,
+    "explanation": "An abstract class can contain both abstract and non-abstract methods, making this statement false."
+  },
+  {
+    "id": 46,
+    "question": "Why is concurrency control important in a multi-user database?",
+    "imageUrl": null,
+    "options": [
+      "To prevent interference when a single user is accessing a data item simultaneously and at least one is writing",
+      "To prevent interference when multiple users are accessing a data item simultaneously and at least one is writing",
+      "To read a data item and compromise database consistency",
+      "To prevent interference when multiple users are accessing a data item simultaneously and at least one is reading"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Concurrency control prevents interference when multiple users access the same data simultaneously with at least one writing operation."
+  },
+  {
+    "id": 47,
+    "question": "What is the main goal of normalization?",
+    "imageUrl": null,
+    "options": [
+      "To reduce data redundancy, improve data sharing, and improve data security",
+      "To improve system performance, maintain database consistency and manage attributes",
+      "To enable data sharing, minimize data inconsistency and improve data access",
+      "To identify data dependency, reduce data redundancy and improve system performance"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Normalization aims to identify data dependencies, reduce redundancy, and improve system performance."
+  },
+  {
+    "id": 48,
+    "question": "What could happen if a failure occurs during execution of operations of a transaction?",
+    "imageUrl": null,
+    "options": [
+      "The database could be inconsistent and data could be lost",
+      "The database could remain consistent but data could be lost",
+      "The database could remain consistent",
+      "The database could remain consistent and the update could be lost"
+    ],
+    "correctAnswer": 0,
+    "explanation": "If a failure occurs during a transaction, the database could become inconsistent and data could be lost."
+  },
+  {
+    "id": 49,
+    "question": "Entity relationship diagrams depict the database's main components. What are they?",
+    "imageUrl": null,
+    "options": [
+      "Entities, attributes and design",
+      "Entities, attributes, types and relationships",
+      "Entities, attributes and relationships",
+      "Entities and relationships"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Entity Relationship diagrams depict entities, attributes, and relationships as the main components."
+  },
+  {
+    "id": 50,
+    "question": "What is the dominant cost in query processing when using cost estimation approach?",
+    "imageUrl": null,
+    "options": [
+      "Cost of relational algebra",
+      "Cost of CPU",
+      "Cost of Memory",
+      "Cost of disk"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Disk I/O is the dominant cost in query processing as it is much slower than CPU or memory operations."
+  },
+  {
+    "id": 51,
+    "question": "Why do we need a database?",
+    "imageUrl": null,
+    "options": [
+      "To store, manage data and make data persistent and shareable in a secure way",
+      "To store, manage data but not retrieve and make data persistent and shareable in a secure way",
+      "To store, manage data in an unorganized manner and make data persistent and shareable in a secure way",
+      "To write database programs, manage data and make data persistent"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Databases store and manage data, making it persistent, shareable, and secure."
+  },
+  {
+    "id": 52,
+    "question": "Within a relational R, an attribute B is functionally dependent on an attribute A if and only if:",
+    "imageUrl": null,
+    "options": [
+      "The values of attribute B are determined by another attribute",
+      "A given value of attribute A determines exactly one value of attribute B",
+      "Attribute B in a specific row whose value directly determines other values",
+      "A given value of attribute B determines exactly one value of attribute A"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Functional dependency means that a given value of A determines exactly one value of B."
+  },
+  {
+    "id": 53,
+    "question": "The ALTER TABLE clause in SQL can be used to:",
+    "imageUrl": null,
+    "options": [
+      "Alter default values, add a column, and delete an attribute of the relation",
+      "Alter default values, add a row, and delete an attribute",
+      "Alter default values, delete a row, and delete an attribute",
+      "Alter default values, delete a column, and update attribute values"
+    ],
+    "correctAnswer": 0,
+    "explanation": "ALTER TABLE can modify default values, add columns, and delete columns (attributes)."
+  },
+  {
+    "id": 54,
+    "question": "Which one of the following is true?",
+    "imageUrl": null,
+    "options": [
+      "A null value means zero or space, created when you press Enter without making an entry",
+      "A strong entity cannot exist apart from all of its related entities",
+      "A relationship in which the primary key of the related entity does not contain a primary key component of the parent entity",
+      "A strong relationship exists when the primary key of the related entity contains a primary key component"
+    ],
+    "correctAnswer": 3,
+    "explanation": "A strong relationship exists when the primary key of the related entity contains a primary key component of the parent entity."
+  },
+  {
+    "id": 55,
+    "question": "Database reliability and consistency are maintained by:",
+    "imageUrl": null,
+    "options": [
+      "Concurrency control protocol and two-phase lock",
+      "Transaction and recovery manager",
+      "Concurrency control and recovery manager",
+      "Transaction and concurrency control"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Database reliability and consistency are maintained by concurrency control and recovery managers."
+  },
+  {
+    "id": 56,
+    "question": "A database that supports data located at a single site is called:",
+    "imageUrl": null,
+    "options": [
+      "Centralized database",
+      "Single-user database",
+      "Multiuser database",
+      "Distributed database"
+    ],
+    "correctAnswer": 0,
+    "explanation": "A centralized database stores data at a single physical location."
+  },
+  {
+    "id": 57,
+    "question": "In the Entity Relationship diagram, cardinality is indicated by:",
+    "imageUrl": null,
+    "options": [
+      "Using derived placing derived attribute",
+      "None",
+      "Describing the relationship classification",
+      "Placing the appropriate numbers beside the entities, using the format (x,y)"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Cardinality is shown by placing numbers beside entities in the format (x,y), where x is minimum and y is maximum."
+  },
+  {
+    "id": 58,
+    "question": "Why is query processing and optimization important in Database?",
+    "imageUrl": null,
+    "options": [
+      "Both are important in query executing to access information from DB",
+      "Both help the user to retrieve results from the database based on time",
+      "Both are used to process SQL statements to return an answer",
+      "Both improve the performance of a database by efficiently executing a query"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Query processing and optimization improve database performance by efficiently executing queries."
+  },
+  {
+    "id": 59,
+    "question": "What is the reason for the creation of OODB?",
+    "imageUrl": null,
+    "options": [
+      "For database applications that require more complex structures for storing objects",
+      "For developing database applications such as airline reservation",
+      "To overcome the problem of lack of experience",
+      "For database applications that require traditional business applications"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Object-Oriented Databases (OODB) were created to handle applications that need to store complex object structures."
+  },
+  {
+    "id": 60,
+    "question": "Which one of the following operations is used to combine two relations?",
+    "imageUrl": null,
+    "options": [
+      "Intersection",
+      "Set difference",
+      "Cross product",
+      "Join operation"
+    ],
+    "correctAnswer": 3,
+    "explanation": "The JOIN operation is used to combine two relations based on a common attribute."
+  },
+  {
+    "id": 61,
+    "question": "What is the bit pattern for the first octet of a Class A network address?",
+    "imageUrl": null,
+    "options": [
+      "10XXXXXX",
+      "0XXXXXXX",
+      "1110XXXX",
+      "110XXXXX"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Class A addresses have a first octet bit pattern of 0XXXXXXX (0-127)."
+  },
+  {
+    "id": 62,
+    "question": "Which one of the following is an alphanumeric string that uniquely identifies a WLAN?",
+    "imageUrl": null,
+    "options": [
+      "BSSID",
+      "SSID",
+      "SID",
+      "ESS"
+    ],
+    "correctAnswer": 1,
+    "explanation": "SSID (Service Set Identifier) is the alphanumeric name that uniquely identifies a wireless network."
+  },
+  {
+    "id": 63,
+    "question": "An internetworking device operating at the transport layer is:",
+    "imageUrl": null,
+    "options": [
+      "Router",
+      "Gateway",
+      "Repeater",
+      "Bridge"
+    ],
+    "correctAnswer": 1,
+    "explanation": "A Gateway operates at the transport layer and can translate between different protocols."
+  },
+  {
+    "id": 64,
+    "question": "Which of the following is NOT a function of an AP?",
+    "imageUrl": null,
+    "options": [
+      "Routes datagrams for delivery to the mobile node when it is away from home",
+      "Send and receive radio signals",
+      "Translate network traffic into radio signal",
+      "Acts as a bridge between the wired and wireless network"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Routing datagrams to mobile nodes away from home is a function of a home agent, not an Access Point."
+  },
+  {
+    "id": 65,
+    "question": "Which protocol provides reliable connection-oriented transmission between two hosts?",
+    "imageUrl": null,
+    "options": [
+      "TCP",
+      "IP",
+      "ARP",
+      "UDP"
+    ],
+    "correctAnswer": 0,
+    "explanation": "TCP (Transmission Control Protocol) provides reliable, connection-oriented communication."
+  },
+  {
+    "id": 66,
+    "question": "In which layer is data addressed, packaged, and routed among networks?",
+    "imageUrl": null,
+    "options": [
+      "Network layer",
+      "Transport layer",
+      "Link layer",
+      "Physical layer"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The Network layer is responsible for addressing, packaging, and routing data across networks."
+  },
+  {
+    "id": 67,
+    "question": "Which one of the following is a 15-digit decimal number that uniquely identifies a mobile phone, also acts as a serial number?",
+    "imageUrl": null,
+    "options": [
+      "ESN",
+      "SID",
+      "IMEI",
+      "MIN"
+    ],
+    "correctAnswer": 2,
+    "explanation": "IMEI (International Mobile Equipment Identity) is a 15-digit number that uniquely identifies a mobile device."
+  },
+  {
+    "id": 68,
+    "question": "By which types of cable can computers communicate at extremely high speeds using impulses of light?",
+    "imageUrl": null,
+    "options": [
+      "Electrical cable",
+      "Twisted pair cable",
+      "Fiber optic",
+      "Radio frequency"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Fiber optic cables transmit data using light impulses, enabling extremely high-speed communication."
+  },
+  {
+    "id": 69,
+    "question": "Which one of the following is an example of Ad Hoc Mode?",
+    "imageUrl": null,
+    "options": [
+      "Cellular Network",
+      "Wi-Fi communication through an AP",
+      "Satellite communication",
+      "Personal Area Network"
+    ],
+    "correctAnswer": 3,
+    "explanation": "A Personal Area Network (PAN) is an example of Ad Hoc mode where devices communicate directly without an AP."
+  },
+  {
+    "id": 70,
+    "question": "A protocol that uses IP addresses to deliver packets to network devices is:",
+    "imageUrl": null,
+    "options": [
+      "User Datagram Protocol",
+      "Internet Protocol",
+      "Address Resolution Protocol",
+      "Transmission Control Protocol"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Internet Protocol (IP) uses IP addresses to deliver packets to network devices."
+  },
+  {
+    "id": 71,
+    "question": "What is the number of usable networks and usable hosts for the network 210.106.140.0/24?",
+    "imageUrl": null,
+    "options": [
+      "4 networks with 64 hosts",
+      "2 networks with 128 hosts",
+      "6 networks with 30 hosts",
+      "1 network with 254 hosts"
+    ],
+    "correctAnswer": 3,
+    "explanation": "/24 subnet mask gives 1 network with 254 usable hosts (256-2)."
+  },
+  {
+    "id": 72,
+    "question": "Which layer in the OSI reference model is responsible for determining the availability of the receiving program and checking if enough resources exist for communication?",
+    "imageUrl": null,
+    "options": [
+      "Session",
+      "Transport",
+      "Presentation",
+      "Application"
+    ],
+    "correctAnswer": 3,
+    "explanation": "The Application layer determines if the receiving program is available and if resources are sufficient for communication."
+  },
+  {
+    "id": 73,
+    "question": "In which mode does IEEE 802.11 operate if we consider that each frame must be acknowledged by the receiver?",
+    "imageUrl": null,
+    "options": [
+      "Simplex",
+      "Full-duplex",
+      "Simple",
+      "Half-duplex"
+    ],
+    "correctAnswer": 3,
+    "explanation": "IEEE 802.11 operates in half-duplex mode where frames must be acknowledged, preventing simultaneous transmission."
+  },
+  {
+    "id": 74,
+    "question": "What is a recommended subnet mask to use in point-to-point WAN links?",
+    "imageUrl": null,
+    "options": [
+      "255.255.255.255",
+      "255.255.255.0",
+      "255.255.255.224",
+      "255.255.255.252"
+    ],
+    "correctAnswer": 3,
+    "explanation": "/30 subnet mask (255.255.255.252) is recommended for point-to-point WAN links as it provides 2 usable addresses."
+  },
+  {
+    "id": 75,
+    "question": "What is the bit length and expression form of a MAC address?",
+    "imageUrl": null,
+    "options": [
+      "48 bits / expressed as a hexadecimal number",
+      "32 bits / expressed as a hexadecimal number",
+      "48 bits / expressed as a decimal number",
+      "32 bits / expressed as a decimal number"
+    ],
+    "correctAnswer": 0,
+    "explanation": "MAC addresses are 48 bits long and are typically expressed in hexadecimal format."
+  },
+  {
+    "id": 76,
+    "question": "What is the need of assigning a care-of-address to a host while away from its home network?",
+    "imageUrl": null,
+    "options": [
+      "To match the network of attachment to the visited network",
+      "All",
+      "Because the permanent address of the device is topologically incorrect in the visited network"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Care-of-address is needed to make the device's address topologically correct in the visited network."
+  },
+  {
+    "id": 77,
+    "question": "File Allocation Table (FAT) used by DOS is a variation of:",
+    "imageUrl": null,
+    "options": [
+      "Indexed allocation",
+      "Contiguous allocation",
+      "No answer from the alternatives",
+      "Linked allocation"
+    ],
+    "correctAnswer": 3,
+    "explanation": "FAT uses linked allocation where each block points to the next block in a file."
+  },
+  {
+    "id": 78,
+    "question": "Accessing every directory and every file within a directory structure is called:",
+    "imageUrl": null,
+    "options": [
+      "No answer from the alternatives",
+      "Searching for a file",
+      "Listing a directory",
+      "Traversing the file system"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Traversing the file system means accessing every directory and file in the directory structure."
+  },
+  {
+    "id": 79,
+    "question": "Which of the following indicates the address of the next instruction to be executed for a process in Process Control Block (PCB)?",
+    "imageUrl": null,
+    "options": [
+      "Pointer",
+      "None of the above",
+      "Program counter",
+      "Process number"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The Program Counter (PC) in the PCB stores the address of the next instruction to be executed."
+  },
+  {
+    "id": 80,
+    "question": "Which directory structure is supported by Windows operating system?",
+    "imageUrl": null,
+    "options": [
+      "Acyclic-Graph Directory",
+      "Two-Level Directory",
+      "All",
+      "Tree-Structured Directory"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Windows supports Acyclic-Graph Directory structure, also known as a tree with links."
+  },
+  {
+    "id": 81,
+    "question": "CPU fetches the instruction from memory according to the value of:",
+    "imageUrl": null,
+    "options": [
+      "Instruction register",
+      "All",
+      "Program counter",
+      "Status register"
+    ],
+    "correctAnswer": 2,
+    "explanation": "The CPU fetches instructions from memory using the address stored in the Program Counter."
+  },
+  {
+    "id": 82,
+    "question": "Protection is provided by a mechanism that controls the access of:",
+    "imageUrl": null,
+    "options": [
+      "Users",
+      "Processes",
+      "All",
+      "Programs"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Protection mechanisms control access by all entities including users, processes, and programs."
+  },
+  {
+    "id": 83,
+    "question": "In a process, which of the following contains temporary data?",
+    "imageUrl": null,
+    "options": [
+      "Process stack",
+      "Data section",
+      "Text section",
+      "Program counter"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The process stack contains temporary data such as function parameters and local variables."
+  },
+  {
+    "id": 84,
+    "question": "The number of resources requested by a process:",
+    "imageUrl": null,
+    "options": [
+      "Must always be less than the total number of resources available in the system",
+      "Must not exceed the total number of resources available in the system",
+      "Must exceed the total number of resources available in the system",
+      "Must always be equal to the total number of resources available in the system"
+    ],
+    "correctAnswer": 1,
+    "explanation": "A process cannot request more resources than are available in the system."
+  },
+  {
+    "id": 85,
+    "question": "A suspended process moved to secondary storage by the medium-term scheduler is called:",
+    "imageUrl": null,
+    "options": [
+      "Swapping",
+      "Terminated",
+      "Waiting for I/O",
+      "Executing"
+    ],
+    "correctAnswer": 0,
+    "explanation": "Swapping is the process of moving a suspended process to secondary storage."
+  },
+  {
+    "id": 86,
+    "question": "Which scheduling algorithm may suffer from indefinite blocking or starvation?",
+    "imageUrl": null,
+    "options": [
+      "FCFS",
+      "Round Robin",
+      "Priority",
+      "SJF"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Priority scheduling can cause starvation of lower-priority processes if higher-priority processes keep arriving."
+  },
+  {
+    "id": 87,
+    "question": "Which model can be selected if the user is involved in all phases of SDLC?",
+    "imageUrl": null,
+    "options": [
+      "Waterfall Model",
+      "RAD Model",
+      "Both Prototyping Model and RAD Model",
+      "Prototyping Model"
+    ],
+    "correctAnswer": 1,
+    "explanation": "RAD (Rapid Application Development) Model involves users in all phases of SDLC."
+  },
+  {
+    "id": 88,
+    "question": "Which of the following points related to Object-oriented development (OOD) is true?",
+    "imageUrl": null,
+    "options": [
+      "OOA is concerned with developing an object model of the application domain",
+      "OOD is concerned with developing an object-oriented system model to implement requirements",
+      "None of the mentioned",
+      "All of the mentioned"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Both statements about OOA and OOD are correct, making 'All of the mentioned' the correct answer."
+  },
+  {
+    "id": 89,
+    "question": "Which of the following diagram is time-oriented?",
+    "imageUrl": null,
+    "options": [
+      "Collaboration",
+      "Activity",
+      "Both collaboration and activity",
+      "Sequence"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Sequence diagrams are time-oriented as they show the order of messages over time."
+  },
+  {
+    "id": 90,
+    "question": "Which one of the following is NOT a fundamental activity for software processes in software engineering?",
+    "imageUrl": null,
+    "options": [
+      "Software evolution",
+      "Software design and implementation",
+      "Software Verification",
+      "Software Validation"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Software Verification is not a separate fundamental activity; it is part of Validation and testing."
+  },
+  {
+    "id": 91,
+    "question": "Which of the following UML diagrams has a static view?",
+    "imageUrl": null,
+    "options": [
+      "State chart",
+      "Activity",
+      "Sequence",
+      "Use case"
+    ],
+    "correctAnswer": 3,
+    "explanation": "Use case diagrams provide a static view of system functionality from the user's perspective."
+  },
+  {
+    "id": 92,
+    "question": "Which one of the following is a functional requirement?",
+    "imageUrl": null,
+    "options": [
+      "Maintainability",
+      "Robustness",
+      "None of the mentioned",
+      "Portability"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Maintainability, Robustness, and Portability are all non-functional requirements. Therefore, none are functional requirements."
+  },
+  {
+    "id": 93,
+    "question": "Which one of the following is NOT a software process quality?",
+    "imageUrl": null,
+    "options": [
+      "Visibility",
+      "Productivity",
+      "Portability",
+      "Timeliness"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Portability is a product quality attribute, not a software process quality attribute."
+  },
+  {
+    "id": 94,
+    "question": "Which of the following is a disadvantage of OOD?",
+    "imageUrl": null,
+    "options": [
+      "Objects are potentially reusable components",
+      "Easier maintenance",
+      "Objects may be understood as stand-alone entities",
+      "None of the mentioned"
+    ],
+    "correctAnswer": 3,
+    "explanation": "All mentioned options are advantages of OOD. There is no disadvantage listed."
+  },
+  {
+    "id": 95,
+    "question": "Which one of the following is NOT a step of requirement engineering?",
+    "imageUrl": null,
+    "options": [
+      "Elicitation",
+      "Analysis",
+      "Design",
+      "Documentation"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Design is a separate phase that comes after requirement engineering. Requirement engineering includes elicitation, analysis, and documentation."
+  },
+  {
+    "id": 96,
+    "question": "How is Incremental Model different from Spiral Model?",
+    "imageUrl": null,
+    "options": [
+      "Users can see the system early in Incremental Model",
+      "Progress can be measured for Incremental Model",
+      "Changing requirements can be accommodated in Incremental Model",
+      "All of the mentioned"
+    ],
+    "correctAnswer": 1,
+    "explanation": "Progress can be measured in Incremental Model as each increment delivers a working product."
+  },
+  {
+    "id": 97,
+    "question": "Identify the disadvantage of Spiral Model:",
+    "imageUrl": null,
+    "options": [
+      "High amount of risk analysis",
+      "Additional functionality can be added at a later date",
+      "Strong approval and documentation control"
+    ],
+    "correctAnswer": 0,
+    "explanation": "High amount of risk analysis is a disadvantage as it can be expensive and time-consuming."
+  },
+  {
+    "id": 98,
+    "question": "Choose the incorrect statement in terms of Objects:",
+    "imageUrl": null,
+    "options": [
+      "All of the mentioned",
+      "Objects are abstractions of real-world",
+      "Objects encapsulate state and representation information"
+    ],
+    "correctAnswer": 0,
+    "explanation": "There is no incorrect statement listed, making 'All of the mentioned' the correct choice."
+  },
+  {
+    "id": 99,
+    "question": "Which of the following is NOT a diagram studied in Requirement Analysis?",
+    "imageUrl": null,
+    "options": [
+      "State Transition Diagram",
+      "Use Cases",
+      "Activity Diagram",
+      "Entity Relationship Diagram"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Activity Diagram is typically used in design phase, not in Requirement Analysis."
+  },
+  {
+    "id": 100,
+    "question": "_____ and _____ are the two issues of Requirement Analysis.",
+    "imageUrl": null,
+    "options": [
+      "None of the mentioned",
+      "Functional, Non-Functional",
+      "Stakeholder, Developer",
+      "Performance, Design"
+    ],
+    "correctAnswer": 2,
+    "explanation": "Stakeholder and Developer are the two key issues in Requirement Analysis, as they represent different perspectives."
+  }
+]

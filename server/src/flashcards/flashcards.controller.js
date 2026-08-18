@@ -19,17 +19,17 @@ exports.getDecks = async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
-        d.id, d.title, d.course_id, d.is_public, d.created_at,
-        c.title as course_title,
+        d.id, d.title, d.course_id, d.is_public, d.created_at, d.user_id,
+        c.title as course_title, c.code as course_code,
         COUNT(DISTINCT f.id) as card_count,
         COUNT(DISTINCT CASE WHEN fr.next_review_date <= CURRENT_DATE THEN fr.card_id END) as due_count
       FROM flashcard_decks d
       LEFT JOIN courses c ON d.course_id = c.id
       LEFT JOIN flashcards f ON f.deck_id = d.id
       LEFT JOIN flashcard_reviews fr ON fr.card_id = f.id AND fr.user_id = $1
-      WHERE d.user_id = $1
-      GROUP BY d.id, c.title
-      ORDER BY d.created_at DESC
+      WHERE d.user_id = $1 OR d.is_public = TRUE OR d.user_id IS NULL
+      GROUP BY d.id, c.title, c.code
+      ORDER BY d.is_public DESC, d.created_at DESC
     `, [userId]);
     res.json(result.rows);
   } catch (err) {
@@ -41,12 +41,13 @@ exports.getDecks = async (req, res) => {
 // POST /flashcards/decks
 exports.createDeck = async (req, res) => {
   const userId = req.user.id;
-  const { title, course_id } = req.body;
+  const { title, course_id, is_public } = req.body;
   if (!title?.trim()) return res.status(400).json({ message: 'Title is required' });
   try {
+    const makePublic = (req.user.role === 'admin') ? (is_public || false) : false;
     const result = await pool.query(
-      'INSERT INTO flashcard_decks (user_id, course_id, title) VALUES ($1, $2, $3) RETURNING *',
-      [userId, course_id || null, title.trim()]
+      'INSERT INTO flashcard_decks (user_id, course_id, title, is_public) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, course_id || null, title.trim(), makePublic]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -60,9 +61,15 @@ exports.deleteDeck = async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params;
   try {
-    const check = await pool.query('SELECT user_id FROM flashcard_decks WHERE id = $1', [id]);
+    const check = await pool.query('SELECT user_id, is_public FROM flashcard_decks WHERE id = $1', [id]);
     if (check.rows.length === 0) return res.status(404).json({ message: 'Deck not found' });
-    if (check.rows[0].user_id !== userId) return res.status(403).json({ message: 'Forbidden' });
+    if (check.rows[0].is_public && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can delete official course decks' });
+    }
+    if (!check.rows[0].is_public && check.rows[0].user_id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    await pool.query('DELETE FROM flashcards WHERE deck_id = $1', [id]);
     await pool.query('DELETE FROM flashcard_decks WHERE id = $1', [id]);
     res.json({ message: 'Deck deleted' });
   } catch (err) {
@@ -133,7 +140,7 @@ exports.getDueCards = async (req, res) => {
       FROM flashcards f
       JOIN flashcard_decks d ON f.deck_id = d.id
       LEFT JOIN flashcard_reviews fr ON fr.card_id = f.id AND fr.user_id = $1
-      WHERE d.user_id = $1
+      WHERE (d.user_id = $1 OR d.is_public = TRUE OR d.user_id IS NULL)
         AND COALESCE(fr.next_review_date, CURRENT_DATE) <= CURRENT_DATE
       ORDER BY COALESCE(fr.next_review_date, CURRENT_DATE) ASC
       LIMIT 50
@@ -190,14 +197,14 @@ exports.getDueCount = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(`
-      SELECT COUNT(*) as count
+      SELECT COUNT(DISTINCT f.id) as count
       FROM flashcards f
       JOIN flashcard_decks d ON f.deck_id = d.id
       LEFT JOIN flashcard_reviews fr ON fr.card_id = f.id AND fr.user_id = $1
-      WHERE d.user_id = $1
+      WHERE (d.user_id = $1 OR d.is_public = TRUE OR d.user_id IS NULL)
         AND COALESCE(fr.next_review_date, CURRENT_DATE) <= CURRENT_DATE
     `, [userId]);
-    res.json({ count: parseInt(result.rows[0].count) });
+    res.json({ count: parseInt(result.rows[0].count) || 0 });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch due count' });
