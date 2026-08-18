@@ -4,6 +4,7 @@ import {
   MessageSquare, Star, Trash2, CheckCircle2, Clock, 
   AlertTriangle, Filter, Search, RefreshCw, X, ShieldAlert, Sparkles 
 } from 'lucide-react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 const CATEGORY_LABELS = {
   general: '💡 General',
@@ -243,11 +244,24 @@ const AdminFeedback = () => {
 
               {/* Footer row: Sender info & Status toggle */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-text/5">
-                <div className="text-xs text-text/60">
-                  <span className="font-semibold text-text">{f.name || f.user_account_name || 'Anonymous Student'}</span>
-                  {(f.email || f.user_account_email) && (
-                    <span className="ml-2 opacity-80">&bull; {f.email || f.user_account_email}</span>
-                  )}
+                <div className="flex items-center space-x-2.5 text-xs text-text/60">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-primary/10 border border-neutral-200 dark:border-neutral-700 shrink-0 flex items-center justify-center">
+                    <img 
+                      src={getAvatarUrl(f.user_account_avatar, f.email || f.user_account_email, f.name || f.user_account_name)}
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(f.email || f.user_account_email || f.name || 'User')}`;
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-text">{f.name || f.user_account_name || 'Anonymous Student'}</span>
+                    {(f.email || f.user_account_email) && (
+                      <span className="ml-2 opacity-80">&bull; {f.email || f.user_account_email}</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-3">

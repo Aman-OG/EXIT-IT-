@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Search, Trash2, UserCheck, AlertTriangle, X, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Search, Trash2, UserCheck, AlertTriangle, X, ShieldAlert, CheckCircle2, Flame, Award } from 'lucide-react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -59,7 +60,7 @@ const UserManagement = () => {
               {users.length} Enrolled
             </span>
           </div>
-          <p className="text-sm text-text/70 mt-0.5">Audit student accounts and manage user permissions.</p>
+          <p className="text-sm text-text/70 mt-0.5">Audit student accounts, profile pictures, and manage user permissions.</p>
         </div>
         
         <div className="relative w-full md:w-auto">
@@ -99,7 +100,7 @@ const UserManagement = () => {
           <table className="w-full text-left whitespace-nowrap">
             <thead className="bg-background/60 dark:bg-neutral-800/20 border-b border-neutral-200 dark:border-neutral-800">
               <tr>
-                <th className="px-6 py-3.5 font-semibold text-xs text-text/60 uppercase tracking-wider">Student Name</th>
+                <th className="px-6 py-3.5 font-semibold text-xs text-text/60 uppercase tracking-wider">Student</th>
                 <th className="px-6 py-3.5 font-semibold text-xs text-text/60 uppercase tracking-wider">Email Address</th>
                 <th className="px-6 py-3.5 font-semibold text-xs text-text/60 uppercase tracking-wider">Joined Date</th>
                 <th className="px-6 py-3.5 font-semibold text-xs text-text/60 uppercase tracking-wider">Role</th>
@@ -122,7 +123,29 @@ const UserManagement = () => {
               ) : (
                 filteredUsers.map(u => (
                   <tr key={u.id} className="hover:bg-primary/5 transition-colors group">
-                    <td className="px-6 py-4 font-semibold text-sm">{u.name || 'Unnamed Student'}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-neutral-200 dark:border-neutral-700 shadow-sm shrink-0 flex items-center justify-center">
+                          <img 
+                            src={getAvatarUrl(u)} 
+                            alt={u.name || 'Student'} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(u.email || u.name || 'User')}`;
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-text truncate">{u.name || 'Unnamed Student'}</p>
+                          {u.bio ? (
+                            <p className="text-xs text-text/50 truncate max-w-xs">{u.bio}</p>
+                          ) : (
+                            <span className="text-[11px] text-text/40">Student Account</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-sm text-text/80">{u.email}</td>
                     <td className="px-6 py-4 text-xs text-text/70">
                       {new Date(u.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -164,9 +187,22 @@ const UserManagement = () => {
               </div>
             </div>
 
-            <div className="p-3.5 bg-text/5 rounded-xl border border-text/10 text-xs text-text/80 space-y-1">
-              <p><span className="font-semibold text-text">Name:</span> {userToDelete.name || 'Unnamed'}</p>
-              <p><span className="font-semibold text-text">Email:</span> {userToDelete.email}</p>
+            <div className="flex items-center space-x-3.5 p-3.5 bg-text/5 rounded-xl border border-text/10">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 border border-neutral-200 dark:border-neutral-700 shadow-sm shrink-0">
+                <img 
+                  src={getAvatarUrl(userToDelete)} 
+                  alt={userToDelete.name || 'Student'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(userToDelete.email || userToDelete.name || 'User')}`;
+                  }}
+                />
+              </div>
+              <div className="min-w-0 flex-1 text-xs">
+                <p className="font-bold text-sm text-text truncate">{userToDelete.name || 'Unnamed'}</p>
+                <p className="text-text/60 truncate">{userToDelete.email}</p>
+              </div>
             </div>
 
             <p className="text-xs text-text/70 leading-relaxed">

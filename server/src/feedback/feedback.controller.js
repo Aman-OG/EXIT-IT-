@@ -35,7 +35,7 @@ const getAllFeedbacks = async (req, res) => {
   try {
     const { status, category } = req.query;
     let query = `
-      SELECT f.*, u.name as user_account_name, u.email as user_account_email
+      SELECT f.*, u.name as user_account_name, u.email as user_account_email, u.avatar_url as user_account_avatar
       FROM feedbacks f
       LEFT JOIN users u ON u.id = f.user_id
     `;

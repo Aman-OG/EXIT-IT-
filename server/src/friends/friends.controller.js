@@ -11,7 +11,7 @@ exports.searchUsers = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT id, name, email, created_at 
+      `SELECT id, name, email, avatar_url, created_at 
        FROM users 
        WHERE (LOWER(name) LIKE LOWER($1) OR LOWER(email) LIKE LOWER($1))
        AND id != $2
@@ -61,11 +61,15 @@ exports.sendFriendRequest = async (req, res) => {
       [userId, friendId]
     );
 
+    // Get sender name to avoid undefined
+    const senderRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const senderName = senderRes.rows[0]?.name || 'A student';
+
     // Create notification for the recipient
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, message, link) 
        VALUES ($1, 'friend_request', 'New Friend Request', $2, '/friends')`,
-      [friendId, `${req.user.name} sent you a friend request`]
+      [friendId, `${senderName} sent you a friend request`]
     );
 
     res.json({ message: 'Friend request sent', friendship: result.rows[0] });
@@ -81,7 +85,7 @@ exports.getPendingRequests = async (req, res) => {
     const userId = req.user.id;
 
     const result = await pool.query(
-      `SELECT f.id, f.user_id, f.created_at, u.name, u.email
+      `SELECT f.id, f.user_id, f.created_at, u.name, u.email, u.avatar_url
        FROM friendships f
        JOIN users u ON f.user_id = u.id
        WHERE f.friend_id = $1 AND f.status = 'pending'
@@ -102,7 +106,7 @@ exports.getSentRequests = async (req, res) => {
     const userId = req.user.id;
 
     const result = await pool.query(
-      `SELECT f.id, f.friend_id, f.created_at, u.name, u.email
+      `SELECT f.id, f.friend_id, f.created_at, u.name, u.email, u.avatar_url
        FROM friendships f
        JOIN users u ON f.friend_id = u.id
        WHERE f.user_id = $1 AND f.status = 'pending'
@@ -139,11 +143,15 @@ exports.acceptFriendRequest = async (req, res) => {
       [requestId]
     );
 
+    // Get accepter name
+    const accepterRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+    const accepterName = accepterRes.rows[0]?.name || 'Your friend';
+
     // Create notification for the sender
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, message, link) 
        VALUES ($1, 'friend_request', 'Friend Request Accepted', $2, '/friends')`,
-      [friendship.rows[0].user_id, `${req.user.name} accepted your friend request`]
+      [friendship.rows[0].user_id, `${accepterName} accepted your friend request`]
     );
 
     res.json({ message: 'Friend request accepted' });
@@ -195,6 +203,7 @@ exports.getFriends = async (req, res) => {
          END as friend_id,
          u.name,
          u.email,
+         u.avatar_url,
          f.created_at as friends_since
        FROM friendships f
        JOIN users u ON (
@@ -257,6 +266,7 @@ exports.getFriendsLeaderboard = async (req, res) => {
            u.id,
            u.name,
            u.email,
+           u.avatar_url,
            COUNT(DISTINCT up.material_id) as completed_materials,
            COALESCE(u.current_streak, 0) as current_streak,
            COALESCE(u.max_streak, 0) as longest_streak,
@@ -265,12 +275,13 @@ exports.getFriendsLeaderboard = async (req, res) => {
          LEFT JOIN user_progress up ON u.id = up.user_id
          LEFT JOIN study_sessions ss ON u.id = ss.user_id
          WHERE u.id IN (SELECT friend_id FROM friend_ids UNION SELECT $1)
-         GROUP BY u.id, u.name, u.email, u.current_streak, u.max_streak
+         GROUP BY u.id, u.name, u.email, u.avatar_url, u.current_streak, u.max_streak
        )
        SELECT 
          id,
          name,
          email,
+         avatar_url,
          completed_materials,
          current_streak,
          longest_streak,
@@ -294,7 +305,12 @@ exports.getUserStats = async (req, res) => {
     const { userId } = req.params;
     const currentUserId = req.user.id;
 
-    // Get friends count for the user
+    // Get friends count and user avatar for the target user
+    const targetUser = await pool.query(
+      `SELECT id, name, email, avatar_url, bio FROM users WHERE id = $1`,
+      [userId]
+    );
+
     const friendsCount = await pool.query(
       `SELECT COUNT(*) as count
        FROM friendships
@@ -304,7 +320,7 @@ exports.getUserStats = async (req, res) => {
 
     // Get mutual friends
     const mutualFriends = await pool.query(
-      `SELECT DISTINCT u.id, u.name, u.email
+      `SELECT DISTINCT u.id, u.name, u.email, u.avatar_url
        FROM friendships f1
        JOIN friendships f2 ON (
          (f1.user_id = f2.user_id OR f1.user_id = f2.friend_id OR f1.friend_id = f2.user_id OR f1.friend_id = f2.friend_id)
@@ -324,7 +340,9 @@ exports.getUserStats = async (req, res) => {
     );
 
     res.json({
-      friendsCount: parseInt(friendsCount.rows[0].count),
+      user: targetUser.rows[0] || null,
+      avatar_url: targetUser.rows[0]?.avatar_url || null,
+      friendsCount: parseInt(friendsCount.rows[0]?.count || 0),
       mutualFriendsCount: mutualFriends.rows.length,
       mutualFriends: mutualFriends.rows
     });

@@ -5,6 +5,7 @@ import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import UserProfileModal from '../components/UserProfileModal';
 import api from '../api/axios';
+import { getAvatarUrl } from '../utils/avatar';
 
 export default function Friends() {
   const [activeTab, setActiveTab] = useState('friends');
@@ -173,6 +174,7 @@ export default function Friends() {
           userId={selectedUser.id}
           userName={selectedUser.name}
           userEmail={selectedUser.email}
+          userAvatar={selectedUser.avatar_url}
           onClose={() => setSelectedUser(null)}
         />
       )}
@@ -182,56 +184,62 @@ export default function Friends() {
           <p className="text-text/70">Connect with other learners and compete together</p>
         </div>
 
-        {/* Tabs - Scrollable on mobile */}
-        <div className="flex gap-2 mb-6 border-b border-text/10 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
+        {/* Tabs - Scrollable on mobile with smooth pill badges */}
+        <div className="flex gap-2 sm:gap-3 mb-6 border-b border-text/10 overflow-x-auto no-scrollbar whitespace-nowrap pb-2 pt-1">
           <button
             onClick={() => setActiveTab('friends')}
-            className={`px-4 py-2 font-medium text-sm sm:text-base transition-colors shrink-0 ${
+            className={`inline-flex items-center space-x-2 px-4 py-2.5 font-semibold text-sm sm:text-base transition-all shrink-0 rounded-xl sm:rounded-none sm:border-b-2 ${
               activeTab === 'friends'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-text/70 hover:text-text'
+                ? 'bg-primary/10 sm:bg-transparent text-primary sm:border-primary font-bold'
+                : 'text-text/70 hover:text-text sm:border-transparent hover:bg-text/5 sm:hover:bg-transparent'
             }`}
           >
-            <Users className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-            My Friends ({friends.length})
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>My Friends</span>
+            <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-text/5 text-text/70">
+              {friends.length}
+            </span>
           </button>
+          
           <button
             onClick={() => setActiveTab('requests')}
-            className={`px-4 py-2 font-medium text-sm sm:text-base transition-colors relative shrink-0 ${
+            className={`inline-flex items-center space-x-2 px-4 py-2.5 font-semibold text-sm sm:text-base transition-all shrink-0 rounded-xl sm:rounded-none sm:border-b-2 ${
               activeTab === 'requests'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-text/70 hover:text-text'
+                ? 'bg-primary/10 sm:bg-transparent text-primary sm:border-primary font-bold'
+                : 'text-text/70 hover:text-text sm:border-transparent hover:bg-text/5 sm:hover:bg-transparent'
             }`}
           >
-            <UserPlus className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-            Requests
+            <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>Requests</span>
             {pendingRequests.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              <span className="ml-1.5 px-2 py-0.5 min-w-[22px] h-5 bg-rose-500 text-white text-xs font-black rounded-full inline-flex items-center justify-center shadow-xs leading-none">
                 {pendingRequests.length}
               </span>
             )}
           </button>
+
           <button
             onClick={() => setActiveTab('search')}
-            className={`px-4 py-2 font-medium text-sm sm:text-base transition-colors shrink-0 ${
+            className={`inline-flex items-center space-x-2 px-4 py-2.5 font-semibold text-sm sm:text-base transition-all shrink-0 rounded-xl sm:rounded-none sm:border-b-2 ${
               activeTab === 'search'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-text/70 hover:text-text'
+                ? 'bg-primary/10 sm:bg-transparent text-primary sm:border-primary font-bold'
+                : 'text-text/70 hover:text-text sm:border-transparent hover:bg-text/5 sm:hover:bg-transparent'
             }`}
           >
-            <Search className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-            Find Friends
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>Find Friends</span>
           </button>
+
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`px-4 py-2 font-medium text-sm sm:text-base transition-colors shrink-0 ${
+            className={`inline-flex items-center space-x-2 px-4 py-2.5 font-semibold text-sm sm:text-base transition-all shrink-0 rounded-xl sm:rounded-none sm:border-b-2 ${
               activeTab === 'leaderboard'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-text/70 hover:text-text'
+                ? 'bg-primary/10 sm:bg-transparent text-primary sm:border-primary font-bold'
+                : 'text-text/70 hover:text-text sm:border-transparent hover:bg-text/5 sm:hover:bg-transparent'
             }`}
           >
-            <Trophy className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-            Leaderboard
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>Leaderboard</span>
           </button>
         </div>
 
@@ -250,19 +258,25 @@ export default function Friends() {
                 </button>
               </div>
             ) : (
-              friends.map((friend) => {
-                const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(friend.email || friend.name)}`;
-                return (
+              friends.map((friend) => (
                 <div
                   key={friend.friend_id}
                   className="bg-card p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow"
                 >
                   <div 
                     className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-                    onClick={() => setSelectedUser({ id: friend.friend_id, name: friend.name, email: friend.email })}
+                    onClick={() => setSelectedUser({ id: friend.friend_id, name: friend.name, email: friend.email, avatar_url: friend.avatar_url })}
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-                      <img src={avatarUrl} alt={friend.name} className="w-full h-full object-cover" />
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                      <img 
+                        src={getAvatarUrl(friend)} 
+                        alt={friend.name} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(friend.email || friend.name || 'User')}`;
+                        }}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-text truncate">{friend.name}</h3>
@@ -281,8 +295,7 @@ export default function Friends() {
                     Unfollow
                   </button>
                 </div>
-              );
-              })
+              ))
             )}
           </div>
         )}
@@ -301,16 +314,22 @@ export default function Friends() {
                     No pending friend requests
                   </p>
                 ) : (
-                  pendingRequests.map((request) => {
-                    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name)}`;
-                    return (
+                  pendingRequests.map((request) => (
                     <div
                       key={request.id}
                       className="bg-card p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-                          <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                          <img 
+                            src={getAvatarUrl(request)} 
+                            alt={request.name} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name || 'User')}`;
+                            }}
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-text truncate">{request.name}</h3>
@@ -337,8 +356,7 @@ export default function Friends() {
                         </button>
                       </div>
                     </div>
-                  );
-                  })
+                  ))
                 )}
               </div>
             </div>
@@ -354,16 +372,22 @@ export default function Friends() {
                     No sent friend requests
                   </p>
                 ) : (
-                  sentRequests.map((request) => {
-                    const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name)}`;
-                    return (
+                  sentRequests.map((request) => (
                     <div
                       key={request.id}
                       className="bg-card p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-                          <img src={avatarUrl} alt={request.name} className="w-full h-full object-cover" />
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                          <img 
+                            src={getAvatarUrl(request)} 
+                            alt={request.name} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(request.email || request.name || 'User')}`;
+                            }}
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-text truncate">{request.name}</h3>
@@ -375,8 +399,7 @@ export default function Friends() {
                       </div>
                       <span className="text-xs sm:text-sm text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-3 py-1 rounded-full shrink-0">Pending</span>
                     </div>
-                  );
-                  })
+                  ))
                 )}
               </div>
             </div>
@@ -412,16 +435,22 @@ export default function Friends() {
                   Enter at least 2 characters to search
                 </p>
               ) : (
-                searchResults.map((user) => {
-                  const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
-                  return (
+                searchResults.map((user) => (
                   <div
                     key={user.id}
                     className="bg-card p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-                        <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                        <img 
+                          src={getAvatarUrl(user)} 
+                          alt={user.name} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name || 'User')}`;
+                          }}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-text truncate">{user.name}</h3>
@@ -437,8 +466,7 @@ export default function Friends() {
                       <span>Add</span>
                     </button>
                   </div>
-                );
-                })
+                ))
               )}
             </div>
           </div>
@@ -473,9 +501,7 @@ export default function Friends() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-                    {friendsLeaderboard.map((user) => {
-                      const avatarUrl = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name)}`;
-                      return (
+                    {friendsLeaderboard.map((user) => (
                       <tr key={user.id} className="hover:bg-background/50 transition-colors">
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
@@ -494,8 +520,16 @@ export default function Friends() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-background flex-shrink-0 border border-neutral-200 dark:border-neutral-800">
-                              <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                              <img 
+                                src={getAvatarUrl(user)} 
+                                alt={user.name} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user.email || user.name || 'User')}`;
+                                }}
+                              />
                             </div>
                             <div>
                               <div className="font-medium text-text">{user.name}</div>
@@ -516,8 +550,7 @@ export default function Friends() {
                           {Math.floor(user.total_study_minutes / 60)}h {user.total_study_minutes % 60}m
                         </td>
                       </tr>
-                    );
-                    })}
+                    ))}
                   </tbody>
                 </table>
               </div>

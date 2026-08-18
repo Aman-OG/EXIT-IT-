@@ -24,7 +24,7 @@ const getStats = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const result = await pool.query("SELECT id, name, email, role, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC");
+    const result = await pool.query("SELECT id, name, email, role, avatar_url, bio, current_streak, total_score, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC");
     res.json(result.rows);
   } catch(e) {
     console.error(e);
@@ -155,6 +155,8 @@ const getStudentAnalytics = async (req, res) => {
         u.id,
         u.name,
         u.email,
+        u.avatar_url,
+        u.bio,
         u.created_at,
         u.last_active_date,
         COALESCE(u.current_streak, 0) as streak_days,
@@ -174,7 +176,7 @@ const getStudentAnalytics = async (req, res) => {
       LEFT JOIN quiz_attempts qa ON qa.user_id = u.id
       LEFT JOIN exam_attempts ea ON ea.user_id = u.id
       WHERE u.role = 'user'
-      GROUP BY u.id, u.name, u.email, u.created_at, u.last_active_date, u.current_streak, u.total_score
+      GROUP BY u.id, u.name, u.email, u.avatar_url, u.bio, u.created_at, u.last_active_date, u.current_streak, u.total_score
       ORDER BY u.created_at DESC
     `);
     

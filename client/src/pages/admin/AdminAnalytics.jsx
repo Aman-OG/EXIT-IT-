@@ -5,6 +5,7 @@ import {
   BookOpen, TrendingUp, Users, AlertTriangle, ChevronRight, ChevronLeft, 
   Award, GraduationCap, Search, Flame, Zap, CheckCircle2, Clock, ArrowUpDown
 } from 'lucide-react';
+import { getAvatarUrl } from '../../utils/avatar';
 
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState('courses'); // 'courses' | 'students'
@@ -425,8 +426,16 @@ const AdminAnalytics = () => {
                   >
                     {/* Student Profile Info */}
                     <div className="flex items-center space-x-4 min-w-[240px]">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/80 to-accent/80 text-white font-bold text-lg flex items-center justify-center shadow-sm shrink-0">
-                        {student.name.charAt(0).toUpperCase()}
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 border border-neutral-200 dark:border-neutral-700 shadow-sm shrink-0 flex items-center justify-center">
+                        <img 
+                          src={getAvatarUrl(student)} 
+                          alt={student.name || 'Student'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(student.email || student.name || 'User')}`;
+                          }}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2">
