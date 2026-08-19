@@ -3,7 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import LoadingSpinner from './components/LoadingSpinner';
-import StreakCelebration from './components/StreakCelebration';
+
+const StreakCelebration = lazy(() => import('./components/StreakCelebration'));
 
 // Lazy load all route pages
 const Login = lazy(() => import('./pages/Login'));
@@ -34,13 +35,15 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminFeedback = lazy(() => import('./pages/admin/AdminFeedback'));
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/welcome" replace />;
   return children;
 };
 
 const AdminRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'admin') return <Navigate to="/" replace />;
   return children;

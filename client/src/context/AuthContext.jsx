@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }) => {
       triggerPointsEarned,
       evaluateBadges,
     }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
