@@ -38,26 +38,26 @@ const Navbar = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between pl-0 pr-3 md:pr-4 relative z-30 shadow-sm">
+    <header className="h-14 bg-card border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between pl-0 pr-2 md:pr-3 relative z-30 shadow-sm">
       <div className="flex items-center">
-        <button className="text-text p-1.5 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors ml-2" onClick={toggleSidebar}>
-          <Menu size={24} />
+        <button className="text-text p-1 md:hidden hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors ml-1" onClick={toggleSidebar}>
+          <Menu size={20} />
         </button>
-        <Link to="/" className="hidden md:flex items-center space-x-2 pl-3 hover:opacity-80 transition-opacity">
-          <ExitItLogo size={28} />
-          <h1 className="text-lg font-black tracking-tight leading-tight">
+        <Link to="/" className="hidden md:flex items-center space-x-1.5 pl-2 hover:opacity-80 transition-opacity">
+          <ExitItLogo size={24} />
+          <h1 className="text-sm font-black tracking-tight leading-tight">
             <span className="text-primary">EX-</span><span className="italic text-accent">IT</span>
           </h1>
         </Link>
-        <Link to="/" className="md:hidden flex items-center space-x-1.5 ml-2 hover:opacity-80 transition-opacity">
-          <ExitItLogo size={28} />
-          <h1 className="text-base font-black tracking-tight leading-tight">
+        <Link to="/" className="md:hidden flex items-center space-x-1 ml-1 hover:opacity-80 transition-opacity">
+          <ExitItLogo size={24} />
+          <h1 className="text-xs font-black tracking-tight leading-tight">
             <span className="text-primary">EX-</span><span className="italic text-accent">IT</span>
           </h1>
         </Link>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1.5">
         {/* Notification Bell */}
         <NotificationBell />
         
@@ -66,10 +66,10 @@ const Navbar = ({ toggleSidebar }) => {
           {user?.current_streak > 0 && (
             <button 
               onClick={() => setStreakOpen(!streakOpen)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 mr-2 rounded-xl transition-all shadow-sm ${streakOpen ? 'bg-orange-500/20 shadow-orange-500/10' : 'bg-orange-500/10 hover:bg-orange-500/20'} border border-orange-500/20 text-orange-500 active:scale-95`}
+              className={`flex items-center space-x-1 px-2 py-1 mr-1 rounded-lg transition-all shadow-sm ${streakOpen ? 'bg-orange-500/20 shadow-orange-500/10' : 'bg-orange-500/10 hover:bg-orange-500/20'} border border-orange-500/20 text-orange-500 active:scale-95`}
             >
-               <Flame size={18} fill="currentColor" className={streakOpen ? '' : 'animate-pulse'} />
-               <span className="font-black text-sm">{user.current_streak}</span>
+               <Flame size={16} fill="currentColor" className={streakOpen ? '' : 'animate-pulse'} />
+               <span className="font-black text-xs">{user.current_streak}</span>
             </button>
           )}
 
@@ -132,9 +132,9 @@ const Navbar = ({ toggleSidebar }) => {
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className={`flex items-center space-x-2 p-1 sm:pr-4 rounded-full transition-all border ${dropdownOpen ? 'bg-primary/10 border-primary/20 shadow-sm' : 'border-transparent hover:bg-primary/5 hover:border-primary/10'}`}
+            className={`flex items-center space-x-1.5 p-0.5 sm:pr-3 rounded-full transition-all border ${dropdownOpen ? 'bg-primary/10 border-primary/20 shadow-sm' : 'border-transparent hover:bg-primary/5 hover:border-primary/10'}`}
           >
-            <div className="h-9 w-9 rounded-full overflow-hidden bg-primary/10 border-2 border-primary/30 shadow-sm shrink-0 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 border-2 border-primary/30 shadow-sm shrink-0 flex items-center justify-center">
               <img 
                 src={getAvatarUrl(user)} 
                 alt={user?.name || "Profile"} 
@@ -145,7 +145,7 @@ const Navbar = ({ toggleSidebar }) => {
                 }}
               />
             </div>
-            <span className={`hidden sm:inline text-sm font-semibold transition-colors ${dropdownOpen ? 'text-primary' : 'text-text/80'}`}>
+            <span className={`hidden sm:inline text-xs font-semibold transition-colors ${dropdownOpen ? 'text-primary' : 'text-text/80'}`}>
               {user?.name ? user.name.split(' ')[0] : 'Profile'}
             </span>
           </button>
@@ -157,12 +157,12 @@ const Navbar = ({ toggleSidebar }) => {
                 className="fixed inset-0 bg-black/40 z-40 sm:hidden animate-in fade-in duration-200"
                 onClick={() => setDropdownOpen(false)}
               />
-              <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-3 w-auto sm:w-64 bg-card z-50 border border-neutral-200 dark:border-neutral-800 shadow-2xl rounded-2xl overflow-hidden pt-1 pb-2 animate-in fade-in slide-in-from-top-2 duration-150 ring-1 ring-black/5">
+              <div className="fixed inset-x-3 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-60 bg-card z-50 border border-neutral-200 dark:border-neutral-800 shadow-2xl rounded-xl overflow-hidden pt-1 pb-1.5 animate-in fade-in slide-in-from-top-2 duration-150 ring-1 ring-black/5">
               
               {/* Profile Header */}
-              <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800/50 bg-background/50 dark:bg-white/5">
-                <div className="flex items-center space-x-3 mb-2.5">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-primary/30 bg-primary/10 shadow-sm flex-shrink-0">
+              <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/50 bg-background/50 dark:bg-white/5">
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden border border-primary/30 bg-primary/10 shadow-sm flex-shrink-0">
                     <img 
                       src={getAvatarUrl(user)} 
                       alt="" 
@@ -174,93 +174,93 @@ const Navbar = ({ toggleSidebar }) => {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-text truncate">{user?.name}</p>
-                    <p className="text-xs text-text/60 truncate font-medium">{user?.email}</p>
+                    <p className="text-xs font-bold text-text truncate">{user?.name}</p>
+                    <p className="text-[11px] text-text/60 truncate font-medium">{user?.email}</p>
                   </div>
                 </div>
 
                 {user?.bio && (
-                  <p className="text-xs text-text/75 italic line-clamp-2 mb-2.5 bg-card/80 p-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80">
+                  <p className="text-[11px] text-text/75 italic line-clamp-2 mb-2 bg-card/80 p-1.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80">
                     "{user.bio}"
                   </p>
                 )}
 
-                <div className="flex items-center space-x-4 mt-2 mb-1">
-                  <div className="flex flex-col items-center flex-1 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg py-2 shadow-sm">
-                     <span className="text-xs font-bold text-text/40 uppercase tracking-widest mb-0.5">Points</span>
-                     <span className="font-black text-primary text-lg">{user?.total_score || 0}</span>
+                <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex flex-col items-center flex-1 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg py-1.5 shadow-sm">
+                     <span className="text-[9px] font-bold text-text/40 uppercase tracking-widest mb-0.5">Points</span>
+                     <span className="font-black text-primary text-sm">{user?.total_score || 0}</span>
                   </div>
-                  <div className="flex flex-col items-center flex-1 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg py-2 shadow-sm">
-                     <span className="text-xs font-bold text-text/40 uppercase tracking-widest mb-0.5">Peak Streak</span>
-                     <span className="font-black text-warning text-lg">{user?.max_streak || 0}</span>
+                  <div className="flex flex-col items-center flex-1 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg py-1.5 shadow-sm">
+                     <span className="text-[9px] font-bold text-text/40 uppercase tracking-widest mb-0.5">Peak</span>
+                     <span className="font-black text-warning text-sm">{user?.max_streak || 0}</span>
                   </div>
                 </div>
               </div>
 
               {/* Theme Settings */}
-              <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800/50">
-                <p className="text-[10px] uppercase tracking-widest text-text/40 font-bold mb-3">Theme Preferences</p>
-                <div className="grid grid-cols-4 gap-2">
+              <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/50">
+                <p className="text-[9px] uppercase tracking-widest text-text/40 font-bold mb-2">Theme</p>
+                <div className="grid grid-cols-4 gap-1.5">
                   <button 
                     onClick={() => handleThemeChange('light')} 
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${theme === 'light' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all ${theme === 'light' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
                   >
-                    <Sun size={20} className="mb-1" strokeWidth={2.5} />
-                    <span className="text-[10px] font-bold">Light</span>
+                    <Sun size={16} className="mb-0.5" strokeWidth={2.5} />
+                    <span className="text-[8px] font-bold">Light</span>
                   </button>
                   <button 
                     onClick={() => handleThemeChange('dark')} 
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${theme === 'dark' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all ${theme === 'dark' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
                   >
-                     <Moon size={20} className="mb-1" strokeWidth={2.5} />
-                    <span className="text-[10px] font-bold">Dark</span>
+                     <Moon size={16} className="mb-0.5" strokeWidth={2.5} />
+                    <span className="text-[8px] font-bold">Dark</span>
                   </button>
                   <button 
                     onClick={() => handleThemeChange('study')} 
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${theme === 'study' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all ${theme === 'study' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
                   >
-                    <Book size={20} className="mb-1" strokeWidth={2.5} />
-                    <span className="text-[10px] font-bold">Study</span>
+                    <Book size={16} className="mb-0.5" strokeWidth={2.5} />
+                    <span className="text-[8px] font-bold">Study</span>
                   </button>
                   <button 
                     onClick={() => handleThemeChange('eye')} 
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${theme === 'eye' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all ${theme === 'eye' ? 'bg-primary/10 text-primary shadow-sm border border-primary/20 scale-105' : 'text-text/50 hover:bg-primary/5 hover:text-primary hover:scale-105'}`}
                   >
-                    <Eye size={20} className="mb-1" strokeWidth={2.5} />
-                    <span className="text-[10px] font-bold">Protect</span>
+                    <Eye size={16} className="mb-0.5" strokeWidth={2.5} />
+                    <span className="text-[8px] font-bold">Protect</span>
                   </button>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="p-2 space-y-1 mt-1">
+              <div className="p-1.5 space-y-0.5 mt-1">
                 <button 
                   onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
+                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors flex items-center space-x-2 group"
                 >
-                  <User size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>View Profile</span>
+                  <User size={16} className="group-hover:scale-110 transition-transform" />
+                  <span>Profile</span>
                 </button>
                 <button 
                   onClick={() => { setDropdownOpen(false); navigate('/friends'); }}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
+                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors flex items-center space-x-2 group"
                 >
-                  <Users size={18} className="group-hover:scale-110 transition-transform" />
+                  <Users size={16} className="group-hover:scale-110 transition-transform" />
                   <span>Friends</span>
                 </button>
                 <button 
                   onClick={() => { setDropdownOpen(false); setFeedbackOpen(true); }}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-xl transition-colors flex items-center space-x-3 group"
+                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-text/70 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors flex items-center space-x-2 group"
                 >
-                  <MessageSquare size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>Give Feedback</span>
+                  <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
+                  <span>Feedback</span>
                 </button>
                 <button 
                   onClick={() => { setDropdownOpen(false); logout(); }} 
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center space-x-3 group"
+                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors flex items-center space-x-2 group"
                 >
-                  <LogOut size={18} className="group-hover:scale-110 transition-transform text-rose-500" />
-                  <span>Log out</span>
+                  <LogOut size={16} className="group-hover:scale-110 transition-transform text-rose-500" />
+                  <span>Logout</span>
                 </button>
               </div>
               
