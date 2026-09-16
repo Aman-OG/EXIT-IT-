@@ -5,7 +5,7 @@ import api, { SERVER_URL, API_BASE_URL } from '../api/axios';
 import { 
   BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, 
   CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, 
-  GripVertical, PlayCircle, CheckSquare 
+  GripVertical, PlayCircle, CheckSquare, Loader2 
 } from 'lucide-react';
 import { CourseSkeleton } from '../components/Skeleton';
 import VideoPanel from '../components/VideoPanel';
@@ -52,6 +52,10 @@ const Courses = () => {
   const dragOverItem = useRef(null);
   const courseRefs = useRef({});
 
+  // Download UX states & timers
+  const [downloadingCourses, setDownloadingCourses] = useState({});
+  const downloadTimers = useRef({});
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -97,6 +101,80 @@ const Courses = () => {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 60);
+    }
+  };
+
+  const handleCourseDownload = async (e, course) => {
+    e.stopPropagation();
+    if (downloadingCourses[course.id]?.status === 'loading') return;
+
+    setDownloadingCourses(prev => ({
+      ...prev,
+      [course.id]: { status: 'loading', text: 'Getting files...' }
+    }));
+
+    if (downloadTimers.current[course.id]) {
+      downloadTimers.current[course.id].forEach(clearTimeout);
+    }
+
+    const t1 = setTimeout(() => {
+      setDownloadingCourses(prev => {
+        if (!prev[course.id] || prev[course.id].status !== 'loading') return prev;
+        return { ...prev, [course.id]: { status: 'loading', text: 'Compressing...' } };
+      });
+    }, 2500);
+
+    const t2 = setTimeout(() => {
+      setDownloadingCourses(prev => {
+        if (!prev[course.id] || prev[course.id].status !== 'loading') return prev;
+        return { ...prev, [course.id]: { status: 'loading', text: 'Almost ready...' } };
+      });
+    }, 6000);
+
+    downloadTimers.current[course.id] = [t1, t2];
+
+    const token = localStorage.getItem('token');
+    try {
+      const res = await api.get(`/materials/download-course/${course.id}`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      if (downloadTimers.current[course.id]) {
+        downloadTimers.current[course.id].forEach(clearTimeout);
+      }
+
+      setDownloadingCourses(prev => ({
+        ...prev,
+        [course.id]: { status: 'done', text: 'Done!' }
+      }));
+
+      setTimeout(() => {
+        setDownloadingCourses(prev => {
+          const next = { ...prev };
+          delete next[course.id];
+          return next;
+        });
+      }, 1800);
+    } catch (err) {
+      console.error('Blob download failed, using token fallback:', err);
+      if (downloadTimers.current[course.id]) {
+        downloadTimers.current[course.id].forEach(clearTimeout);
+      }
+      setDownloadingCourses(prev => {
+        const next = { ...prev };
+        delete next[course.id];
+        return next;
+      });
+      window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
     }
   };
 
@@ -331,34 +409,43 @@ const Courses = () => {
                         <h2 className="text-base sm:text-xl font-bold text-text break-words">
                           {course.title}
                         </h2>
-                        <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
-                          <button 
-                            onClick={async (e) => { 
-                              e.stopPropagation(); 
-                              const token = localStorage.getItem('token');
-                              try {
-                                const res = await api.get(`/materials/download-course/${course.id}`, {
-                                  responseType: 'blob'
-                                });
-                                const blob = new Blob([res.data], { type: 'application/zip' });
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                              } catch (err) {
-                                console.error('Blob download failed, using token fallback:', err);
-                                window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
-                              }
-                            }} 
-                            className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
-                            title="Download Course (ZIP)"
-                          >
-                            <Download size={14} />
-                          </button>
+                        <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
+                          {(() => {
+                            const dlState = downloadingCourses[course.id];
+                            const isDownloading = dlState?.status === 'loading';
+                            const isDone = dlState?.status === 'done';
+                            return (
+                              <button 
+                                onClick={(e) => handleCourseDownload(e, course)}
+                                disabled={isDownloading}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all duration-200 shrink-0 ${
+                                  isDone
+                                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+                                    : isDownloading
+                                    ? 'bg-primary/10 border-primary/30 text-primary cursor-wait'
+                                    : 'bg-card/90 hover:bg-primary/10 border-neutral-200/90 dark:border-neutral-700/80 text-text/60 hover:text-primary hover:border-primary/40 shadow-xs'
+                                }`}
+                                title="Download Course (ZIP)"
+                              >
+                                {isDone ? (
+                                  <>
+                                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Done!</span>
+                                  </>
+                                ) : isDownloading ? (
+                                  <>
+                                    <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+                                    <span className="text-[11px] font-medium text-primary whitespace-nowrap animate-pulse">{dlState.text}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download size={13} className="shrink-0" />
+                                    <span className="text-[11px] font-semibold">ZIP</span>
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })()}
                           {user?.role === 'admin' && (
                              <div className="flex items-center space-x-0.5 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                                 <button onClick={(e) => { e.stopPropagation(); setCourseForm({title: course.title, code: course.code, description: course.description}); setCourseModal({mode: 'edit', data: course}); }} className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10">
