@@ -113,38 +113,65 @@ const uploadMaterial = async (req, res) => {
 const downloadCourse = async (req, res) => {
     try {
         const { courseId } = req.params;
-        const materialsResult = await pool.query('SELECT * FROM materials WHERE course_id = $1', [courseId]);
-        const courseResult = await pool.query('SELECT title FROM courses WHERE id = $1', [courseId]);
+        const [materialsResult, courseResult] = await Promise.all([
+            pool.query('SELECT * FROM materials WHERE course_id = $1 ORDER BY sort_order ASC, created_at ASC', [courseId]),
+            pool.query('SELECT title FROM courses WHERE id = $1', [courseId])
+        ]);
 
         if (materialsResult.rows.length === 0) {
             return res.status(404).json({ message: 'No materials found for this course' });
         }
 
+        // Check which files actually exist on disk (async, non-blocking)
+        const fileChecks = await Promise.all(
+            materialsResult.rows.map(async (mat) => {
+                const filePath = path.join(__dirname, '../../', mat.file_url);
+                try {
+                    await fs.promises.access(filePath, fs.constants.F_OK);
+                    return { mat, filePath, exists: true };
+                } catch {
+                    return { mat, filePath, exists: false };
+                }
+            })
+        );
+
+        const validFiles = fileChecks.filter(f => f.exists);
+        if (validFiles.length === 0) {
+            return res.status(404).json({ message: 'No downloadable files found for this course' });
+        }
+
         const courseTitle = courseResult.rows[0].title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 
-        res.attachment(`${courseTitle}_materials.zip`);
+        // Set headers immediately so the browser knows a download is starting
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${courseTitle}_materials.zip"`);
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Transfer-Encoding', 'chunked');
 
+        // Use level 1 (fastest compression) instead of 9 — dramatically reduces CPU time on free-tier servers
         const archive = archiver('zip', {
-            zlib: { level: 9 }
+            zlib: { level: 1 }
         });
 
         archive.on('error', (err) => {
-            throw err;
+            console.error('Archive error:', err);
+            // Headers already sent, can't send JSON — just destroy the connection
+            res.destroy();
         });
 
         archive.pipe(res);
 
-        materialsResult.rows.forEach(mat => {
-            const filePath = path.join(__dirname, '../../', mat.file_url);
-            if (fs.existsSync(filePath)) {
-                archive.file(filePath, { name: `${mat.title}.pdf` });
-            }
-        });
+        // Add all valid files to the archive
+        for (const { mat, filePath } of validFiles) {
+            archive.file(filePath, { name: `${mat.title}.pdf` });
+        }
 
-        archive.finalize();
+        await archive.finalize();
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Failed to generate course zip' });
+        console.error('downloadCourse error:', e);
+        if (!res.headersSent) {
+            res.status(500).json({ message: 'Failed to generate course zip' });
+        }
     }
 }
 
