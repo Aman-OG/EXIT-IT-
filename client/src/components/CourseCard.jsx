@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api, { API_BASE_URL } from '../api/axios';
 import ProgressBar from './ProgressBar';
-import { BookOpen, CheckCircle2, Clock, Star, ArrowRight, Play, Download } from 'lucide-react';
+import { BookOpen, CheckCircle2, Clock, Star, ArrowRight, Play, Download, Loader2 } from 'lucide-react';
 
 const courseGradients = [
   { card: 'from-blue-500/10 to-blue-600/5', icon: 'bg-blue-500/10', accent: 'text-blue-500' },
@@ -14,9 +14,20 @@ const courseGradients = [
   { card: 'from-teal-500/10 to-teal-600/5', icon: 'bg-teal-500/10', accent: 'text-teal-500' },
 ];
 
+// Cycling status labels to show during the ~8s download wait
+const DL_STAGES = [
+  { label: 'Getting files...', delay: 0 },
+  { label: 'Compressing...', delay: 2500 },
+  { label: 'Almost ready...', delay: 6000 },
+];
+
 const CourseCard = ({ course, index, isRecommended, onClick }) => {
   const pct = Number(course.progress_percentage) || 0;
   const [showCheck, setShowCheck] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [dlDone, setDlDone] = useState(false);
+  const [dlStatus, setDlStatus] = useState(DL_STAGES[0].label);
+  const stageTimers = useRef([]);
 
   // Trigger check animation for completed courses
   useEffect(() => {
@@ -105,6 +116,17 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
           <button
             onClick={async (e) => {
               e.stopPropagation();
+              if (downloading) return;
+
+              // Start loading state + cycle through status labels
+              setDownloading(true);
+              setDlDone(false);
+              setDlStatus(DL_STAGES[0].label);
+              stageTimers.current.forEach(clearTimeout);
+              stageTimers.current = DL_STAGES.slice(1).map(({ label, delay }) =>
+                setTimeout(() => setDlStatus(label), delay)
+              );
+
               const token = localStorage.getItem('token');
               try {
                 const res = await api.get(`/materials/download-course/${course.id}`, {
@@ -119,16 +141,53 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
+                // Brief success flash
+                stageTimers.current.forEach(clearTimeout);
+                setDlDone(true);
+                setTimeout(() => { setDownloading(false); setDlDone(false); }, 1800);
               } catch (err) {
                 console.error('Blob download failed, using token fallback:', err);
+                stageTimers.current.forEach(clearTimeout);
+                setDownloading(false);
                 window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
               }
             }}
-            className="absolute -top-2 -right-2 p-1.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg text-text/40 hover:text-primary opacity-0 group-hover/icon:opacity-100 transition-all shadow-md z-20"
-            title="Download Course (ZIP)"
+            className={`absolute -top-2 -right-2 p-1.5 bg-card border rounded-lg transition-all shadow-md z-20
+              ${
+                dlDone
+                  ? 'border-emerald-400 text-emerald-500 opacity-100'
+                  : downloading
+                  ? 'border-primary/40 text-primary opacity-100'
+                  : 'border-neutral-200 dark:border-neutral-800 text-text/40 hover:text-primary opacity-0 group-hover/icon:opacity-100'
+              }`
+            }
+            title={downloading ? dlStatus : 'Download Course (ZIP)'}
+            disabled={downloading}
           >
-            <Download size={12} />
+            {dlDone ? (
+              <CheckCircle2 size={12} className="text-emerald-500" />
+            ) : downloading ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Download size={12} />
+            )}
           </button>
+
+          {/* Floating status pill — visible only while downloading */}
+          {downloading && (
+            <div className="absolute top-6 -right-1 z-30 pointer-events-none">
+              <div className={`
+                flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold whitespace-nowrap shadow-lg
+                transition-all duration-300
+                ${dlDone
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-card border border-primary/20 text-primary'}
+              `}>
+                {!dlDone && <Loader2 size={8} className="animate-spin flex-shrink-0" />}
+                <span>{dlDone ? 'Done!' : dlStatus}</span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
           <h3 className="font-bold text-[13px] leading-snug text-text group-hover:text-primary transition-colors line-clamp-2 mb-1">
