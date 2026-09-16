@@ -14,7 +14,6 @@ const courseGradients = [
   { card: 'from-teal-500/10 to-teal-600/5', icon: 'bg-teal-500/10', accent: 'text-teal-500' },
 ];
 
-// Cycling status labels to show during the ~8s download wait
 const DL_STAGES = [
   { label: 'Getting files...', delay: 0 },
   { label: 'Compressing...', delay: 2500 },
@@ -29,48 +28,64 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
   const [dlStatus, setDlStatus] = useState(DL_STAGES[0].label);
   const stageTimers = useRef([]);
 
-  // Trigger check animation for completed courses
   useEffect(() => {
     if (pct >= 70) {
       const timer = setTimeout(() => setShowCheck(true), 300 + index * 100);
       return () => clearTimeout(timer);
     }
   }, [pct, index]);
-  
-  // Determine status styling — using INLINE STYLES for border to guarantee visibility
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    if (downloading) return;
+    setDownloading(true);
+    setDlDone(false);
+    setDlStatus(DL_STAGES[0].label);
+    stageTimers.current.forEach(clearTimeout);
+    stageTimers.current = DL_STAGES.slice(1).map(({ label, delay }) =>
+      setTimeout(() => setDlStatus(label), delay)
+    );
+    const token = localStorage.getItem('token');
+    try {
+      const res = await api.get(`/materials/download-course/${course.id}`, { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      stageTimers.current.forEach(clearTimeout);
+      setDlDone(true);
+      setTimeout(() => { setDownloading(false); setDlDone(false); }, 1800);
+    } catch (err) {
+      console.error('Download failed:', err);
+      stageTimers.current.forEach(clearTimeout);
+      setDownloading(false);
+      window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
+    }
+  };
+
   const getStatusConfig = () => {
-    if (pct >= 70) return { 
-      label: 'Completed', 
-      badgeBg: 'bg-emerald-500/10',
-      badgeText: 'text-emerald-600 dark:text-emerald-400',
-      badgeBorder: 'border-emerald-500/20',
-      dot: 'bg-emerald-500',
-      dotAnim: '',
+    if (pct >= 70) return {
+      label: 'Completed', badgeBg: 'bg-emerald-500/10', badgeText: 'text-emerald-600 dark:text-emerald-400',
+      badgeBorder: 'border-emerald-500/20', dot: 'bg-emerald-500', dotAnim: '',
       borderStyle: { borderColor: 'rgb(16, 185, 129)', borderWidth: '2px' },
-      hoverShadow: '0 8px 30px -6px rgba(16, 185, 129, 0.25)',
-      bgTint: 'bg-emerald-500/5',
+      hoverShadow: '0 8px 30px -6px rgba(16, 185, 129, 0.25)', bgTint: 'bg-emerald-500/5',
     };
-    if (pct > 0) return { 
-      label: 'In Progress', 
-      badgeBg: 'bg-amber-500/10',
-      badgeText: 'text-amber-600 dark:text-amber-400',
-      badgeBorder: 'border-amber-500/20',
-      dot: 'bg-amber-500',
-      dotAnim: 'animate-pulse',
+    if (pct > 0) return {
+      label: 'In Progress', badgeBg: 'bg-amber-500/10', badgeText: 'text-amber-600 dark:text-amber-400',
+      badgeBorder: 'border-amber-500/20', dot: 'bg-amber-500', dotAnim: 'animate-pulse',
       borderStyle: { borderColor: 'rgb(245, 158, 11)', borderWidth: '2px' },
-      hoverShadow: '0 8px 30px -6px rgba(245, 158, 11, 0.25)',
-      bgTint: 'bg-amber-500/5',
+      hoverShadow: '0 8px 30px -6px rgba(245, 158, 11, 0.25)', bgTint: 'bg-amber-500/5',
     };
-    return { 
-      label: 'Not Started', 
-      badgeBg: 'bg-neutral-500/10 dark:bg-neutral-800',
-      badgeText: 'text-neutral-500 dark:text-neutral-400',
-      badgeBorder: 'border-neutral-200 dark:border-neutral-700',
-      dot: 'bg-neutral-400',
-      dotAnim: '',
+    return {
+      label: 'Not Started', badgeBg: 'bg-neutral-500/10 dark:bg-neutral-800', badgeText: 'text-neutral-500 dark:text-neutral-400',
+      badgeBorder: 'border-neutral-200 dark:border-neutral-700', dot: 'bg-neutral-400', dotAnim: '',
       borderStyle: { borderColor: 'rgba(148, 163, 184, 0.3)', borderWidth: '2px' },
-      hoverShadow: '0 8px 30px -6px rgba(var(--primary), 0.15)',
-      bgTint: '',
+      hoverShadow: '0 8px 30px -6px rgba(var(--primary), 0.15)', bgTint: '',
     };
   };
 
@@ -83,172 +98,71 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
       style={status.borderStyle}
       onMouseEnter={(e) => e.currentTarget.style.boxShadow = status.hoverShadow}
       onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
-      role="button"
-      tabIndex={0}
+      role='button' tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
       className={`relative bg-card ${status.bgTint} rounded-2xl p-5 flex flex-col text-left hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden cursor-pointer ${isRecommended ? 'ring-2 ring-amber-400/50 ring-offset-2 ring-offset-background' : ''}`}
     >
-      {/* Gradient background on hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${theme.card} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
-      
-      {/* Recommended badge */}
+
       {isRecommended && !showCheck && (
-        <div className="absolute top-3 right-3 flex items-center space-x-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-300 dark:border-amber-500/30 z-10 shadow-sm">
-          <Star size={10} fill="currentColor" />
-          <span>Up Next</span>
+        <div className='absolute top-3 right-3 flex items-center space-x-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-300 dark:border-amber-500/30 z-10 shadow-sm'>
+          <Star size={10} fill='currentColor' /><span>Up Next</span>
         </div>
       )}
 
-      {/* Completed check — animated pop-in */}
       {pct >= 70 && (
         <div className={`absolute top-3 right-3 z-10 transition-all duration-500 ${showCheck ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
-          <div className="bg-emerald-500 rounded-full p-1.5 shadow-lg shadow-emerald-500/30">
-            <CheckCircle2 size={16} className="text-white" strokeWidth={3} />
+          <div className='bg-emerald-500 rounded-full p-1.5 shadow-lg shadow-emerald-500/30'>
+            <CheckCircle2 size={16} className='text-white' strokeWidth={3} />
           </div>
         </div>
       )}
 
-      {/* Course icon + title */}
-      <div className="relative z-10 flex items-start space-x-3.5 mb-4">
-        <div className={`p-2.5 rounded-xl ${theme.icon} ${theme.accent} group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-sm relative group/icon`}>
+      <div className='relative z-10 flex items-start space-x-3.5 mb-4'>
+        <div className={`p-2.5 rounded-xl ${theme.icon} ${theme.accent} group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-sm`}>
           <BookOpen size={20} strokeWidth={2} />
-          {/* Course Download Button */}
-          <button
-            onClick={async (e) => {
-              e.stopPropagation();
-              if (downloading) return;
-
-              // Start loading state + cycle through status labels
-              setDownloading(true);
-              setDlDone(false);
-              setDlStatus(DL_STAGES[0].label);
-              stageTimers.current.forEach(clearTimeout);
-              stageTimers.current = DL_STAGES.slice(1).map(({ label, delay }) =>
-                setTimeout(() => setDlStatus(label), delay)
-              );
-
-              const token = localStorage.getItem('token');
-              try {
-                const res = await api.get(`/materials/download-course/${course.id}`, {
-                  responseType: 'blob'
-                });
-                const blob = new Blob([res.data], { type: 'application/zip' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-                // Brief success flash
-                stageTimers.current.forEach(clearTimeout);
-                setDlDone(true);
-                setTimeout(() => { setDownloading(false); setDlDone(false); }, 1800);
-              } catch (err) {
-                console.error('Blob download failed, using token fallback:', err);
-                stageTimers.current.forEach(clearTimeout);
-                setDownloading(false);
-                window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
-              }
-            }}
-            className={`absolute -top-2 -right-2 p-1.5 bg-card border rounded-lg transition-all shadow-md z-20
-              ${
-                dlDone
-                  ? 'border-emerald-400 text-emerald-500 opacity-100'
-                  : downloading
-                  ? 'border-primary/40 text-primary opacity-100'
-                  : 'border-neutral-200 dark:border-neutral-800 text-text/40 hover:text-primary opacity-0 group-hover/icon:opacity-100'
-              }`
-            }
-            title={downloading ? dlStatus : 'Download Course (ZIP)'}
-            disabled={downloading}
-          >
-            {dlDone ? (
-              <CheckCircle2 size={12} className="text-emerald-500" />
-            ) : downloading ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Download size={12} />
-            )}
-          </button>
-
-          {/* Floating status pill — visible only while downloading */}
-          {downloading && (
-            <div className="absolute top-6 -right-1 z-30 pointer-events-none">
-              <div className={`
-                flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold whitespace-nowrap shadow-lg
-                transition-all duration-300
-                ${dlDone
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-card border border-primary/20 text-primary'}
-              `}>
-                {!dlDone && <Loader2 size={8} className="animate-spin flex-shrink-0" />}
-                <span>{dlDone ? 'Done!' : dlStatus}</span>
-              </div>
-            </div>
-          )}
         </div>
-        <div className="min-w-0 flex-1 pt-0.5">
-          <h3 className="font-bold text-[13px] leading-snug text-text group-hover:text-primary transition-colors line-clamp-2 mb-1">
-            {course.title}
-          </h3>
-          <p className="text-[10px] text-text/35 font-semibold tracking-wide">{course.code}</p>
+        <div className='min-w-0 flex-1 pt-0.5'>
+          <h3 className='font-bold text-[13px] leading-snug text-text group-hover:text-primary transition-colors line-clamp-2 mb-1'>{course.title}</h3>
+          <p className='text-[10px] text-text/35 font-semibold tracking-wide'>{course.code}</p>
         </div>
       </div>
 
-      {/* Progress bar — BIGGER */}
-      <div className="relative z-10 mb-3">
-        <ProgressBar percentage={pct} size="lg" delay={index * 80} />
+      <div className='relative z-10 mb-3'>
+        <ProgressBar percentage={pct} size='lg' delay={index * 80} />
       </div>
 
-      {/* Status badge — MUCH BIGGER and BOLDER */}
-      <div className="relative z-10 flex items-center justify-between mt-auto pt-2">
+      <div className='relative z-10 flex items-center justify-between mt-auto pt-2'>
         <div className={`flex items-center space-x-2 text-xs font-black px-3.5 py-2 rounded-xl border ${status.badgeBg} ${status.badgeText} ${status.badgeBorder}`}>
           <div className={`w-2.5 h-2.5 rounded-full ${status.dot} ${status.dotAnim}`} />
           <span>{status.label}</span>
         </div>
-        
         {course.last_activity && (
-          <div className="flex items-center space-x-1 text-[10px] text-text/35 font-medium">
-            <Clock size={10} />
-            <span>{new Date(course.last_activity).toLocaleDateString()}</span>
+          <div className='flex items-center space-x-1 text-[10px] text-text/35 font-medium'>
+            <Clock size={10} /><span>{new Date(course.last_activity).toLocaleDateString()}</span>
           </div>
         )}
       </div>
 
-      {/* Action button at bottom */}
-      <div className="relative z-10 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/50">
-        {pct > 0 && pct < 70 ? (
-          <div className="flex items-center justify-between bg-primary/5 rounded-lg px-3 py-2 group-hover:bg-primary/10 transition-colors">
-            <span className="text-xs font-bold text-primary flex items-center space-x-1.5">
-              <Play size={12} fill="currentColor" />
-              <span>Continue Studying</span>
-            </span>
-            <ArrowRight size={14} className="text-primary/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-          </div>
-        ) : pct >= 70 ? (
-          <div className="flex items-center justify-between bg-emerald-500/5 rounded-lg px-3 py-2 group-hover:bg-emerald-500/10 transition-colors">
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1.5">
-              <CheckCircle2 size={12} />
-              <span>Review Materials</span>
-            </span>
-            <ArrowRight size={14} className="text-emerald-500/50 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
-          </div>
-        ) : (
-          <div className="flex items-center justify-between bg-neutral-500/5 dark:bg-neutral-800/30 rounded-lg px-3 py-2 group-hover:bg-primary/5 transition-colors">
-            <span className="text-xs font-bold text-text/40 group-hover:text-primary transition-colors flex items-center space-x-1.5">
-              <BookOpen size={12} />
-              <span>Start Course</span>
-            </span>
-            <ArrowRight size={14} className="text-text/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-          </div>
-        )}
+      <div className='relative z-10 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/50 flex items-center gap-2'>
+        <div className={`flex-1 flex items-center justify-between rounded-lg px-3 py-2 transition-colors ${pct > 0 && pct < 70 ? 'bg-primary/5 group-hover:bg-primary/10' : pct >= 70 ? 'bg-emerald-500/5 group-hover:bg-emerald-500/10' : 'bg-neutral-500/5 dark:bg-neutral-800/30 group-hover:bg-primary/5'}`}>
+          <span className={`text-xs font-bold flex items-center space-x-1.5 ${pct > 0 && pct < 70 ? 'text-primary' : pct >= 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-text/40 group-hover:text-primary transition-colors'}`}>
+            {pct > 0 && pct < 70 ? (<><Play size={12} fill='currentColor' /><span>Continue</span></>) : pct >= 70 ? (<><CheckCircle2 size={12} /><span>Review</span></>) : (<><BookOpen size={12} /><span>Start</span></>)}
+          </span>
+          <ArrowRight size={14} className={`group-hover:translate-x-0.5 transition-all ${pct > 0 && pct < 70 ? 'text-primary/50 group-hover:text-primary' : pct >= 70 ? 'text-emerald-500/50 group-hover:text-emerald-500' : 'text-text/20 group-hover:text-primary'}`} />
+        </div>
+
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          title='Download all materials as ZIP'
+          className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all flex-shrink-0 ${dlDone ? 'bg-emerald-500/10 border-emerald-400/40 text-emerald-600 dark:text-emerald-400' : downloading ? 'bg-primary/5 border-primary/25 text-primary cursor-not-allowed' : 'bg-neutral-100/80 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 text-text/45 hover:text-primary hover:border-primary/40 hover:bg-primary/5'}`}
+        >
+          {dlDone ? (<><CheckCircle2 size={12} /><span>Done!</span></>) : downloading ? (<><Loader2 size={12} className='animate-spin flex-shrink-0' /><span className='whitespace-nowrap'>{dlStatus}</span></>) : (<><Download size={12} /><span>ZIP</span></>)}
+        </button>
       </div>
     </div>
   );
 };
 
 export default CourseCard;
- 
- 
