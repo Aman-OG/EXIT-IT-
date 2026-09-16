@@ -250,3 +250,5 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
 };
 
 export default CourseCard;
+ 
+ 
