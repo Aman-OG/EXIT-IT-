@@ -333,7 +333,27 @@ const Courses = () => {
                         </h2>
                         <div className="flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
                           <button 
-                            onClick={(e) => { e.stopPropagation(); window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank'); }} 
+                            onClick={async (e) => { 
+                              e.stopPropagation(); 
+                              const token = localStorage.getItem('token');
+                              try {
+                                const res = await api.get(`/materials/download-course/${course.id}`, {
+                                  responseType: 'blob'
+                                });
+                                const blob = new Blob([res.data], { type: 'application/zip' });
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                              } catch (err) {
+                                console.error('Blob download failed, using token fallback:', err);
+                                window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
+                              }
+                            }} 
                             className="p-1.5 text-text/40 hover:text-primary transition rounded-lg hover:bg-primary/10 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
                             title="Download Course (ZIP)"
                           >

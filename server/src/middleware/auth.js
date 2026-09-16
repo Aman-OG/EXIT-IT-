@@ -12,8 +12,8 @@ function extractBearerToken(req) {
 }
 
 const protect = (req, res, next) => {
-  // Accept token from cookie OR Authorization header
-  const token = req.cookies.jwt || extractBearerToken(req);
+  // Accept token from cookie, Authorization header, OR query parameter
+  const token = req.cookies.jwt || req.cookies.token || extractBearerToken(req) || req.query.token;
 
   if (!token) {
     return res.status(401).json({ message: 'Not authorized, no token' });
@@ -30,7 +30,7 @@ const protect = (req, res, next) => {
 };
 
 const optionalAuth = (req, res, next) => {
-  const token = req.cookies.jwt || extractBearerToken(req);
+  const token = req.cookies.jwt || req.cookies.token || extractBearerToken(req) || req.query.token;
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);

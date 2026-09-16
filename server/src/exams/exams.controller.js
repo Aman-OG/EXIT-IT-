@@ -4,10 +4,12 @@ const { notifyAllFriends } = require('../notifications/notifications.controller'
 exports.getOfficialList = async (req, res) => {
   try {
     const query = `
-      SELECT id, title 
-      FROM quizzes 
-      WHERE is_official = TRUE AND COALESCE(quiz_type, 'exam') = 'exam'
-      ORDER BY title ASC
+      SELECT qz.id, qz.title, qz.description, COUNT(q.id)::int as question_count
+      FROM quizzes qz
+      LEFT JOIN questions q ON qz.id = q.quiz_id
+      WHERE qz.is_official = TRUE AND COALESCE(qz.quiz_type, 'exam') = 'exam'
+      GROUP BY qz.id
+      ORDER BY qz.title ASC
     `;
     const result = await pool.query(query);
     res.json(result.rows);

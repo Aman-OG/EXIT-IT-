@@ -1,0 +1,2302 @@
+{
+  "2017_tir_exit_exam": [
+    {
+      "id": 1,
+      "exam": "2017 Tir Exit Exam",
+      "question": "An ODP concept that bundles data and methods, uses private fields with public getters/setters for control is:",
+      "imageUrl": null,
+      "options": [
+        "Abstraction",
+        "Dynamic binding",
+        "Polymorphism",
+        "Encapsulation"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Encapsulation is the OOP concept that bundles data and methods, hiding internal state and requiring access through public methods."
+    },
+    {
+      "id": 2,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is an important feature of object-oriented system analysis and design?",
+      "imageUrl": null,
+      "options": [
+        "The focus is on methods to operate upon object's data",
+        "Programs are organized around objects and grouped in classes",
+        "It follows a top-down approach in program design",
+        "It does not support reusability"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Object-oriented design organizes programs around objects grouped into classes, which is a fundamental feature."
+    },
+    {
+      "id": 3,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which of the following is a web application protocol that uses SSL/TLS encryption for secure communication?",
+      "imageUrl": null,
+      "options": [
+        "SMTP",
+        "FTP",
+        "HTTPS",
+        "HTTP"
+      ],
+      "correctAnswer": 2,
+      "explanation": "HTTPS is the secure version of HTTP that uses SSL/TLS encryption for secure communication."
+    },
+    {
+      "id": 4,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following types of data has the developer most likely to be able to use for forms and search keys in software applications?",
+      "imageUrl": null,
+      "options": [
+        "Image view",
+        "Text view",
+        "Data view",
+        "Register view"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Text view data is most commonly used for forms and search keys in applications."
+    },
+    {
+      "id": 5,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which statement best describes the principles of Normalization in database schema?",
+      "imageUrl": null,
+      "options": [
+        "Reduce data redundancy and improve data integrity",
+        "Reduce domain integrity and referential integrity",
+        "Increase data security and integrity",
+        "Reduce performance of data transaction"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Normalization is a database design technique that reduces data redundancy and improves data integrity."
+    },
+    {
+      "id": 6,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following OSI layer is the network administrator targets on if the data is not displayed correctly when transferred between different operating systems?",
+      "imageUrl": null,
+      "options": [
+        "Data link layer",
+        "Session layer",
+        "Presentation layer",
+        "Physical layer"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Presentation layer is responsible for data formatting and translation between different systems."
+    },
+    {
+      "id": 7,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following you target on assuming that you want staying up to date with new security threats and vulnerabilities and adapting security measures to address them?",
+      "imageUrl": null,
+      "options": [
+        "Identifying data security policies",
+        "Evaluate system security",
+        "Continuously monitoring and improving security",
+        "Assess network security"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Continuous monitoring and improvement is the practice of staying current with security threats and adapting measures accordingly."
+    },
+    {
+      "id": 8,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A company is developing a project plan for its incoming project, then which one of the following is NOT included in the plan?",
+      "imageUrl": null,
+      "options": [
+        "Risk analysis",
+        "Description of the project",
+        "Introduction to overview",
+        "Budget information"
+      ],
+      "correctAnswer": 2,
+      "explanation": "\"Introduction to overview\" is vague and not typically a standard component of a project plan. Standard components include risk analysis, project description, and budget."
+    },
+    {
+      "id": 9,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which statement best describes key distinction between the computer networks and distributed file system?",
+      "imageUrl": null,
+      "options": [
+        "A well-known example of a distributed system is web page",
+        "In a computer network, a collection of independent computers appears to its users as a single system",
+        "In a computer network, it has a single model or paradigm that it presents to the users",
+        "In a distributed file system, a collection of independent computers appears to its users as a single coherent system"
+      ],
+      "correctAnswer": 3,
+      "explanation": "A distributed file system provides a single coherent view of files across multiple independent computers, unlike a computer network where each system is seen distinctly."
+    },
+    {
+      "id": 10,
+      "exam": "2017 Tir Exit Exam",
+      "question": "At a database administrator, you want to develop a database schema by identifying objects that will be represented in the database, and then which procedures are appropriate for your case?",
+      "imageUrl": null,
+      "options": [
+        "Identifying data requirements",
+        "Normalizing data",
+        "Creating entity relationship diagram",
+        "Identifying entities and relationships"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Identifying entities and relationships is the first step in creating a database schema by recognizing objects to be represented."
+    },
+    {
+      "id": 11,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which characteristic better represents an IT project?",
+      "imageUrl": null,
+      "options": [
+        "Measured by quantity produced",
+        "Time restriction",
+        "Varies little day-to-day",
+        "On-going work"
+      ],
+      "correctAnswer": 1,
+      "explanation": "IT projects are characterized by having a specific time restriction or deadline."
+    },
+    {
+      "id": 12,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Mr. X wants to display list of names exist in table A but not exist in table B using SQL command, which one of the following command you apply to display the intended result?",
+      "imageUrl": null,
+      "options": [
+        "Select name from A minus select name from B",
+        "Select name from A union all select name from B",
+        "Select name from A intersect select name from B",
+        "Select name from B minus select name from A"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The MINUS operator returns all rows from the first query that are not present in the second query."
+    },
+    {
+      "id": 13,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly explains the purpose of using constructor in Java?",
+      "imageUrl": null,
+      "options": [
+        "It is used to extract shared features from two or more classes",
+        "It is used to execute the main method of the program",
+        "It is used to delete unused variable from the memory",
+        "It is used to initialize object state at object creation"
+      ],
+      "correctAnswer": 3,
+      "explanation": "A constructor in Java is used to initialize the state of an object when it is created."
+    },
+    {
+      "id": 14,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Consider the following java code ... What will be the output?",
+      "imageUrl": null,
+      "options": [
+        "Circle constructor",
+        "Cylinder constructor",
+        "Circle constructor Cylinder constructor",
+        "Cylinder constructor Circle constructor"
+      ],
+      "correctAnswer": 2,
+      "explanation": "When a subclass object is created, the parent class constructor is called first, followed by the subclass constructor."
+    },
+    {
+      "id": 15,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following lists correctly presents the OSI reference model from top to bottom layer?",
+      "imageUrl": null,
+      "options": [
+        "Application > Session > Presentation > Transport > Network > Data Link > Physical",
+        "Application > Presentation > Session > Transport > Network > Data Link > Physical",
+        "Application > Session > Presentation > Transport > Data Link > Network > Physical",
+        "Application > Presentation > Session > Transport > Data Link > Network > Physical"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The correct OSI model order from top to bottom is: Application, Presentation, Session, Transport, Network, Data Link, Physical."
+    },
+    {
+      "id": 16,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following correctly explains about internet layer of TCP/IP model?",
+      "imageUrl": null,
+      "options": [
+        "It fragments the incoming bytes stream in discrete messages",
+        "The layer where TCP or UDP protocols are ensuring reliable or unreliable data transmission respectively",
+        "Designed to allow peer entities on the source and destination hosts to carry out a communication",
+        "The layer where IP protocol routes the packets across different networks"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The Internet layer of TCP/IP is responsible for routing packets across networks using the IP protocol."
+    },
+    {
+      "id": 17,
+      "exam": "2017 Tir Exit Exam",
+      "question": "You are an information security expert in an Organization and you need to ensure that the security of their information is protected irrespective of the employees they may have. How do you administer this security task?",
+      "imageUrl": null,
+      "options": [
+        "By Policies, Standards and Procedures",
+        "By giving strong password for all user",
+        "By encrypting all information",
+        "By securing the data center from employees"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The most comprehensive approach is implementing policies, standards, and procedures to govern security practices."
+    },
+    {
+      "id": 18,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following Java code is applied to execute a block of code that always runs even after a return statement?",
+      "imageUrl": null,
+      "options": [
+        "try { finally {System.out.println(\"Finally block\");}",
+        "try { return 1; finally {System.out.println(\"Finally block\");}",
+        "try {return 1; finally {returnedException();}",
+        "try {return 1; finally {System.out.println(\"Finally block\");}"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The finally block in Java always executes, even after a return statement. The correct syntax is try{return;} finally{...}."
+    },
+    {
+      "id": 19,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following mechanism the system admin must apply when the router is regularly losing the configuration?",
+      "imageUrl": null,
+      "options": [
+        "Using backup and restore",
+        "Replacing router with other brand",
+        "Disabling advanced features",
+        "Rebooting the router"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Backup and restore should be used to preserve and recover configuration when a router regularly loses its configuration."
+    },
+    {
+      "id": 20,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is an example of an event?",
+      "imageUrl": null,
+      "options": [
+        "Mouse click",
+        "Function definition",
+        "Compilation error",
+        "Variable declaration"
+      ],
+      "correctAnswer": 0,
+      "explanation": "A mouse click is a common example of an event in event-driven programming."
+    },
+    {
+      "id": 21,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following procedure you choose to ensure optimal usage of physical memory (RAM) and disk space?",
+      "imageUrl": null,
+      "options": [
+        "Optimizing start-up programs",
+        "Registry cleaning and optimization",
+        "Performance monitoring and tuning",
+        "Virtual memory management"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Virtual memory management is used to optimize the usage of physical memory and disk space."
+    },
+    {
+      "id": 22,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which of the following is the first task in network device configuration management?",
+      "imageUrl": null,
+      "options": [
+        "Creating VLAN",
+        "Documenting configurations",
+        "Applying security",
+        "Creating inventory or list"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Creating an inventory or list of network devices is the first task in configuration management."
+    },
+    {
+      "id": 23,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement distinguishes structured programming from object oriented programming?",
+      "imageUrl": null,
+      "options": [
+        "Structured programming is used for small to medium size projects while object-oriented programming is used for development of enterprise applications",
+        "Data is secured in structured programming while it is not secure in object-oriented programming",
+        "Data and functionality are treated separately in object-oriented programming but not in structured programming",
+        "Object oriented programming emphasizes more on functionality while structured programming emphasizes on data not functionality"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Structured programming is typically used for smaller projects, while OOP is used for enterprise applications, though this is not a strict rule."
+    },
+    {
+      "id": 24,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following correctly explains about debugging tools in a visual development environment?",
+      "imageUrl": null,
+      "options": [
+        "They are used to create a user-friendly interface without having to write all the code manually",
+        "They are used to assist the developer to identify the problem going to be solved",
+        "They are used to step through the code line-by-line, set breakpoints, and view variable values at different points in the program",
+        "They are used for visualization of data in a meaningful way, making it easier to identify patterns and trends"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Debugging tools allow developers to step through code, set breakpoints, and inspect variable values to identify issues."
+    },
+    {
+      "id": 25,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is an attack on availability from information systems security concepts?",
+      "imageUrl": null,
+      "options": [
+        "An unauthorized copy of software is made",
+        "Files are deleted and/or access is denied",
+        "Existing files are modified",
+        "New files and messages are fabricated"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Attacks on availability include deletion of files and denial of access to resources."
+    },
+    {
+      "id": 26,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly distinguishes physical layer from data link layer?",
+      "imageUrl": null,
+      "options": [
+        "Physical layer transmits bits, while data link layer frames data",
+        "Physical layer controls congestion, while data link layer detects errors",
+        "Physical layer segments IP address, while data link layer routes packets",
+        "Physical layer handles encryption, while data link layer segments data"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The physical layer transmits raw bits, while the data link layer organizes bits into frames and handles error detection."
+    },
+    {
+      "id": 27,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Suppose you are designing a dynamic website with user-specific content. Which one of the following approach would you use to implement a feature where each user sees personalized content?",
+      "imageUrl": null,
+      "options": [
+        "Embedding the personalized content into PHP files for each user",
+        "Storing all user data in session variables and accessing it via PHP",
+        "Storing user preferences in a cookie and retrieving them on every page load using PHP",
+        "Storing user-specific content in a database and retrieving it using a unique session ID with PHP"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The most scalable approach is to store user-specific content in a database and retrieve it using a unique session ID."
+    },
+    {
+      "id": 28,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is NOT the feature of object-oriented System analysis and design?",
+      "imageUrl": null,
+      "options": [
+        "Unified modeling languages are used to depict relationships between objects and classes",
+        "Designing phase follows a top-down approach",
+        "It helps to depict the real-world scenario",
+        "Every entity is represented as an object"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Object-oriented design typically follows an iterative approach, not a top-down approach, which is more common in structured programming."
+    },
+    {
+      "id": 29,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Suppose a student has finished an android project and run the project. Which Android SDK component is responsible to compile, gather resources and package them to apk file for installation?",
+      "imageUrl": null,
+      "options": [
+        "Manifest build system",
+        "Activity main system",
+        "Android manifest",
+        "Gradle build system"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The Gradle build system is responsible for compiling, gathering resources, and packaging Android apps into APK files."
+    },
+    {
+      "id": 30,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following VB code creates a MessageBox for \"Welcome\" message?",
+      "imageUrl": null,
+      "options": [
+        "System.Windows.Forms.MessageBox.Show(\"Welcome\")",
+        "System.Windows.Forms.MessageBox.Show(\"Welcome!\")",
+        "System.Windows.Forms.Messagebox.Show(\"Welcome!\")",
+        "System.Windows.Forms.MessageBox.Show(\"Welcome!\")"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The correct VB.NET syntax is System.Windows.Forms.MessageBox.Show(\"Welcome!\") with proper capitalization."
+    },
+    {
+      "id": 31,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Project Quality Management includes the processes required to ensure that the project will satisfy the needs for which it was undertaken. To examine this, which of the following is true?",
+      "imageUrl": null,
+      "options": [
+        "Quality control - Quality planning - Quality assurance",
+        "Quality planning - Quality control - Quality assurance",
+        "Quality control - Quality assurance - Quality planning",
+        "Quality planning - Quality assurance - Quality control"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The correct sequence in Project Quality Management is Quality Planning, Quality Assurance, then Quality Control."
+    },
+    {
+      "id": 32,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Project manager of the given company is not targeting on the task of tracking the progress of the software development activities. Finally, the software is not completed within the expected time and budget. Which one of the following project management concept you apply to track the progress of the software against the schedule and budget, and taking corrective action when necessary?",
+      "imageUrl": null,
+      "options": [
+        "Project planning",
+        "Project monitoring and control",
+        "Change management",
+        "Project quality assurance"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Project monitoring and control involves tracking progress against schedule and budget and taking corrective actions."
+    },
+    {
+      "id": 33,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following does NOT drive the advantage of homogeneous distributed database system?",
+      "imageUrl": null,
+      "options": [
+        "Improved visibility",
+        "Improved performance",
+        "Improved memory",
+        "Other"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Improved memory is not typically listed as an advantage of homogeneous distributed database systems."
+    },
+    {
+      "id": 34,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which central connection network device takes an incoming signal on one port and blindly broadcasts it to all other ports?",
+      "imageUrl": null,
+      "options": [
+        "Modem",
+        "Repeater",
+        "Hub",
+        "Bridge"
+      ],
+      "correctAnswer": 2,
+      "explanation": "A hub broadcasts incoming signals to all other ports, while other devices like bridges and switches are more selective."
+    },
+    {
+      "id": 35,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following comparison between Internal bus and External bus is correct?",
+      "imageUrl": null,
+      "options": [
+        "External bus is a system bus while internal bus is an expansion bus",
+        "Internal bus is a system bus whereas External bus is expansion bus",
+        "External bus interconnects main memory while Internal bus connects CPU",
+        "Internal bus interconnects main memory and External bus connects CPU"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Internal bus is a system bus that connects internal components, while External bus is an expansion bus for connecting peripherals."
+    },
+    {
+      "id": 36,
+      "exam": "2017 Tir Exit Exam",
+      "question": "To configure router or switch you have to connect with pc via interface and make them active. Which cable you should use to connect your pc with the device (router/switch)?",
+      "imageUrl": null,
+      "options": [
+        "Crossover cable",
+        "Straight-through cable",
+        "Rollover cable",
+        "Fiber optic cable"
+      ],
+      "correctAnswer": 2,
+      "explanation": "A rollover cable (console cable) is used to connect a PC to a router or switch for configuration purposes."
+    },
+    {
+      "id": 37,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What are three key pieces of information does a device need for IP communication?",
+      "imageUrl": null,
+      "options": [
+        "MAC address, port number, and default Gateway",
+        "IP Address, Subnet Mask, and Default Gateway",
+        "IP Address, port number, and Default Gateway",
+        "MAC Address, Subnet Mask, and Default Gateway"
+      ],
+      "correctAnswer": 1,
+      "explanation": "A device needs an IP Address, Subnet Mask, and Default Gateway for IP communication."
+    },
+    {
+      "id": 38,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following sample HTML code displays a drop down with an id and female not?",
+      "imageUrl": null,
+      "options": [
+        "<select option value=\"male\" ><option>Female</option></select>",
+        "<select name=\"id\" onchange=\"display()\">",
+        "<select name=\"id\" onChange=\"display()\">",
+        "<select name=\"id\" onchange=\"display()\">"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The correct HTML syntax for a dropdown with an id and onchange event is <select name=\"id\" onchange=\"display()\">."
+    },
+    {
+      "id": 39,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following HTML statements is used to create a radio button to select either male or female for gender information?",
+      "imageUrl": null,
+      "options": [
+        "<input type=\"radio\" name=\"gender\" value=\"Male\"> Male",
+        "<input type=\"radio\" name=\"gender\" value=\"Female\"> Female",
+        "<input type=\"radio\" name=\"gender\" value=\"Male\"> Male",
+        "<input type=\"radio\" name=\"gender\" value=\"Female\"> Female"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Radio buttons for gender selection should have the same name attribute with different values, as shown in option a."
+    },
+    {
+      "id": 40,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A system user wants to copy 2GB of data to its workstation computer. Unfortunately, an error was generated while copying the data with an error message: 'Access granted even if the system has 500GB free space'. What is the first case that should be applied to solve this problem?",
+      "imageUrl": null,
+      "options": [
+        "Check the file in the drive",
+        "Format the hard disk",
+        "Check file and folders permission management",
+        "Check the user account"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The error suggests permission issues, so checking file and folder permission management should be the first step."
+    },
+    {
+      "id": 41,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A company web designer plans to design a website with multiple pages. The designer wants to control the style and layout of all pages at once. Which method of including the style sheet list for the designer plan?",
+      "imageUrl": null,
+      "options": [
+        "Embedded style sheet",
+        "External style sheet",
+        "Internal style sheet",
+        "Nine style sheet"
+      ],
+      "correctAnswer": 1,
+      "explanation": "An external style sheet allows controlling the style and layout of all pages at once."
+    },
+    {
+      "id": 42,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is common scripting language for developing Web-based applications for client side?",
+      "imageUrl": null,
+      "options": [
+        "ColdFusion",
+        "Java server page (JSP)",
+        "PHP",
+        "JavaScript"
+      ],
+      "correctAnswer": 3,
+      "explanation": "JavaScript is the most common client-side scripting language for web development."
+    },
+    {
+      "id": 43,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following router configuration on the network administrator should apply to configure EIGRP on the given network topology?",
+      "imageUrl": null,
+      "options": [
+        "#config t !network 192.168.10.0 !network 172.16.10.0",
+        "#router eigrp 1 !network 192.168.10.0 !network 172.16.10.10",
+        "#router eigrp 1 !network 192.168.10.0 !network *",
+        "#router eigrp 1 !network 192.168.10.0 !network 172.16.10.0"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The correct EIGRP configuration syntax is #router eigrp 1 !network 192.168.10.0 !network 172.16.10.0."
+    },
+    {
+      "id": 44,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Event-driven programming differs from traditional programming paradigms in that:",
+      "imageUrl": null,
+      "options": [
+        "event-driven programming operates sequentially",
+        "event-driven programming operates synchronously",
+        "event-driven programming operates asynchronously",
+        "event-driven programming operates textually"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Event-driven programming operates asynchronously, responding to events as they occur."
+    },
+    {
+      "id": 45,
+      "exam": "2017 Tir Exit Exam",
+      "question": "In university registrar database system, the students can view their own grade but they cannot modify it. The registrar head can modify the grade. Which pairs of database security is used by the system?",
+      "imageUrl": null,
+      "options": [
+        "Availability and confidentiality",
+        "Availability and integrity",
+        "Integrity and confidentiality",
+        "Authenticity and availability"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The system uses integrity (preventing unauthorized modifications) and confidentiality (restricting who can view the data)."
+    },
+    {
+      "id": 46,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following scripting languages is classified as server side scripting language?",
+      "imageUrl": null,
+      "options": [
+        "HTML",
+        "Node.js",
+        "CSS",
+        "JS"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Node.js is a server-side JavaScript runtime environment, while HTML and CSS are client-side languages."
+    },
+    {
+      "id": 47,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following foundry network device offers advanced routing features such as Border Gateway Protocol, Multi-Protocol Label Switching and Virtual Private LAN Service?",
+      "imageUrl": null,
+      "options": [
+        "Foundry FastIron",
+        "Foundry Mobility",
+        "Foundry NetIron",
+        "Foundry ServerIron"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Foundry NetIron series offers advanced routing features including BGP, MPLS, and VPLS."
+    },
+    {
+      "id": 48,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A technician reviews a transaction log after a failure (crash). In the review process, the log shows a transaction with partially commit but never commit. What the technician should apply based on the standard transaction management procedure?",
+      "imageUrl": null,
+      "options": [
+        "Restart the transaction as an active state",
+        "Continue the transaction from the point of failure",
+        "Hold the transaction and continue next transaction",
+        "Rollback the transaction to ensure data consistency"
+      ],
+      "correctAnswer": 3,
+      "explanation": "A partially committed transaction that never committed should be rolled back to ensure data consistency."
+    },
+    {
+      "id": 49,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is used for manipulating HTML documents, handling events, and creating animations and effects in a webpage development?",
+      "imageUrl": null,
+      "options": [
+        "WYSIWYG",
+        "Query",
+        "ReactJS",
+        "Bootstrap"
+      ],
+      "correctAnswer": 2,
+      "explanation": "ReactJS is a JavaScript library used for manipulating HTML, handling events, and creating animations and effects."
+    },
+    {
+      "id": 50,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly explains about Network interface card?",
+      "imageUrl": null,
+      "options": [
+        "The computer device which can be used for long-term storage of information",
+        "Converts AC voltage from the wall outlet to DC voltage the computer can use",
+        "A computer hardware component that allows a computer to interconnect with other computer devices",
+        "An auxiliary device that connects to and works with the computer in some way"
+      ],
+      "correctAnswer": 2,
+      "explanation": "A Network Interface Card (NIC) allows a computer to connect and communicate with other computer devices on a network."
+    },
+    {
+      "id": 51,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly distinguishes a tower computer case from a desktop case in terms of their physical orientation and typical usage scenarios?",
+      "imageUrl": null,
+      "options": [
+        "Tower cases use laptops internally while desktops do not",
+        "Tower cases are portable while desktops are stationary",
+        "Tower cases have no cooling while desktops have cooling",
+        "Tower cases are vertical while desktops are horizontal"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Tower cases are typically vertical while desktop cases are horizontal in orientation."
+    },
+    {
+      "id": 52,
+      "exam": "2017 Tir Exit Exam",
+      "question": "If the students are doing their final project and want to show the relationships between different objects within their system. Which one of the following is correct?",
+      "imageUrl": null,
+      "options": [
+        "Component diagram",
+        "Activity diagram",
+        "Sequence diagram",
+        "Class diagram"
+      ],
+      "correctAnswer": 3,
+      "explanation": "A Class diagram is used to show relationships between different objects/classes in a system."
+    },
+    {
+      "id": 53,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following Object Oriented Programming features represents the process of identifying methods/statements for execution at runtime?",
+      "imageUrl": null,
+      "options": [
+        "Inheritance",
+        "Abstraction",
+        "Dynamic Binding",
+        "Message Passing"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Dynamic Binding is the process of resolving method calls at runtime based on the actual object type."
+    },
+    {
+      "id": 54,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following Java syntax is used to create an abstract method?",
+      "imageUrl": null,
+      "options": [
+        "access specifier abstract returnType methodName(params list);",
+        "access specifier returnType abstract methodName(params list);",
+        "access specifier abstract returnType methodName(params list);",
+        "returnType access specifier abstract methodName(params list);"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The correct Java syntax for an abstract method is: access specifier abstract returnType methodName(params list);"
+    },
+    {
+      "id": 55,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following android application method is called when another activity comes to the foreground, or when the current activity is partially obscured?",
+      "imageUrl": null,
+      "options": [
+        "onResume()",
+        "onStart()",
+        "onPause()",
+        "onDestroy()"
+      ],
+      "correctAnswer": 2,
+      "explanation": "onPause() is called when another activity comes to the foreground or when the current activity is partially obscured."
+    },
+    {
+      "id": 56,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following diagnostic tool choices the employer of Niles and Fellows can a hard drive by scanning the life system?",
+      "imageUrl": null,
+      "options": [
+        "CHKDSK",
+        "Disk cleanup",
+        "Disk defragmenter",
+        "Disk management"
+      ],
+      "correctAnswer": 0,
+      "explanation": "CHKDSK is a diagnostic tool used to scan hard drives for errors and bad sectors."
+    },
+    {
+      "id": 57,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following thread Class Method prepares a thread to be run?",
+      "imageUrl": null,
+      "options": [
+        "public void start()",
+        "public void stop()",
+        "public final void stop()",
+        "public void run()"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The start() method prepares a thread to be run by calling the run() method."
+    },
+    {
+      "id": 58,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following can be classified as the feature of rack-mount case?",
+      "imageUrl": null,
+      "options": [
+        "Used in office or home environments where space is limited",
+        "Designed to be compact, portable, and used in small spaces or for travel",
+        "Designed to be portable and fit includes mini-TX micro-ATX and mini-ATX cases",
+        "Used in data centers or other environments where space is at a premium"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Rack-mount cases are specifically designed for data centers where space efficiency is critical."
+    },
+    {
+      "id": 59,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A Library management system is build and ready for delivery and use, which UML diagram is more useful for this system?",
+      "imageUrl": null,
+      "options": [
+        "Component diagram",
+        "Use case diagram",
+        "Deployment diagram",
+        "State chart diagram"
+      ],
+      "correctAnswer": 2,
+      "explanation": "A Deployment diagram is most useful for a system ready for delivery and use as it shows the physical deployment of components."
+    },
+    {
+      "id": 60,
+      "exam": "2017 Tir Exit Exam",
+      "question": "In implementing security measures, Authentication deals with the 'who' of security policy enforcement. What does a firewall enforce?",
+      "imageUrl": null,
+      "options": [
+        "All traffic will be allowed to pass",
+        "It provides secured access for internal security problems",
+        "It provides auditing service",
+        "It provides secured access between two networks"
+      ],
+      "correctAnswer": 3,
+      "explanation": "A firewall enforces security by providing secured access between two networks (typically between internal and external networks)."
+    },
+    {
+      "id": 61,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Students are creating a login form with username and password. Which statement identifies the name field (name)?",
+      "imageUrl": null,
+      "options": [
+        "<input type=\"text\" action=\"username\"/>",
+        "<input type=\"text\" id=\"username\"/>",
+        "<input type=\"text\" name=\"username\"/>",
+        "<input type=\"text\" name=\"username\"/>"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The name attribute in HTML identifies the field for form submission, so <input type=\"text\" name=\"username\"/> is correct."
+    },
+    {
+      "id": 62,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Polymorphism allows us to write multiple methods with similar name through:",
+      "imageUrl": null,
+      "options": [
+        "super keyword",
+        "method overloading and method overriding",
+        "attributes and methods",
+        "encapsulation and abstraction"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Polymorphism is achieved through method overloading (compile-time) and method overriding (runtime)."
+    },
+    {
+      "id": 63,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which modeling technique developers must target on if the model is refined and updated based on feedback and new information?",
+      "imageUrl": null,
+      "options": [
+        "Iterative approach",
+        "Analysis of data",
+        "Modeling software",
+        "Systematic approach"
+      ],
+      "correctAnswer": 0,
+      "explanation": "An iterative approach involves refining and updating the model based on feedback and new information."
+    },
+    {
+      "id": 64,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What is the priority purpose of sending email handling in Android?",
+      "imageUrl": null,
+      "options": [
+        "Call back method associated at background",
+        "Call back method called by broadcast receiver",
+        "Call back method sends data to network",
+        "Call back method triggered by user taps on view"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Email handling in Android typically uses broadcast receivers to handle intents for sending emails."
+    },
+    {
+      "id": 65,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly explains the purpose of using constructor in Java?",
+      "imageUrl": null,
+      "options": [
+        "It is used to delete unused variable from the memory",
+        "It is used to initialize object state at object creation",
+        "It is used to execute the main method of the program",
+        "It is used to extract shared features from two or more classes"
+      ],
+      "correctAnswer": 1,
+      "explanation": "A constructor in Java is used to initialize the state of an object at the time of its creation."
+    },
+    {
+      "id": 66,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following components is correct about Array and HashMap?",
+      "imageUrl": null,
+      "options": [
+        "Array uses get method to access the elements, while HashMap uses an index to access the elements",
+        "Array uses an index in order to store the elements, while HashMap uses key-value pairs for storing elements",
+        "Array uses put method to add new elements to the list, while HashMap uses add method",
+        "Array is a collection of key-value pairs, while HashMap is a dynamic collection of elements that can be added or removed at runtime"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Array uses an index to store elements sequentially, while HashMap uses key-value pairs for storage and retrieval."
+    },
+    {
+      "id": 67,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which components of android application processing in background without interface?",
+      "imageUrl": null,
+      "options": [
+        "Swagger",
+        "Service",
+        "Postman",
+        "Activity"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Services in Android run in the background without a user interface."
+    },
+    {
+      "id": 68,
+      "exam": "2017 Tir Exit Exam",
+      "question": "When we design a GUI system, professionally it shows portable views in different screen with small laptop or large desktop screen. What do we use to create this feature in our program?",
+      "imageUrl": null,
+      "options": [
+        "Setting fixed (x,y) coordinate for each GUI component",
+        "Creating different app",
+        "Use graphics code",
+        "Layout manager (border, flow or Grid Layout)"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Layout managers help create responsive designs that adapt to different screen sizes."
+    },
+    {
+      "id": 69,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following code is valid to create a table with 2 fields: id and name, and the data type of id is int and the data type of name is varchar(50)?",
+      "imageUrl": null,
+      "options": [
+        "CREATE TABLE student(id INT, name VARCHAR(50));",
+        "CREATE TABLE student(id INT, name VARCHAR(50));",
+        "CREATE TABLE student(id INT, name VARCHAR(50));",
+        "CREATE TABLE student(id INT, name VARCHAR(50));"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The correct SQL syntax is CREATE TABLE student(id INT, name VARCHAR(50)); with proper parentheses and semicolon."
+    },
+    {
+      "id": 70,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is the basic feature of file system compared to database system?",
+      "imageUrl": null,
+      "options": [
+        "File manipulation",
+        "Data integrity",
+        "Concurrency control",
+        "Data consistency"
+      ],
+      "correctAnswer": 0,
+      "explanation": "File systems primarily provide file manipulation capabilities, while database systems provide additional features like integrity and concurrency."
+    },
+    {
+      "id": 71,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following function is correct to call a parent class constructor from a child class in Java?",
+      "imageUrl": null,
+      "options": [
+        "base()",
+        "this()",
+        "parent()",
+        "super()"
+      ],
+      "correctAnswer": 3,
+      "explanation": "In Java, super() is used to call a parent class constructor from a child class."
+    },
+    {
+      "id": 72,
+      "exam": "2017 Tir Exit Exam",
+      "question": "An IT technician, what will be your decision if a customer requests for upgrading a processor?",
+      "imageUrl": null,
+      "options": [
+        "The decision should be based on whether the motherboard manufacturer allows or not",
+        "It is okay to choose any processor since there is only one processor manufacturer around the globe",
+        "It is okay to upgrade the processor entirely with the motherboard",
+        "It is okay to choose any processor since all have the same form factor"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Processor upgrades must be compatible with the motherboard, so the decision should be based on motherboard manufacturer specifications."
+    },
+    {
+      "id": 73,
+      "exam": "2017 Tir Exit Exam",
+      "question": "As a network administrator, you use switch and router for different tasks. Where do you apply them?",
+      "imageUrl": null,
+      "options": [
+        "Switch operates at Data Link layer (MAC addressing), router at Network layer (IP routing)",
+        "Both perform the same functions",
+        "Router cannot handle VLANs",
+        "Switch operates at layer 3(IP). Router operates at Layer 2"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Switch operates at Layer 2 (Data Link layer) using MAC addresses, while router operates at Layer 3 (Network layer) for IP routing."
+    },
+    {
+      "id": 74,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What is the correct syntax to implement exception while writing a java code?",
+      "imageUrl": null,
+      "options": [
+        "try { ... } catch (Exception e) {...}",
+        "catch (L) try(Exceptions)",
+        "try { ... } catch() { exception type }",
+        "catch (Exception) try(...)"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The correct Java exception handling syntax is try { ... } catch (ExceptionType e) {...}."
+    },
+    {
+      "id": 75,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following mechanisms the system admin must target on if he wants to ensure that users have the appropriate permissions?",
+      "imageUrl": null,
+      "options": [
+        "Managing group memberships",
+        "Creating user accounts",
+        "Creating user groups",
+        "Managing user accounts"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Managing group memberships is key to ensuring users have appropriate permissions based on their group assignments."
+    },
+    {
+      "id": 76,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following comparison is correct about ArrayList and HashSet?",
+      "imageUrl": null,
+      "options": [
+        "ArrayList uses get method to access the elements, while HashSet uses an index to access the elements",
+        "ArrayList uses put method to add new elements to the list, while HashSet uses add method",
+        "ArrayList uses an index in order to store the elements, while HashSet uses key-value pairs for storing elements",
+        "ArrayList is a collection of key-value pairs, while HashSet is a dynamic collection of elements that can be added or removed at runtime"
+      ],
+      "correctAnswer": 0,
+      "explanation": "ArrayList uses the get() method to access elements by index, while HashSet does not support indexed access."
+    },
+    {
+      "id": 77,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Mrs. X is withdrawing money from the bank and the network disconnected after the final task is executed, but the detail of the information for this specific transaction has not been saved in the database of the bank system. Which one of the following state of the transaction correctly indicates the case?",
+      "imageUrl": null,
+      "options": [
+        "Partially committed",
+        "Failed state",
+        "Aborted",
+        "Committed"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The transaction is in a failed state because the changes were not saved to the database due to network disconnection."
+    },
+    {
+      "id": 78,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following you apply to retrieve only relevant network events from the event storage?",
+      "imageUrl": null,
+      "options": [
+        "Configuring event collection",
+        "Defining event types",
+        "Choosing event storage",
+        "Setting up event filtering"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Setting up event filtering allows retrieving only relevant network events from storage."
+    },
+    {
+      "id": 79,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Suppose you are developing a dynamic Website that changes or continuously itself frequently and automatically based on certain criteria. You decide to create the page by combining HTML and Java code. Which server side script language will be applied for your task?",
+      "imageUrl": null,
+      "options": [
+        "JavaScript",
+        "PHP",
+        "C++",
+        "Perl"
+      ],
+      "correctAnswer": 1,
+      "explanation": "PHP is commonly used for server-side scripting with HTML for dynamic content."
+    },
+    {
+      "id": 80,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following APIs is used by developers to play back audio and video content?",
+      "imageUrl": null,
+      "options": [
+        "OpenGL",
+        "BitmapFactory",
+        "Twilio",
+        "SurfaceView"
+      ],
+      "correctAnswer": 3,
+      "explanation": "SurfaceView in Android is used for playing back audio and video content."
+    },
+    {
+      "id": 81,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What is the primary purpose of onclick() event handling in Android?",
+      "imageUrl": null,
+      "options": [
+        "Call back method called by Broadcast Receiver",
+        "Call back method pass data via extras",
+        "Call back method executed at background",
+        "Call back method triggered by user taps on view"
+      ],
+      "correctAnswer": 3,
+      "explanation": "onclick() event handling is triggered when a user taps on a view."
+    },
+    {
+      "id": 82,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following methods you should invoke to put a thread in active state?",
+      "imageUrl": null,
+      "options": [
+        "Thread.start()",
+        "Thread.stop()",
+        "Thread.run()",
+        "Thread.active()"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The start() method is invoked to put a thread in an active state (ready to run)."
+    },
+    {
+      "id": 83,
+      "exam": "2017 Tir Exit Exam",
+      "question": "When we design a full system, professionally there are three possible views in different screen with small laptop or large desktop screen. What do we use to create this layout in our project?",
+      "imageUrl": null,
+      "options": [
+        "Use graphics code",
+        "Creating different app",
+        "Using a large screen device like a 30 inch laptop",
+        "Setting font (e.g. monospace for each font component)"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Using responsive layout techniques and graphics code helps create views that adapt to different screen sizes."
+    },
+    {
+      "id": 84,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What one of the following mediums has the system admin not target on if he wants to ensure that users have this appropriate permission?",
+      "imageUrl": null,
+      "options": [
+        "Managing group memberships",
+        "Creating new accounts",
+        "Creating new groups",
+        "Managing user accounts"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Creating new groups is not directly related to ensuring users have appropriate permissions; managing group memberships and user accounts are."
+    },
+    {
+      "id": 85,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statements is correct about project quality assurance?",
+      "imageUrl": null,
+      "options": [
+        "It is a method for ensuring that project results comply with the relevant quality standards",
+        "It is related with identifying which quality standards are relevant to the project and how to satisfy them",
+        "It includes activities related to analyzing the relevant quality standards for a project",
+        "It focuses on identifying the individual steps to achieve success of manufacturing results"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Quality assurance ensures that project results comply with relevant quality standards."
+    },
+    {
+      "id": 86,
+      "exam": "2017 Tir Exit Exam",
+      "question": "A database administrator working in company database wants to retrieve the name and address of all employees who work for the IT department. Which SQL queries retrieve this information?",
+      "imageUrl": null,
+      "options": [
+        "SELECT FNAME,LNAME,ADDRESS FROM EMPLOYEE, DEPARTMENT WHERE DNAME='IT' AND DNUMBER=DNO;",
+        "SELECT * FROM EMPLOYEE, DEPARTMENT WHERE DNAME='IT' AND DNUMBER=DNO;",
+        "SELECT FNAME,LNAME,ADDRESS FROM DEPARTMENT WHERE DNAME='IT' AND DNUMBER=DNO;",
+        "SELECT * FROM EMPLOYEE WHERE DNAME='IT' AND DNUMBER=DNO;"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The correct SQL query selects specific columns (FNAME, LNAME, ADDRESS) from both tables with proper join condition."
+    },
+    {
+      "id": 87,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following Java code is applied to execute a block of code that always runs, even after a return statement?",
+      "imageUrl": null,
+      "options": [
+        "try finally {System.out.println(\"Finally block\");}",
+        "try return {finally System.out.println(\"Finally block\");}",
+        "try{return} catch (InterruptedException e){}",
+        "try{return} finally {System.out.println(\"Finally block\");}"
+      ],
+      "correctAnswer": 3,
+      "explanation": "try{return;} finally {System.out.println(\"Finally block\");} ensures the finally block runs even after a return."
+    },
+    {
+      "id": 88,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following database recovery techniques the database administrator must choose to check if there is a record of all changes or transactions happened to database?",
+      "imageUrl": null,
+      "options": [
+        "Transaction log replay",
+        "Data caching",
+        "Transaction log",
+        "Data update"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Transaction log records all changes and transactions that happen to the database."
+    },
+    {
+      "id": 89,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following statement correctly distinguishes collaboration diagram from sequence diagram?",
+      "imageUrl": null,
+      "options": [
+        "Sequence diagram illustrates ordering of messages, while collaboration diagram illustrates the structure of the objects",
+        "The messages are placed along the y-axis in collaboration diagram while the messages in the x-axis are placed along the x-axis",
+        "In sequence diagram, the objects are shown using arrows, while objects that interact with the interaction are placed on the x-axis in collaboration diagram",
+        "Sequence diagram is one type of dynamic modeling while collaboration diagram is one type of static modeling"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Sequence diagrams show message ordering over time, while collaboration diagrams show the structural relationships between objects."
+    },
+    {
+      "id": 90,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following protocol transfers human readable domain names into IP addresses that can be used by web clients to connect to web servers?",
+      "imageUrl": null,
+      "options": [
+        "HTTP",
+        "SMTP",
+        "DNS",
+        "FTP"
+      ],
+      "correctAnswer": 2,
+      "explanation": "DNS (Domain Name System) translates human-readable domain names into IP addresses."
+    },
+    {
+      "id": 91,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following Object Oriented Programming features represents the process of identifying methods/statements for execution at runtime?",
+      "imageUrl": null,
+      "options": [
+        "Inheritance",
+        "Dynamic Binding",
+        "Message Passing",
+        "Abstraction"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Dynamic Binding is the process of resolving method calls at runtime based on the actual object type."
+    },
+    {
+      "id": 92,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which one of the following is a valid host address?",
+      "imageUrl": null,
+      "options": [
+        "172.17.61.255/18",
+        "172.19.65.0/18",
+        "192.168.255.31/27",
+        "192.168.0.224/27"
+      ],
+      "correctAnswer": 3,
+      "explanation": "192.168.0.224/27 is a valid host address (not network or broadcast address) in its subnet."
+    },
+    {
+      "id": 93,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which of the following is NOT a valid Java identifier?",
+      "imageUrl": null,
+      "options": [
+        "_variable1",
+        "$amount",
+        "2ndPlace",
+        "firstName"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Java identifiers cannot start with numbers, making '2ndPlace' invalid."
+    },
+    {
+      "id": 94,
+      "exam": "2017 Tir Exit Exam",
+      "question": "In Android development, which component is responsible for managing the app's UI and user interactions?",
+      "imageUrl": null,
+      "options": [
+        "Service",
+        "Content Provider",
+        "Activity",
+        "Broadcast Receiver"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Activities are the components that manage UI and user interactions in Android apps."
+    },
+    {
+      "id": 95,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which SQL clause is used to filter groups in a GROUP BY query?",
+      "imageUrl": null,
+      "options": [
+        "WHERE",
+        "HAVING",
+        "FILTER",
+        "CONDITION"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The HAVING clause filters groups after aggregation, while WHERE filters rows before aggregation."
+    },
+    {
+      "id": 96,
+      "exam": "2017 Tir Exit Exam",
+      "question": "What is the default port number for HTTP traffic?",
+      "imageUrl": null,
+      "options": [
+        "80",
+        "443",
+        "8080",
+        "21"
+      ],
+      "correctAnswer": 0,
+      "explanation": "HTTP traffic uses port 80 by default, while HTTPS uses 443."
+    },
+    {
+      "id": 97,
+      "exam": "2017 Tir Exit Exam",
+      "question": "Which of the following is NOT a valid primitive data type in Java?",
+      "imageUrl": null,
+      "options": [
+        "int",
+        "boolean",
+        "string",
+        "double"
+      ],
+      "correctAnswer": 2,
+      "explanation": "'string' is not a primitive type in Java (it's 'String' which is a class). The primitive types are byte, short, int, long, float, double, boolean, and char."
+    }
+  ],
+  "2017_sene_exit_exam": [
+    {
+      "id": 98,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following Java keyword is used to declare an exception?",
+      "imageUrl": null,
+      "options": [
+        "catch",
+        "finally",
+        "throws",
+        "void"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The 'throws' keyword is used in Java to declare that a method can throw an exception."
+    },
+    {
+      "id": 99,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is false about Active directory (AD)?",
+      "imageUrl": null,
+      "options": [
+        "AD is a directory service developed by GNU",
+        "AD uses LDAP versions 2.0 and 3.0",
+        "AD checks password and determines whether the user is a system administrator or not",
+        "AD-Domain Services is called a domain controller"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Active Directory was developed by Microsoft, not GNU. This makes statement 'a' false."
+    },
+    {
+      "id": 100,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What is the advantage of distributed databases?",
+      "imageUrl": null,
+      "options": [
+        "Minimize performance",
+        "Maximize reliability and availability",
+        "Maximize complexity",
+        "Minimize Scalability"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Distributed databases maximize reliability and availability by distributing data across multiple sites."
+    },
+    {
+      "id": 101,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Copies of data may be stored at multiple sites for better availability, performance, and reliability. This distributed database concept is called?",
+      "imageUrl": null,
+      "options": [
+        "Integration",
+        "Replication",
+        "Fragmentation",
+        "Duplication"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Data Replication is the process of storing copies of data at multiple sites for better availability, performance, and reliability."
+    },
+    {
+      "id": 102,
+      "exam": "2017 Sene Exit Exam",
+      "question": "A technique used to break up the database into logically related units is called?",
+      "imageUrl": null,
+      "options": [
+        "Data fragmentation",
+        "Data integration",
+        "Data replication",
+        "Data allocation"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Data Fragmentation is the technique of breaking up a database into smaller, logically related units."
+    },
+    {
+      "id": 103,
+      "exam": "2017 Sene Exit Exam",
+      "question": "One of the following statements is not correct about an array?",
+      "imageUrl": null,
+      "options": [
+        "An array can store many different types of values",
+        "The first element in every array has index zero",
+        "An index must be a nonnegative integer",
+        "An array is a group of variables that all have the same type"
+      ],
+      "correctAnswer": 0,
+      "explanation": "An array stores elements of the same type, not different types. This makes statement 'a' incorrect."
+    },
+    {
+      "id": 104,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following PHP function is used to search string or character within a string?",
+      "imageUrl": null,
+      "options": [
+        "strrev() function",
+        "strlen() function",
+        "strpos() function",
+        "strcount() function"
+      ],
+      "correctAnswer": 2,
+      "explanation": "strpos() is the PHP function used to search for a string or character within another string."
+    },
+    {
+      "id": 105,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following PHP Programming is used to find the length of a string?",
+      "imageUrl": null,
+      "options": [
+        "<?php echo strrev(\"Hello world!\"); ?>",
+        "<?php echo strpos(\"Hello world!\",\"world\"); ?>",
+        "<?php echo strlen(\"Hello world!\"); ?>",
+        "No PHP code"
+      ],
+      "correctAnswer": 2,
+      "explanation": "strlen() function is used to find the length of a string in PHP."
+    },
+    {
+      "id": 106,
+      "exam": "2017 Sene Exit Exam",
+      "question": "A constraint that states 'No value of the attribute should be beyond the allowable limits' is called?",
+      "imageUrl": null,
+      "options": [
+        "Referential Integrity",
+        "Domain Integrity",
+        "Enterprise Integrity",
+        "Entity Integrity"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Domain Integrity ensures that attribute values fall within allowable limits and data types."
+    },
+    {
+      "id": 107,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What is Constructive Cost Model (COCOMO) in project management?",
+      "imageUrl": null,
+      "options": [
+        "It is an automated software estimation model to estimate project costs",
+        "It is a technique used to calculate the expected time for a particular task",
+        "It is a method to show project tasks and their interrelationships",
+        "It is a graphical technique used in planning and controlling projects"
+      ],
+      "correctAnswer": 0,
+      "explanation": "COCOMO is an automated software estimation model used to estimate project costs, effort, and schedule."
+    },
+    {
+      "id": 108,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What is Primary Partition?",
+      "imageUrl": null,
+      "options": [
+        "Used to organize files and folders on the hard disk",
+        "Active Partition used to boot the system",
+        "Formatted Partitions which cannot be for any file system",
+        "Unallocated space on the hard disk"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Primary Partition can be active and used to boot the system."
+    },
+    {
+      "id": 109,
+      "exam": "2017 Sene Exit Exam",
+      "question": "_____ is validation test is also called an Existence Test or Required Field Test.",
+      "imageUrl": null,
+      "options": [
+        "Numeric Data Test",
+        "Range Data Test",
+        "Reasonableness test",
+        "Missing Data Test"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Missing Data Test is also called an Existence Test or Required Field Test, as it checks if required fields have data."
+    },
+    {
+      "id": 110,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is true about Remark in VB Programming?",
+      "imageUrl": null,
+      "options": [
+        "A Remark is only read by Machines",
+        "Remark statements are non-executable",
+        "Remark is useful for small program",
+        "// used for single line remark"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Remark statements in VB are non-executable and are used for comments. The correct comment symbol in VB is ' (single quote)."
+    },
+    {
+      "id": 111,
+      "exam": "2017 Sene Exit Exam",
+      "question": "If your computer will take a long time to open applications and requests, then what will be the cause of this issue?",
+      "imageUrl": null,
+      "options": [
+        "A power supply is malfunctioning",
+        "The motherboard or the CPU is not functioning",
+        "Hard disk problem or an incorrect/loose connection",
+        "The memory modules has failed"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Slow application loading is often caused by hard disk problems or data access issues."
+    },
+    {
+      "id": 112,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is true about symmetric Key Algorithms?",
+      "imageUrl": null,
+      "options": [
+        "The sender and receiver use the shared or single key",
+        "The Sender uses the Public Key to encrypt whereas the receiver uses private decrypt",
+        "The Sender uses the private Key to encrypt whereas the receiver uses Public decrypt",
+        "The sender and receiver use both Private and Public keys"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Symmetric key algorithms use a single shared key for both encryption and decryption."
+    },
+    {
+      "id": 113,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What is the error of the following program segment? int[] b = new int[10]; for (int i = 0; i <= b.length; i++) b[i] = 1;",
+      "imageUrl": null,
+      "options": [
+        "Array assignment is not correct",
+        "Array initialization is not correct",
+        "No error",
+        "Referencing an array element outside the bounds"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The loop runs from i=0 to i<=b.length (10), accessing b[10] which is out of bounds. Valid indices are 0-9."
+    },
+    {
+      "id": 114,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following MySQL command is used to view only Student with ID Number ET00123/13 from Table student?",
+      "imageUrl": null,
+      "options": [
+        "VIEW * FROM Student;",
+        "SELECT * FROM Student;",
+        "SELECT * FROM Student WHERE ID='ET00123/13';",
+        "VIEW * FROM Student WHERE ID='ET00123/13';"
+      ],
+      "correctAnswer": 2,
+      "explanation": "SELECT * FROM Student WHERE ID='ET00123/13'; is the correct SQL query to retrieve a specific record."
+    },
+    {
+      "id": 115,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following Cisco's router command is used to assign name GC to the router?",
+      "imageUrl": null,
+      "options": [
+        "Host GC",
+        "Hostname GC",
+        "Host name GC",
+        "Name GC"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Hostname GC is the correct Cisco command used to assign the name 'GC' to a router."
+    },
+    {
+      "id": 116,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is not the advantage of object oriented programming?",
+      "imageUrl": null,
+      "options": [
+        "Portable and having no implementation dependent",
+        "Reuse to build more reliable and effective systems",
+        "Lesser extensibility",
+        "Robust to eliminate error-prone situations"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Lesser extensibility is not an advantage; OOP actually provides good extensibility through inheritance and polymorphism."
+    },
+    {
+      "id": 117,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Choose the correct order of Data flow in OSI model when Client receives data from server.",
+      "imageUrl": null,
+      "options": [
+        "Application>Presentation>Session>Transport>Network>Data Link>Physical",
+        "Physical>Network>Data Link>Transport>Presentation>Session>Application",
+        "Physical>Data Link>Network>Transport>Session>Presentation>Application",
+        "Physical>Network>Data Link>Transport>Session>Presentation>Application"
+      ],
+      "correctAnswer": 2,
+      "explanation": "When receiving data, it travels from Physical layer up to Application layer. The correct order is: Physical>Data Link>Network>Transport>Session>Presentation>Application."
+    },
+    {
+      "id": 118,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is an example of Asymmetric Key Algorithm?",
+      "imageUrl": null,
+      "options": [
+        "Caesar",
+        "Classical",
+        "RSA",
+        "Playfair"
+      ],
+      "correctAnswer": 2,
+      "explanation": "RSA is an asymmetric key algorithm that uses public and private key pairs."
+    },
+    {
+      "id": 119,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which skill is not such important for a project manager to manage information technology projects?",
+      "imageUrl": null,
+      "options": [
+        "Mathematical skill",
+        "Management skill",
+        "Leadership skill",
+        "Technical skill"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Mathematical skill is less critical compared to management, leadership, and technical skills for an IT project manager."
+    },
+    {
+      "id": 120,
+      "exam": "2017 Sene Exit Exam",
+      "question": "A type of visibility that enables the members of the class to be accessed by any class is called?",
+      "imageUrl": null,
+      "options": [
+        "Private",
+        "Protected",
+        "Default",
+        "Public"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Public access modifier allows members to be accessed by any class."
+    },
+    {
+      "id": 121,
+      "exam": "2017 Sene Exit Exam",
+      "question": "The purpose of implementation or coding in project management is?",
+      "imageUrl": null,
+      "options": [
+        "To transform the requirements specified in the SRS document into a structure",
+        "To translate the software design into source code",
+        "To convert logical design into conceptual design",
+        "To install and operate the developed information system"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Implementation or coding translates the software design into actual source code."
+    },
+    {
+      "id": 122,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following knowledge area of project management is misrepresented?",
+      "imageUrl": null,
+      "options": [
+        "Scope management - Managing all the work required to complete the project",
+        "Cost management - Preparing and managing the budget for the project",
+        "Communications management - Concerned with making effective use of the people",
+        "Time management - Estimating how long it will take to complete the work"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Communications management is about managing project communications, not 'making effective use of people' - that would be Human Resource Management."
+    },
+    {
+      "id": 123,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following tag is used to create links with different HTML pages?",
+      "imageUrl": null,
+      "options": [
+        "<link>",
+        "<anchor>",
+        "<a>",
+        "<href>"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The <a> (anchor) tag is used to create hyperlinks in HTML."
+    },
+    {
+      "id": 124,
+      "exam": "2017 Sene Exit Exam",
+      "question": "A graphic representation that illustrates the movement of data between external entities, processes and data stores within a system is called?",
+      "imageUrl": null,
+      "options": [
+        "Data-flow diagram",
+        "Entity-relationship diagram",
+        "Sequence diagram",
+        "Class-diagram"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Data-flow diagrams show the movement of data between external entities, processes, and data stores."
+    },
+    {
+      "id": 125,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is Count Controlled loop in Visual Basic programming?",
+      "imageUrl": null,
+      "options": [
+        "Do while Loop",
+        "For...Next Loop",
+        "Nested Loop",
+        "Do Loop"
+      ],
+      "correctAnswer": 1,
+      "explanation": "For...Next Loop is a count-controlled loop that executes a specific number of times."
+    },
+    {
+      "id": 126,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following Protocol is used for file uploading and downloading?",
+      "imageUrl": null,
+      "options": [
+        "NTP",
+        "SMTP",
+        "FTP",
+        "HTTP"
+      ],
+      "correctAnswer": 2,
+      "explanation": "FTP (File Transfer Protocol) is used for uploading and downloading files."
+    },
+    {
+      "id": 127,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following command is used to show the OSPF operation on the interfaces?",
+      "imageUrl": null,
+      "options": [
+        "router#show ip ospf database",
+        "router#show ip ospf",
+        "router#show ip ospf events",
+        "router#show ip ospf interface"
+      ],
+      "correctAnswer": 3,
+      "explanation": "show ip ospf interface command displays OSPF operation information on interfaces."
+    },
+    {
+      "id": 128,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is not the benefit of multithreading in java?",
+      "imageUrl": null,
+      "options": [
+        "Improved performance and concurrency",
+        "Simultaneous and parallelized occurrence of tasks",
+        "Enable programmers to do multiple tasks at a time",
+        "Increase cost of maintenance"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Multithreading reduces cost of maintenance by simplifying code structure, not increasing it."
+    },
+    {
+      "id": 129,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Host command in Linux is used for: ______ ?",
+      "imageUrl": null,
+      "options": [
+        "To check and display information on domain",
+        "To check packet flow",
+        "To check host is alive",
+        "To check local machine"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Host command in Linux is used to check and display DNS information about a domain."
+    },
+    {
+      "id": 130,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following loop will always execute the block of code once, it will then check the condition, and repeat the loop while the specified condition is true in PHP programming?",
+      "imageUrl": null,
+      "options": [
+        "Do... while",
+        "While",
+        "For each",
+        "For"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Do...while loop executes the block once, then checks the condition and repeats while true."
+    },
+    {
+      "id": 131,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What is database schema?",
+      "imageUrl": null,
+      "options": [
+        "It is a collection of logically related data",
+        "It is the description of a database",
+        "It is a named, two-dimensional table of data",
+        "It is an interface that used to interact with the database management system"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Database schema is the description of a database's structure, including tables, relationships, and constraints."
+    },
+    {
+      "id": 132,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is not a traditional method of Collecting System requirements?",
+      "imageUrl": null,
+      "options": [
+        "Analyzing procedures and documents",
+        "Directly observing users",
+        "Interviewing and Listening",
+        "Prototyping"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Prototyping is a modern method for collecting requirements, not a traditional method. Traditional methods include interviews, observation, and document analysis."
+    },
+    {
+      "id": 133,
+      "exam": "2017 Sene Exit Exam",
+      "question": "The key difference between structured and object oriented Paradigm is that?",
+      "imageUrl": null,
+      "options": [
+        "In structured approach applications is developed in which data is separated from behavior",
+        "In structured approach, a system be separated into data and functions",
+        "In object oriented approach, system is defined as a collection of interacting objects",
+        "In object oriented approach, systems is developed based on data or processes rather than objects"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The key difference is that OOP defines a system as a collection of interacting objects."
+    },
+    {
+      "id": 134,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following pair is incorrect?",
+      "imageUrl": null,
+      "options": [
+        "Data flow diagram -> A picture of the movement of data between external entities and the processes",
+        "Network diagram -> A diagram that depicts project tasks and their interrelationships",
+        "Class diagram -> Shows the conditional logic for the sequence of system activities needed to accomplish a business",
+        "Entity-relationship diagram -> graphical representation of the data for an organization"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Class diagrams show class relationships, not conditional logic. Sequence or Activity diagrams show business process logic."
+    },
+    {
+      "id": 135,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Select the wrong statement from the given alternatives below?",
+      "imageUrl": null,
+      "options": [
+        "Domain is a set of allowable values for one or more attributes",
+        "Attribute is a named column of a relation",
+        "Tuple is another name of a field",
+        "Relation is a table with rows and columns"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Tuple is another name for a row or record, not a field. A field is an attribute/column."
+    },
+    {
+      "id": 136,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is the collection of user accounts that share the same security rights and permissions?",
+      "imageUrl": null,
+      "options": [
+        "User name",
+        "User group",
+        "User type",
+        "User admin"
+      ],
+      "correctAnswer": 1,
+      "explanation": "User group is a collection of user accounts that share the same security rights and permissions."
+    },
+    {
+      "id": 137,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following activity cannot be carried out during project execution?",
+      "imageUrl": null,
+      "options": [
+        "Managing Changes to the Baseline Project Plan",
+        "Describing Project Scope, Alternatives, and Feasibility",
+        "Communicating the Project Status",
+        "Monitoring Project Progress against the Baseline Project Plan"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Describing Project Scope, Alternatives, and Feasibility is done during project initiation/planning, not execution."
+    },
+    {
+      "id": 138,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Advantage of hierarchical Network design over flat design is __?",
+      "imageUrl": null,
+      "options": [
+        "Applicable for the large and complicated networks",
+        "They both are the same to design and configure",
+        "Easy to configure because of few devices and users",
+        "Applicable for the small networks and few nodes"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Hierarchical network design is advantageous for large and complicated networks as it provides better scalability and management."
+    },
+    {
+      "id": 139,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following statement is not true? (federated database)",
+      "imageUrl": null,
+      "options": [
+        "In a federated and multi-database system, each server is independent and has a very high degree of local autonomy",
+        "In a heterogeneous distributed database, different machine use different DBMS software",
+        "In a heterogeneous distributed database, all servers and clients use identical DBMSs software",
+        "In a federated database system, there is some global view or schema of the federation of databases that is shared by the applications"
+      ],
+      "correctAnswer": 2,
+      "explanation": "In a heterogeneous distributed database, different servers may use different DBMS software, not identical. This makes statement 'c' false."
+    },
+    {
+      "id": 140,
+      "exam": "2017 Sene Exit Exam",
+      "question": "HTTPS is ___?",
+      "imageUrl": null,
+      "options": [
+        "It uses the port number 8080",
+        "It is the secured HTTP and useful for financial industry",
+        "It is the same as HTTP",
+        "It is not important for the web programming"
+      ],
+      "correctAnswer": 1,
+      "explanation": "HTTPS is the secured version of HTTP that uses SSL/TLS encryption and is essential for financial and secure transactions."
+    },
+    {
+      "id": 141,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following statement is not true? (transaction schedule)",
+      "imageUrl": null,
+      "options": [
+        "Concurrent execution of transactions improves throughput and system utilization",
+        "A schedule is serializable if it is equivalent to some serial schedule",
+        "A Serial schedule is serializable",
+        "r1(X); w1(X); r2(X); r1(Y); w2(X); w1(Y); a1; a2; this schedule is not recoverable schedule"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The schedule may actually be recoverable if the aborts and commits are handled properly."
+    },
+    {
+      "id": 142,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following standards is used for Cabling the network cables?",
+      "imageUrl": null,
+      "options": [
+        "568 C",
+        "568 A",
+        "658 A",
+        "865 B"
+      ],
+      "correctAnswer": 1,
+      "explanation": "TIA/EIA-568-A is a standard for network cable wiring."
+    },
+    {
+      "id": 143,
+      "exam": "2017 Sene Exit Exam",
+      "question": "_____ refers to the management of one or more hardware and software systems.",
+      "imageUrl": null,
+      "options": [
+        "Network Management",
+        "System Management",
+        "Infrastructure Management",
+        "Database Management"
+      ],
+      "correctAnswer": 1,
+      "explanation": "System Management refers to the management of one or more hardware and software systems."
+    },
+    {
+      "id": 144,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following routing protocol is used to connect two autonomous systems?",
+      "imageUrl": null,
+      "options": [
+        "EIGRP",
+        "OSPF",
+        "RIP",
+        "BGP"
+      ],
+      "correctAnswer": 3,
+      "explanation": "BGP (Border Gateway Protocol) is used to connect different autonomous systems on the internet."
+    },
+    {
+      "id": 145,
+      "exam": "2017 Sene Exit Exam",
+      "question": "ABC Company has daily transaction which includes the financial and sales data. The company CEO orders to be Regarding the Data must be secured and free from man-made and natural attacks. As IT expert what type of advisable?",
+      "imageUrl": null,
+      "options": [
+        "Establishing Task force to monitor physical security",
+        "Handling daily/weekly Backups",
+        "Locking systems with good password",
+        "Handling Printed document"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Regular backups are essential to protect data against both man-made and natural attacks/incidents."
+    },
+    {
+      "id": 146,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which software testing type brings together all of the modules that a program comprises?",
+      "imageUrl": null,
+      "options": [
+        "Integration testing",
+        "Unit testing",
+        "System testing",
+        "Stub testing"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Integration testing is used to test the interaction between different modules when they are combined together."
+    },
+    {
+      "id": 147,
+      "exam": "2017 Sene Exit Exam",
+      "question": "The Java database connectivity (JDBC) application program interface (API) that provides communication with database is called?",
+      "imageUrl": null,
+      "options": [
+        "Connection",
+        "Statement",
+        "Driver",
+        "ResultSet"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The Connection interface in JDBC provides communication with the database."
+    },
+    {
+      "id": 148,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Rules that should be obeyed while manipulating the data is called?",
+      "imageUrl": null,
+      "options": [
+        "Relationship",
+        "Constraints",
+        "Entities",
+        "Attributes"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Constraints are rules that must be followed when manipulating data to maintain data integrity."
+    },
+    {
+      "id": 149,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Good mobile user interface cannot be characterized by?",
+      "imageUrl": null,
+      "options": [
+        "How fast information can be input through the user interface",
+        "How it is complex and hard to use",
+        "How easy it is to use a certain user interface",
+        "How fast the user can process the information coming back from the system"
+      ],
+      "correctAnswer": 1,
+      "explanation": "A good mobile UI is characterized by being simple and easy to use, not complex and hard to use."
+    },
+    {
+      "id": 150,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following sequence of project management process phases are stated correctly?",
+      "imageUrl": null,
+      "options": [
+        "Planning the project -> Initiating the project -> Executing the project -> Closing down the project",
+        "Initiating the project -> Planning the project -> Executing the project -> Closing down the project",
+        "Planning the project -> Initiating the project -> Closing down the project -> Executing the project",
+        "Initiating the project -> Planning the project -> Closing down the project -> Executing the project"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The correct project management process sequence is: Initiating -> Planning -> Executing -> Closing."
+    },
+    {
+      "id": 151,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is not true? (virus/worm)",
+      "imageUrl": null,
+      "options": [
+        "Virus and a worm are similar in that both forms of malicious software",
+        "Virus needs another program in order to spread",
+        "Virus spreads from system to system automatically",
+        "Viruses and worms can be used to infect a system"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Viruses need a host program to spread, unlike worms that spread automatically. So statement 'c' is false."
+    },
+    {
+      "id": 152,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Aster is working as a chief executive secretary in ABC Company. Her computer is dead and not starts at all. Then, as a computer technician what will be your recommended solution for this issue if she asks you to fix the problem?",
+      "imageUrl": null,
+      "options": [
+        "Hard disk is failed so that reformatting it",
+        "Power supply is malfunctioning so that measure voltages on different connectors",
+        "Motherboard or the CPU is not functioning so that must be replaced",
+        "Replace the old computer by the new one"
+      ],
+      "correctAnswer": 1,
+      "explanation": "When a computer is completely dead and won't start, the first thing to check is the power supply."
+    },
+    {
+      "id": 153,
+      "exam": "2017 Sene Exit Exam",
+      "question": "What does Plug and Play (PnP) compatible refers to?",
+      "imageUrl": null,
+      "options": [
+        "Attaching the connector in correct polarity",
+        "Device to be detected and configured automatically",
+        "Devices that are used to control access to a system",
+        "Cards used to extend the functionality of a computer"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Plug and Play refers to devices that can be automatically detected and configured by the operating system."
+    },
+    {
+      "id": 154,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following is default VLAN in Cisco Switches?",
+      "imageUrl": null,
+      "options": [
+        "No VLAN",
+        "VLAN 0",
+        "VLAN 1",
+        "VLAN 2"
+      ],
+      "correctAnswer": 2,
+      "explanation": "VLAN 1 is the default VLAN in Cisco switches."
+    },
+    {
+      "id": 155,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which HTML code correctly creates an ordered list of three items?",
+      "imageUrl": null,
+      "options": [
+        "<ol><li>Cyber security</li><li>Data Science</li><li>Cloud Computing</li></ul>",
+        "<ol><li>Cyber security</li><li>Data Science</li><li>Cloud Computing</li></ol>",
+        "<li><ol>Cyber security</li><li>Data Science</li><li>Cloud Computing</li></ul>",
+        "<ul><li>Cyber security</li><li>Data Science</li><li>Cloud Computing</li></ul>"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The correct HTML for an ordered list is <ol> with <li> items, and </ol> closing tag."
+    },
+    {
+      "id": 156,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following method is used to delete leading and trailing blank characters?",
+      "imageUrl": null,
+      "options": [
+        "Empty",
+        "Trim",
+        "Flash",
+        "Delete"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Trim is the method used to remove leading and trailing whitespace characters from a string."
+    },
+    {
+      "id": 157,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is not true about Power-On Self-Test (POST)?",
+      "imageUrl": null,
+      "options": [
+        "It detects and tests major hardware components",
+        "It is a software diagnostic tool to identify software problem",
+        "It is a Microsoft Diagnostics (MSD) program to detect software errors",
+        "It cannot indicate whether there is a problem with the hard disk"
+      ],
+      "correctAnswer": 2,
+      "explanation": "POST is a hardware diagnostic tool, not a Microsoft Diagnostics program for software errors."
+    },
+    {
+      "id": 158,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following command used for canceling privileges?",
+      "imageUrl": null,
+      "options": [
+        "CANCEL",
+        "GIVE",
+        "GRANT",
+        "REVOKE"
+      ],
+      "correctAnswer": 3,
+      "explanation": "REVOKE is the SQL command used to cancel privileges that have been granted."
+    },
+    {
+      "id": 159,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which one of the following Linux command is used to print the working directory?",
+      "imageUrl": null,
+      "options": [
+        "Pwd",
+        "CD",
+        "Head",
+        "MkDir"
+      ],
+      "correctAnswer": 0,
+      "explanation": "pwd (Print Working Directory) command displays the current directory path in Linux."
+    },
+    {
+      "id": 160,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following MySQL Query is used to insert data from VB GUI Form (TextBox1, TextBox2 and TextBox3) to the table STUDENT with data column of Fullname, ID and Dept?",
+      "imageUrl": null,
+      "options": [
+        "INSERT STUDENT values (\" & TextBox1.Text & \", \" & TextBox2.Text & \", \" & TextBox3.Text & \")",
+        "INSERT INTO STUDENT values(\" & TextBox1.Text & \", \" & TextBox2.Text & \", \" & TextBox3.Text & \")",
+        "INSERT INTO STUDENT (fullname, ID, Dept) VALUES (\" & TextBox1.Text & \", \" & TextBox2.Text & \", \" & TextBox3.Text & \")",
+        "INSERT INTO STUDENT (fullname, ID, Dept)(\" & TextBox1.Text & \", \" & TextBox2.Text & \", \" & TextBox3.Text & \")"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The correct syntax is INSERT INTO STUDENT (column1, column2, column3) VALUES (value1, value2, value3)."
+    },
+    {
+      "id": 161,
+      "exam": "2017 Sene Exit Exam",
+      "question": "_____ used to measure the maximum data transfer rate of a network in an organization?",
+      "imageUrl": null,
+      "options": [
+        "Frequency",
+        "Packet size",
+        "Speed",
+        "Bandwidth"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Bandwidth is used to measure the maximum data transfer rate of a network."
+    },
+    {
+      "id": 162,
+      "exam": "2017 Sene Exit Exam",
+      "question": "Which of the following is the correct way to declare two-dimensional array in Java?",
+      "imageUrl": null,
+      "options": [
+        "arrayType[][] arrayName = arrayType[numRows][numColumns];",
+        "arrayName arrayType[][] = new arrayType[numRows][numColumns];",
+        "arrayType[][] arrayName = new arrayType[numRows][numColumns];",
+        "arrayType[][] arrayName = new [numRows][numColumns];"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The correct syntax is: arrayType[][] arrayName = new arrayType[numRows][numColumns];"
+    },
+    {
+      "id": 163,
+      "exam": "2017 Sene Exit Exam",
+      "question": "In a mobile user interface allowing users to make mistakes and giving them the opportunity to revoke changes refers to?",
+      "imageUrl": null,
+      "options": [
+        "Consistency",
+        "Gestures",
+        "Tolerance",
+        "Uniqueness"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Tolerance in UI design allows users to make mistakes and provides options to undo or revoke changes."
+    },
+    {
+      "id": 164,
+      "exam": "2017 Sene Exit Exam",
+      "question": "The purpose of analysis in system analysis and design is?",
+      "imageUrl": null,
+      "options": [
+        "To transform requirements into a structure that is suitable for implementation",
+        "To translate the software design into source code",
+        "To determine what information are needed to support objectives and functions of the organization",
+        "To ensure that the developed system functions according to its requirements"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Analysis phase determines what information is needed to support organizational objectives and functions."
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import api, { API_BASE_URL } from '../api/axios';
 import ProgressBar from './ProgressBar';
 import { BookOpen, CheckCircle2, Clock, Star, ArrowRight, Play, Download } from 'lucide-react';
-import { API_BASE_URL } from '../api/axios';
 
 const courseGradients = [
   { card: 'from-blue-500/10 to-blue-600/5', icon: 'bg-blue-500/10', accent: 'text-blue-500' },
@@ -103,9 +103,26 @@ const CourseCard = ({ course, index, isRecommended, onClick }) => {
           <BookOpen size={20} strokeWidth={2} />
           {/* Course Download Button */}
           <button
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              window.open(`${API_BASE_URL}/materials/download-course/${course.id}`, '_blank');
+              const token = localStorage.getItem('token');
+              try {
+                const res = await api.get(`/materials/download-course/${course.id}`, {
+                  responseType: 'blob'
+                });
+                const blob = new Blob([res.data], { type: 'application/zip' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${course.title ? course.title.replace(/[^a-zA-Z0-9]/g, '_') : 'course'}_materials.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+              } catch (err) {
+                console.error('Blob download failed, using token fallback:', err);
+                window.open(`${API_BASE_URL}/materials/download-course/${course.id}?token=${token || ''}`, '_blank');
+              }
             }}
             className="absolute -top-2 -right-2 p-1.5 bg-card border border-neutral-200 dark:border-neutral-800 rounded-lg text-text/40 hover:text-primary opacity-0 group-hover/icon:opacity-100 transition-all shadow-md z-20"
             title="Download Course (ZIP)"

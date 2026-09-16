@@ -631,14 +631,26 @@ const ExamMode = () => {
          <div className="max-w-6xl mx-auto w-full space-y-8">
             <div>
               <h1 className="text-3xl md:text-4xl font-black tracking-tight text-text mb-2">Select Official Exam</h1>
-              <p className="text-sm md:text-base text-text/60 font-medium">Choose an exam to begin your simulation with 100 randomized questions.</p>
+              <p className="text-sm md:text-base text-text/60 font-medium">Choose an official exam to begin your examination simulation.</p>
             </div>
 
             {officialExams.length > 0 ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {officialExams.map((exam) => {
                      const isModel = exam.title.toLowerCase().includes('model');
-                     const year = exam.title.includes('2015') ? '2015' : '2016';
+                     
+                     let count = 100;
+                     if (exam.question_count !== undefined && exam.question_count !== null) {
+                       count = exam.question_count;
+                     } else if (exam.questionCount !== undefined && exam.questionCount !== null) {
+                       count = exam.questionCount;
+                     } else if (exam.description) {
+                       const m = exam.description.match(/(\d+)\s*questions?/i);
+                       if (m) count = parseInt(m[1], 10);
+                     } else if (exam.title) {
+                       const m = exam.title.match(/(\d+)\s*questions?/i);
+                       if (m) count = parseInt(m[1], 10);
+                     }
 
                      return (
                        <button 
@@ -654,7 +666,9 @@ const ExamMode = () => {
                            }`}>
                              {isModel ? 'Model Exam' : 'Official Exit Exam'}
                            </span>
-                           <span className="text-xs font-bold text-text/40">{year}</span>
+                           <span className="text-xs font-medium text-text/40">
+                             {count} Q
+                           </span>
                          </div>
 
                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 ${
@@ -669,7 +683,7 @@ const ExamMode = () => {
                            {exam.title}
                          </h3>
                          <p className="text-xs font-medium text-text/50 mb-6 leading-relaxed">
-                           Full length exam with 100 questions covering core Information Technology topics.
+                           {exam.description || `Full length exit exam with ${count} questions covering core Information Technology topics.`}
                          </p>
 
                          <div className="mt-auto pt-4 border-t border-neutral-100 dark:border-neutral-800/80 w-full flex items-center justify-between text-xs text-text/60">
