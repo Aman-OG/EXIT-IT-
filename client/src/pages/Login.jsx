@@ -169,8 +169,16 @@ const Login = () => {
           />
         </div>
 
+        {/* Sign Up Link */}
+        <p className="text-center text-xs font-bold text-text/60 pt-1">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-primary hover:underline font-black">
+            Sign up now →
+          </Link>
+        </p>
+
         {/* Privacy & Terms Note */}
-        <p className="text-center text-[11px] text-text/50 font-medium leading-relaxed pt-2">
+        <p className="text-center text-[11px] text-text/50 font-medium leading-relaxed pt-1">
           By signing in, you agree to our Terms of Service. We only use your verified Google email for platform communications.
         </p>
 

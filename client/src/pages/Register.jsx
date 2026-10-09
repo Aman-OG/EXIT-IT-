@@ -169,8 +169,16 @@ const Register = () => {
           />
         </div>
 
+        {/* Sign In Link */}
+        <p className="text-center text-xs font-bold text-text/60 pt-1">
+          Already have an account?{' '}
+          <Link to="/login" className="text-primary hover:underline font-black">
+            Sign in here →
+          </Link>
+        </p>
+
         {/* Privacy Note */}
-        <p className="text-center text-[11px] text-text/50 font-medium leading-relaxed pt-2">
+        <p className="text-center text-[11px] text-text/50 font-medium leading-relaxed pt-1">
           Fast & secure login. No passwords to remember—your verified Google email automatically links your learning progress.
         </p>
 
