@@ -217,7 +217,7 @@ const Leaderboard = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-10 lg:py-20 flex flex-col lg:flex-row items-center lg:items-center justify-between gap-12 lg:gap-20">
             
             {/* LEFT COLUMN: INFO */}
-            <div className="flex-1 space-y-6 text-center lg:text-left order-2 lg:order-1">
+            <div className="flex-1 space-y-6 text-center lg:text-left order-1">
                 <div className="inline-flex p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-xl shadow-primary/5 mb-2 rotate-3 hover:rotate-0 transition-transform duration-500">
                     <Trophy size={42} className="text-primary drop-shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]" />
                 </div>
@@ -235,7 +235,7 @@ const Leaderboard = () => {
             </div>
 
             {/* RIGHT COLUMN: 3D PODIUM */}
-            <div className="flex-1 flex justify-center order-1 lg:order-2 w-full max-w-2xl min-h-[200px]">
+            <div className="flex-1 flex justify-center order-2 w-full max-w-2xl min-h-[200px]">
                 <div className="flex justify-center items-end gap-1.5 md:gap-4 w-full transform scale-95 lg:scale-100 pb-4">
                     {/* RANK 2 */}
                     {top3[1] && (
