@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const pool = require('../config/db');
+const notificationsController = require('../notifications/notifications.controller');
 
 // Generate JWT — sets HTTP-only cookie AND returns the token string
 // so the client can also store it in localStorage (needed for cross-origin deployments)
@@ -52,6 +53,16 @@ const registerUser = async (req, res) => {
 
     if (newUser.rows.length > 0) {
       const token = generateToken(res, newUser.rows[0].id, newUser.rows[0].role);
+
+      // Dispatch Welcome Email and Notification
+      notificationsController.createNotification(
+        newUser.rows[0].id,
+        'system_announcements',
+        `Welcome to EXIT-IT, ${name}! 🎓`,
+        `Welcome to EXIT-IT! We're excited to accompany you on your learning journey. Start by exploring Course study guides, building your daily streak, and testing your skills with practice quizzes.`,
+        '/dashboard'
+      ).catch(err => console.error('Failed to send welcome notification:', err));
+
       res.status(201).json({ ...newUser.rows[0], token });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -428,6 +439,15 @@ const googleAuth = async (req, res) => {
         [name, email, hashedPassword, 2]
       );
       user = newUser.rows[0];
+
+      // Dispatch Welcome Email for new Google user
+      notificationsController.createNotification(
+        user.id,
+        'system_announcements',
+        `Welcome to EXIT-IT, ${user.name}! 🎓`,
+        `Welcome to EXIT-IT! We're excited to accompany you on your learning journey. Start by exploring Course study guides, building your daily streak, and testing your skills with practice quizzes.`,
+        '/dashboard'
+      ).catch(err => console.error('Failed to send Google welcome notification:', err));
     } else {
       user = userResult.rows[0];
     }

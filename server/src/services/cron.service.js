@@ -23,8 +23,8 @@ const streakWarningJob = cron.schedule('0 20 * * *', async () => {
       await notificationsController.createNotification(
         user.id,
         'streak_warnings',
-        'Your streak is at risk!',
-        `You haven't studied today. Your ${user.current_streak}-day streak will be lost at midnight unless you study now${user.freeze_count > 0 ? ' or use a streak freeze' : ''}.`,
+        `🔥 Don't lose your ${user.current_streak}-day streak on EXIT-IT!`,
+        `Keep your momentum alive! You haven't studied today, and your ${user.current_streak}-day streak will be lost at midnight. Complete at least one quiz question or review flashcards now${user.freeze_count > 0 ? ` (or use one of your ${user.freeze_count} streak freezes)` : ''} to protect your hard work!`,
         '/dashboard'
       );
     }

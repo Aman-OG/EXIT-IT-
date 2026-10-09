@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const notificationsController = require('./notifications.controller');
-const { protect } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 
 // All routes require authentication
 router.use(protect);
@@ -22,5 +22,9 @@ router.post('/badge-unlocked', notificationsController.notifyBadgeUnlocked);
 // Preferences
 router.get('/preferences', notificationsController.getPreferences);
 router.put('/preferences', notificationsController.updatePreferences);
+
+// Admin Broadcasts
+router.post('/broadcast', adminOnly, notificationsController.broadcastNotification);
+router.post('/broadcast/hall-of-fame', adminOnly, notificationsController.broadcastHallOfFame);
 
 module.exports = router;

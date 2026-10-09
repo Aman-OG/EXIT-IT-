@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const notificationsController = require('../notifications/notifications.controller');
 
 // Search users by name or email
 exports.searchUsers = async (req, res) => {
@@ -65,11 +66,13 @@ exports.sendFriendRequest = async (req, res) => {
     const senderRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
     const senderName = senderRes.rows[0]?.name || 'A student';
 
-    // Create notification for the recipient
-    await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message, link) 
-       VALUES ($1, 'friend_request', 'New Friend Request', $2, '/friends')`,
-      [friendId, `${senderName} sent you a friend request`]
+    // Create notification and email alert for the recipient
+    await notificationsController.createNotification(
+      friendId,
+      'friend_requests',
+      `🤝 New Friend Request`,
+      `${senderName} sent you a friend request on EXIT-IT! Check out their profile and connect.`,
+      '/friends'
     );
 
     res.json({ message: 'Friend request sent', friendship: result.rows[0] });
@@ -147,11 +150,13 @@ exports.acceptFriendRequest = async (req, res) => {
     const accepterRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
     const accepterName = accepterRes.rows[0]?.name || 'Your friend';
 
-    // Create notification for the sender
-    await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message, link) 
-       VALUES ($1, 'friend_request', 'Friend Request Accepted', $2, '/friends')`,
-      [friendship.rows[0].user_id, `${accepterName} accepted your friend request`]
+    // Create notification and email alert for the sender
+    await notificationsController.createNotification(
+      friendship.rows[0].user_id,
+      'friend_requests',
+      `✨ Friend Request Accepted`,
+      `${accepterName} accepted your friend request on EXIT-IT! You can now view each other's progress.`,
+      '/friends'
     );
 
     res.json({ message: 'Friend request accepted' });

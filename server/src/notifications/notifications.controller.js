@@ -5,17 +5,18 @@ const nodemailer = require('nodemailer');
 let transporter = null;
 
 const initializeEmailTransporter = () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
+      service: 'gmail',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
       },
     });
-    console.log('✅ Email transporter initialized');
+    console.log('✅ Email transporter initialized for ' + process.env.SMTP_USER);
   } else {
     console.log('⚠️  Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env');
   }
@@ -184,15 +185,13 @@ exports.createNotification = async (userId, type, title, message, link = null) =
       [userId]
     );
 
-    if (prefs.rows.length === 0) return;
-
-    const preferences = prefs.rows[0];
+    const preferences = prefs.rows[0] || { email_enabled: true };
     const typeEnabled = preferences[type] !== false;
 
     // Send email if enabled
     if (preferences.email_enabled && typeEnabled && transporter) {
       const user = await pool.query(`SELECT email, name FROM users WHERE id = $1`, [userId]);
-      if (user.rows.length > 0) {
+      if (user.rows.length > 0 && user.rows[0].email) {
         await sendEmail(user.rows[0].email, user.rows[0].name, title, message, link);
       }
     }
@@ -200,6 +199,96 @@ exports.createNotification = async (userId, type, title, message, link = null) =
     console.log(`✅ [Notifications] Created notification for user ${userId}: ${title}`);
   } catch (error) {
     console.error('❌ [Notifications] Error creating notification:', error);
+  }
+};
+
+// Admin Broadcast Notification & Email to all users
+exports.broadcastNotification = async (req, res) => {
+  try {
+    const { title, message, link, type = 'system_announcements', sendEmailToAll = true } = req.body;
+    
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    const usersRes = await pool.query('SELECT id, name, email FROM users');
+    const users = usersRes.rows;
+
+    let emailsDispatched = 0;
+    for (const u of users) {
+      // In-app notification
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)`,
+        [u.id, type, title, message, link || '/dashboard']
+      );
+
+      // Email dispatch
+      if (sendEmailToAll && transporter && u.email) {
+        await sendEmail(u.email, u.name, title, message, link || '/dashboard');
+        emailsDispatched++;
+      }
+    }
+
+    console.log(`📢 [Broadcast] Dispatched to ${users.length} users (${emailsDispatched} emails sent)`);
+    res.json({
+      success: true,
+      message: `Broadcast successfully sent to ${users.length} scholars (${emailsDispatched} emails delivered).`,
+      totalRecipients: users.length,
+      emailsSent: emailsDispatched
+    });
+  } catch (error) {
+    console.error('❌ [Notifications] Error in broadcast:', error);
+    res.status(500).json({ message: 'Failed to dispatch broadcast announcement' });
+  }
+};
+
+// Admin Broadcast Weekly Hall of Fame Digest
+exports.broadcastHallOfFame = async (req, res) => {
+  try {
+    const top3Res = await pool.query(`
+      SELECT name, total_score, current_streak, COALESCE(is_anonymous, TRUE) as is_anonymous 
+      FROM users 
+      ORDER BY total_score DESC, current_streak DESC 
+      LIMIT 3
+    `);
+
+    const top3 = top3Res.rows;
+    if (top3.length === 0) {
+      return res.status(400).json({ message: 'No scholars found for Hall of Fame digest' });
+    }
+
+    const p1 = top3[0] ? `${top3[0].is_anonymous ? 'Anonymous' : top3[0].name} (${(top3[0].total_score || 0).toLocaleString()} pts)` : 'None';
+    const p2 = top3[1] ? `${top3[1].is_anonymous ? 'Anonymous' : top3[1].name} (${(top3[1].total_score || 0).toLocaleString()} pts)` : 'None';
+    const p3 = top3[2] ? `${top3[2].is_anonymous ? 'Anonymous' : top3[2].name} (${(top3[2].total_score || 0).toLocaleString()} pts)` : 'None';
+
+    const title = '🏆 Weekly Hall of Fame Highlights!';
+    const message = `Check out this week's top scholars on the EXIT-IT leaderboard:\n\n🥇 1st Place: ${p1}\n🥈 2nd Place: ${p2}\n🥉 3rd Place: ${p3}\n\nJoin the challenge, study today, and climb into the Hall of Fame!`;
+
+    const usersRes = await pool.query('SELECT id, name, email FROM users');
+    const users = usersRes.rows;
+
+    let emailsDispatched = 0;
+    for (const u of users) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, 'system_announcements', $2, $3, '/leaderboard')`,
+        [u.id, title, message]
+      );
+
+      if (transporter && u.email) {
+        await sendEmail(u.email, u.name, title, message, '/leaderboard');
+        emailsDispatched++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Weekly Hall of Fame digest broadcast to ${users.length} scholars!`,
+      totalRecipients: users.length,
+      emailsSent: emailsDispatched
+    });
+  } catch (error) {
+    console.error('❌ [Notifications] Error broadcasting Hall of Fame:', error);
+    res.status(500).json({ message: 'Failed to broadcast Hall of Fame digest' });
   }
 };
 
@@ -261,19 +350,78 @@ const sendEmail = async (email, name, title, message, link) => {
   if (!transporter) return;
 
   try {
+    const fullLink = link ? `${process.env.CLIENT_URL || 'http://localhost:5173'}${link}` : null;
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: `EXIT-IT: ${title}`,
+      subject: `⚡ EXIT-IT: ${title}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4F46E5;">${title}</h2>
-          <p>Hi ${name},</p>
-          <p>${message}</p>
-          ${link ? `<p><a href="${process.env.CLIENT_URL || 'http://localhost:3000'}${link}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View in EXIT-IT</a></p>` : ''}
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 12px;">You received this email because you have notifications enabled in EXIT-IT. You can change your notification preferences in your account settings.</p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 24px; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #1e293b; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+            <!-- HEADER BRAND -->
+            <tr>
+              <td style="padding: 28px 32px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); text-align: left;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td>
+                      <span style="display: inline-block; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; text-decoration: none;">
+                        🎓 EXIT-IT
+                      </span>
+                      <span style="display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; color: #ffffff; letter-spacing: 0.5px;">
+                        Learning Platform
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- BODY CONTENT -->
+            <tr>
+              <td style="padding: 32px;">
+                <h1 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">
+                  ${title}
+                </h1>
+                
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #94a3b8; font-weight: 600;">
+                  Hello <span style="color: #e2e8f0; font-weight: 700;">${name || 'Scholar'}</span>,
+                </p>
+
+                <div style="background-color: #0f172a; border-radius: 14px; padding: 20px; margin: 16px 0 24px 0; border: 1px solid rgba(255,255,255,0.06);">
+                  <p style="margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.6;">
+                    ${message}
+                  </p>
+                </div>
+
+                ${fullLink ? `
+                  <div style="text-align: center; margin: 28px 0 12px 0;">
+                    <a href="${fullLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); text-transform: uppercase; letter-spacing: 0.5px;">
+                      Open in EXIT-IT →
+                    </a>
+                  </div>
+                ` : ''}
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td style="padding: 20px 32px; background-color: #0f172a; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.5;">
+                  You received this email because notification alerts are enabled on your EXIT-IT account.
+                  <br>
+                  You can customize or mute email alerts in your <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/notifications/settings" style="color: #818cf8; text-decoration: underline;">Notification Settings</a>.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     };
 
