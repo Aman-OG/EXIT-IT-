@@ -45,14 +45,7 @@ const markCompleted = async (req, res) => {
           if (infoRes.rows.length > 0) {
             const { user_name, material_title, course_title, course_id } = infoRes.rows[0];
 
-            // 1. Notify friends about chapter completion
-            await notifyAllFriends(
-              userId,
-              'friend_activity',
-              `${user_name} Completed a Chapter! 📖`,
-              `${user_name} just completed "${material_title}" in ${course_title}!`,
-              `/courses`
-            );
+            // 1. Chapter completion notification removed (too transparent per user feedback)
 
             // 2. Check if all materials in the entire course are now finished
             const totalInCourse = await pool.query(`SELECT COUNT(*) as count FROM materials WHERE course_id = $1`, [course_id]);
@@ -69,13 +62,14 @@ const markCompleted = async (req, res) => {
 
             if (totalCnt > 0 && compCnt >= totalCnt) {
               pointsEarned += 100; // 100 XP bonus for completing the entire course!
-              await notifyAllFriends(
-                userId,
-                'friend_activity',
-                `${user_name} Finished an Entire Course! 🎓`,
-                `Major achievement! ${user_name} has completed 100% of "${course_title}"!`,
-                `/courses`
-              );
+              // Course completion notification removed (too transparent per user feedback)
+              // await notifyAllFriends(
+              //   userId,
+              //   'friend_activity',
+              //   `${user_name} Finished an Entire Course! 🎓`,
+              //   `Major achievement! ${user_name} has completed 100% of "${course_title}"!`,
+              //   `/courses`
+              // );
             }
           }
 

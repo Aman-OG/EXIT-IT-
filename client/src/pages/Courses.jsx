@@ -7,7 +7,7 @@ import {
   CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, 
   GripVertical, PlayCircle, CheckSquare, Loader2 
 } from 'lucide-react';
-import { CourseSkeleton } from '../components/Skeleton';
+import { CourseAccordionSkeleton, MaterialCardSkeleton } from '../components/Skeleton';
 import VideoPanel from '../components/VideoPanel';
 
 const YoutubeIcon = ({ size = 16, className = "" }) => (
@@ -27,6 +27,7 @@ const Courses = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [materials, setMaterials] = useState({});
+  const [loadingMaterials, setLoadingMaterials] = useState({});
   const [contentType, setContentType] = useState(() => {
     const saved = localStorage.getItem('courses_content_type');
     return saved || 'pdf';
@@ -76,11 +77,14 @@ const Courses = () => {
   }, []);
 
   const fetchMaterials = async (courseId) => {
+    setLoadingMaterials(prev => ({ ...prev, [courseId]: true }));
     try {
       const res = await api.get(`/materials/course/${courseId}`);
       setMaterials(prev => ({ ...prev, [courseId]: res.data }));
     } catch (err) {
       console.error('Failed to load materials', err);
+    } finally {
+      setLoadingMaterials(prev => ({ ...prev, [courseId]: false }));
     }
   };
 
@@ -366,8 +370,8 @@ const Courses = () => {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <CourseSkeleton key={i} />)}
+        <div className="grid grid-cols-1 gap-4">
+          {[1, 2, 3, 4, 5].map(i => <CourseAccordionSkeleton key={i} />)}
         </div>
       ) : courses.length === 0 ? (
         <div className="bg-card rounded-2xl border border-neutral-200 dark:border-neutral-800 p-16 text-center">
@@ -506,7 +510,15 @@ const Courses = () => {
                         </div>
                       )}
 
-                      {(!materials[course.id] || materials[course.id].length === 0) ? (
+                      {loadingMaterials[course.id] ? (
+                        // Show skeleton loading while materials are being fetched
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                        </div>
+                      ) : (!materials[course.id] || materials[course.id].length === 0) ? (
                         <p className="text-text/50 text-center py-6">No materials uploaded for this course yet.</p>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
@@ -592,7 +604,15 @@ const Courses = () => {
                   {/* ================= MODE 2: VIDEOS TAB ================= */}
                   {contentType === 'video' && (
                     <div className="space-y-4">
-                      {(!materials[course.id] || materials[course.id].length === 0) ? (
+                      {loadingMaterials[course.id] ? (
+                        // Show skeleton loading while materials are being fetched
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                          <MaterialCardSkeleton />
+                        </div>
+                      ) : (!materials[course.id] || materials[course.id].length === 0) ? (
                         <p className="text-text/50 text-center py-6">No video materials available for this course yet.</p>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -33,7 +33,7 @@ const StudyViewer = () => {
   const [zoom, setZoom] = useState(1); // 1 = 100% (Fit to width)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState('1');
-  const [sidebarTab, setSidebarTab] = useState('notes');
+  const [sidebarTab, setSidebarTab] = useState('ai');
   const [showSidebar, setShowSidebar] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 768;
@@ -62,39 +62,43 @@ const StudyViewer = () => {
   const pdfContainerRef = useRef(null);
   const touchStartDistRef = useRef(null);
   const initialZoomRef = useRef(zoom);
-  const [containerWidth, setContainerWidth] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const padding = window.innerWidth < 640 ? 16 : 32;
-      return Math.max(280, window.innerWidth - padding);
-    }
-    return 600;
-  });
+  
+  const getInitialContainerWidth = () => {
+    if (typeof window === 'undefined') return 800;
+    const isDesktop = window.innerWidth >= 768;
+    const sidebarSpacer = isDesktop ? 80 : 0;
+    const rightSidebarWidth = (isDesktop && showSidebar) ? 320 : 0;
+    return Math.max(280, window.innerWidth - sidebarSpacer - rightSidebarWidth);
+  };
+
+  const [containerWidth, setContainerWidth] = useState(getInitialContainerWidth);
 
   // Reset zoom to 100% on material change
   useEffect(() => {
     setZoom(1);
   }, [id]);
 
-  // Measure container width for exact responsive PDF page fitting
+  // Measure container width using ResizeObserver so the PDF always fits its
+  // actual container edge-to-edge on initial mount AND whenever sidebars open/close
   useEffect(() => {
-    const updateWidth = () => {
-      if (pdfContainerRef.current) {
-        const w = pdfContainerRef.current.clientWidth;
-        if (w > 0) {
-          const padding = window.innerWidth < 640 ? 16 : 32;
-          setContainerWidth(Math.max(280, w - padding));
-        }
+    const container = pdfContainerRef.current;
+    if (!container) return;
+
+    const updateWidth = (entries) => {
+      const w = entries ? entries[0].contentRect.width : container.clientWidth;
+      if (w > 0) {
+        // Really fill from side to side (full available container width)
+        setContainerWidth(Math.floor(w));
       }
     };
 
     updateWidth();
-    const timer = setTimeout(updateWidth, 100);
-    window.addEventListener('resize', updateWidth);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateWidth);
-    };
-  }, [showSidebar, id]);
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [id, showSidebar]);
 
   useEffect(() => {
     initialZoomRef.current = zoom;
@@ -597,7 +601,11 @@ const StudyViewer = () => {
     api.post(`/progress/${id}`, { percentage: savedPct }).catch(e => console.error(e));
   };
 
-  const pdfUrl = material ? `${SERVER_URL}${material.file_url}` : null;
+  // Encode the URL so special characters in filenames (e.g. '#' in "C#.pdf")
+  // aren't treated as URL fragments or otherwise misinterpreted by the browser.
+  const pdfUrl = material
+    ? `${SERVER_URL}${material.file_url.split('/').map(encodeURIComponent).join('/')}`
+    : null;
 
   if (isLoading) return (
     <div className="h-full bg-background flex flex-col">
@@ -685,7 +693,7 @@ const StudyViewer = () => {
       )}
       {/* Study Header - Hidden in Focused Notes Mode */}
       {!isNotesMode && (
-        <div className="flex items-center justify-between backdrop-blur-xl bg-white/60 dark:bg-black/40 border-b border-white/20 dark:border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 z-20 shadow-sm">
+        <div className="flex-none flex items-center justify-between backdrop-blur-xl bg-white/60 dark:bg-black/40 border-b border-white/20 dark:border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 z-20 shadow-sm">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <button onClick={() => navigate(-1)} className="p-2 text-text/60 hover:text-primary hover:bg-primary/5 rounded-lg transition shrink-0" title="Go Back">
               <ArrowLeft size={18} />
@@ -754,7 +762,7 @@ const StudyViewer = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
         {/* PDF Viewer Panel */}
         {!isNotesMode && (
           <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 overflow-y-auto overflow-x-auto relative w-full`}>
@@ -803,7 +811,7 @@ const StudyViewer = () => {
             </div>
           )}
           {pdfUrl ? (
-            <div className="flex flex-col items-center p-2 sm:p-4 max-w-full overflow-x-auto">
+            <div className="flex flex-col w-full pb-20">
               <Document
                 file={pdfUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
@@ -818,8 +826,8 @@ const StudyViewer = () => {
                     key={`page_${index + 1}`} 
                     id={`pdf-page-${index + 1}`}
                     ref={index === numPages - 1 ? lastPageRef : null}
-                    className={`pdf-page-wrapper mb-6 shadow-xl rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 transition-all duration-150 ${pdfThemeClass}`}
-                    style={{ width: containerWidth ? `${Math.round(containerWidth * zoom)}px` : 'auto', maxWidth: 'none' }}
+                    className={`pdf-page-wrapper mb-4 shadow-lg overflow-hidden border-y border-neutral-200 dark:border-neutral-800 transition-all duration-150 ${pdfThemeClass}`}
+                    style={{ width: containerWidth ? `${Math.round(containerWidth * zoom)}px` : '100%', maxWidth: '100%' }}
                   >
                     <Page 
                       pageNumber={index + 1} 
@@ -937,30 +945,30 @@ const StudyViewer = () => {
               className="fixed inset-0 top-16 bg-black/50 z-30 md:hidden animate-in fade-in duration-200"
               onClick={() => setShowSidebar(false)}
             />
-            <div className={`fixed md:relative top-16 md:top-0 bottom-0 right-0 z-40 md:z-10 w-full sm:w-80 md:w-80 bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
+            <div className={`fixed md:relative top-[108px] md:top-0 bottom-0 right-0 z-40 md:z-10 w-full sm:w-80 md:w-80 h-auto md:h-full bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
               {/* Sidebar Tabs - Hidden in Notes Mode */}
               {!isNotesMode && (
                 <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pr-2">
                   <div className="flex flex-1">
                     <button
-                      onClick={() => setSidebarTab('notes')}
-                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                      onClick={() => setSidebarTab('ai')}
+                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
                     >
-                      <StickyNote size={16} />
+                      <Sparkles size={15} />
+                      <span>AI</span>
+                    </button>
+                    <button
+                      onClick={() => setSidebarTab('notes')}
+                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                    >
+                      <StickyNote size={15} />
                       <span>Notes</span>
                     </button>
                     <button
-                      onClick={() => setSidebarTab('ai')}
-                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
-                    >
-                      <Sparkles size={16} />
-                      <span>AI Tools</span>
-                    </button>
-                    <button
                       onClick={() => setSidebarTab('videos')}
-                      className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center space-x-2 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
+                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
                     >
-                      <PlayCircle size={16} />
+                      <PlayCircle size={15} />
                       <span>Videos</span>
                     </button>
                   </div>
@@ -1165,8 +1173,83 @@ const StudyViewer = () => {
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : sidebarTab === 'videos' ? (
                 <VideoPanel materialId={id} materialTitle={material?.title} />
+              ) : (
+                /* ── Quizzes Tab ── */
+                <div className="space-y-5 animate-in fade-in duration-300">
+                  <p className="text-xs uppercase tracking-widest text-text/40 font-bold">Course Quizzes</p>
+
+                  {quizzes.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
+                      <HelpCircle size={28} className="mx-auto text-text/20 mb-2" />
+                      <p className="text-sm font-semibold text-text/50">No quizzes for this course yet</p>
+                      <p className="text-xs text-text/30 mt-1">Generate one via AI Tools</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {/* Official Quizzes */}
+                      {quizzes.filter(q => q.is_official).length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase tracking-wider text-text/50">Official</h4>
+                          <div className="space-y-2">
+                            {quizzes.filter(q => q.is_official).map(q => (
+                              <div
+                                key={q.id}
+                                onClick={() => navigate(`/quiz/${q.id}`, { state: { from: `/study/${id}`, courseId: material?.course_id } })}
+                                className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-accent/50 p-3 rounded-xl shadow-sm transition-all flex items-center justify-between group cursor-pointer hover:shadow-md"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-1.5 py-0.5 rounded">Official</span>
+                                    {q.best_score != null && (
+                                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                                        Best: {q.best_score}/{q.total_questions}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-bold text-xs text-text group-hover:text-accent transition-colors truncate">{q.title}</p>
+                                </div>
+                                <PlayCircle size={16} className="text-accent shrink-0 ml-2 group-hover:scale-110 transition-transform" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* AI Practice Quizzes */}
+                      {quizzes.filter(q => !q.is_official).length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">AI Practice</h4>
+                          <div className="space-y-2">
+                            {quizzes.filter(q => !q.is_official).map(q => (
+                              <div
+                                key={q.id}
+                                onClick={() => navigate(`/quiz/${q.id}`, { state: { from: `/study/${id}`, courseId: material?.course_id } })}
+                                className="bg-card border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/50 p-3 rounded-xl shadow-sm transition-all flex items-center justify-between group cursor-pointer hover:shadow-md"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                      <Sparkles size={8} />AI
+                                    </span>
+                                    {q.best_score != null && (
+                                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                                        Best: {q.best_score}/{q.total_questions}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-bold text-xs text-text group-hover:text-emerald-600 transition-colors truncate">{q.title}</p>
+                                </div>
+                                <Sparkles size={14} className="text-emerald-500 shrink-0 ml-2 group-hover:scale-110 transition-transform" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

@@ -6,6 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import UserProfileModal from '../components/UserProfileModal';
 import api from '../api/axios';
 import { getAvatarUrl } from '../utils/avatar';
+import { FriendCardSkeleton } from '../components/Skeleton';
 
 export default function Friends() {
   const [activeTab, setActiveTab] = useState('friends');
@@ -15,6 +16,7 @@ export default function Friends() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [friendsLeaderboard, setFriendsLeaderboard] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -30,10 +32,22 @@ export default function Friends() {
   };
 
   useEffect(() => {
-    fetchFriends();
-    fetchPendingRequests();
-    fetchSentRequests();
-    fetchFriendsLeaderboard();
+    const loadAll = async () => {
+      setInitialLoading(true);
+      try {
+        await Promise.all([
+          fetchFriends(),
+          fetchPendingRequests(),
+          fetchSentRequests(),
+          fetchFriendsLeaderboard()
+        ]);
+      } catch (err) {
+        console.error('Error loading friends data:', err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadAll();
   }, []);
 
   const fetchFriends = async () => {
@@ -246,7 +260,9 @@ export default function Friends() {
         {/* Friends Tab */}
         {activeTab === 'friends' && (
           <div className="grid gap-4">
-            {friends.length === 0 ? (
+            {initialLoading ? (
+              [1, 2, 3, 4, 5].map(i => <FriendCardSkeleton key={i} />)
+            ) : friends.length === 0 ? (
               <div className="text-center py-12 bg-card rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
                 <Users className="w-16 h-16 mx-auto text-text/40 mb-4" />
                 <p className="text-text/70 mb-4 font-semibold">You don't have any friends yet</p>

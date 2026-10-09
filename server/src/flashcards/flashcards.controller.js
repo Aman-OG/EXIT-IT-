@@ -367,3 +367,78 @@ exports.updateCard = async (req, res) => {
     res.status(500).json({ message: 'Failed to update card' });
   }
 };
+
+// POST /flashcards/decks/:id/complete — award 100 points and notify for first-time completion
+exports.completeDeckSession = async (req, res) => {
+  const userId = req.user.id;
+  const { id } = req.params;
+
+  try {
+    // Ensure completions table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS flashcard_completions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        deck_id INTEGER REFERENCES flashcard_decks(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Check if this user has completed any flashcard deck before
+    const prevCountRes = await pool.query(
+      'SELECT COUNT(*) as count FROM flashcard_completions WHERE user_id = $1',
+      [userId]
+    );
+    const previousCount = parseInt(prevCountRes.rows[0]?.count || 0);
+
+    // Record this completion
+    await pool.query(
+      'INSERT INTO flashcard_completions (user_id, deck_id) VALUES ($1, $2)',
+      [userId, id && id !== 'undefined' ? id : null]
+    );
+
+    // Award 100 points
+    await pool.query(
+      'UPDATE users SET total_score = total_score + 100 WHERE id = $1',
+      [userId]
+    );
+
+    const isFirstTime = previousCount === 0;
+
+    if (isFirstTime) {
+      // Get user name
+      const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
+      const userName = userRes.rows[0]?.name || 'Student';
+
+      // 1. Notify friends: "X just did their first flashcards"
+      const { notifyAllFriends, createNotification } = require('../notifications/notifications.controller');
+      await notifyAllFriends(
+        userId,
+        'friend_activity',
+        `${userName} just did their first flashcards 🎴`,
+        `${userName} just did their first flashcards`,
+        '/flashcards'
+      );
+
+      // 2. Personal notification for the user
+      await createNotification(
+        userId,
+        'achievements',
+        'First Flashcards Completed! 🎴',
+        'You earned +100 points for finishing your first flashcards!',
+        '/flashcards'
+      );
+    }
+
+    res.json({
+      success: true,
+      pointsEarned: 100,
+      isFirstTime,
+      message: 'Flashcards completed! +100 points awarded.'
+    });
+  } catch (err) {
+    console.error('Error completing deck session:', err);
+    res.status(500).json({ message: 'Failed to complete deck session' });
+  }
+};
+

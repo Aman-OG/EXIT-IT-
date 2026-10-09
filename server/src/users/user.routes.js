@@ -15,7 +15,9 @@ const {
   updateProfile,
   uploadAvatar,
   googleAuth,
-  deleteMyAccount 
+  deleteMyAccount,
+  resetUserProgress,
+  toggleAnonymousMode 
 } = require('./user.controller');
 const { protect, adminOnly } = require('../middleware/auth');
 
@@ -58,7 +60,9 @@ router.get('/me', protect, getUserProfile);
 router.put('/theme', protect, updateTheme);
 router.put('/name', protect, updateName);
 router.put('/profile', protect, updateProfile);
+router.put('/anonymous', protect, toggleAnonymousMode);
 router.delete('/profile', protect, deleteMyAccount);
+router.post('/reset-progress', protect, resetUserProgress);
 router.post('/avatar', protect, uploadAvatarMiddleware.single('avatar'), uploadAvatar);
 router.post('/streak', protect, updateStreak);
 router.post('/use-freeze', protect, useStreakFreeze);

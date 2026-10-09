@@ -183,13 +183,14 @@ exports.submitQuiz = async (req, res) => {
       const quizTitle = quizRes.rows[0]?.title || 'Quiz';
       const pctScore = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
-      await notifyAllFriends(
-        userId,
-        'friend_activity',
-        `${userName} Completed a Quiz! 🎯`,
-        `${userName} completed "${quizTitle}" with a score of ${score}/${totalQuestions} (${pctScore}%)!`,
-        `/quizzes`
-      );
+      // Quiz completion notification removed (too transparent per user feedback)
+      // await notifyAllFriends(
+      //   userId,
+      //   'friend_activity',
+      //   `${userName} Completed a Quiz! 🎯`,
+      //   `${userName} completed "${quizTitle}" with a score of ${score}/${totalQuestions} (${pctScore}%)!`,
+      //   `/quizzes`
+      // );
     } catch (notifErr) {
       console.warn('⚠️ Friend notification skipped on quiz submit:', notifErr.message);
     }

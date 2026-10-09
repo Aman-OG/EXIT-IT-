@@ -3,6 +3,7 @@ import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Play, Award, CheckCircle, XCircle, ArrowRight, ArrowLeft, AlertTriangle, BookOpen, ShieldAlert, Flag, Send, X, LogOut, Menu } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { ExamCardSkeleton } from '../components/Skeleton';
 
 const ExamMode = () => {
   const [questions, setQuestions] = useState([]);
@@ -10,6 +11,7 @@ const ExamMode = () => {
   const [active, setActive] = useState(false);
   const [progressData, setProgressData] = useState(null);
   const [officialExams, setOfficialExams] = useState([]);
+  const [loadingExams, setLoadingExams] = useState(true);
   const [selectedExamId, setSelectedExamId] = useState(null);
   const [examMode, setExamMode] = useState('practice'); // 'practice' or 'test'
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -75,11 +77,14 @@ const ExamMode = () => {
   // Fetch official exams
   useEffect(() => {
     const fetchExams = async () => {
+      setLoadingExams(true);
       try {
         const res = await api.get('/exams/official-list');
         setOfficialExams(res.data);
       } catch (e) {
         console.error('Failed to fetch official exams:', e);
+      } finally {
+        setLoadingExams(false);
       }
     };
     fetchExams();
@@ -634,7 +639,19 @@ const ExamMode = () => {
               <p className="text-sm md:text-base text-text/60 font-medium">Choose an official exam to begin your examination simulation.</p>
             </div>
 
-            {officialExams.length > 0 ? (
+            {loadingExams ? (
+              // Show skeleton loading while exams are being fetched
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+                <ExamCardSkeleton />
+              </div>
+            ) : officialExams.length > 0 ? (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                    {officialExams.map((exam) => {
                      const isModel = exam.title.toLowerCase().includes('model');

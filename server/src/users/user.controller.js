@@ -20,6 +20,15 @@ const generateToken = (res, userId, role) => {
   return token;
 };
 
+// Auto ensure is_anonymous column exists on users and defaults to TRUE for all users
+pool.query(`
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT TRUE;
+  ALTER TABLE users ALTER COLUMN is_anonymous SET DEFAULT TRUE;
+  UPDATE users SET is_anonymous = TRUE WHERE is_anonymous IS NULL OR is_anonymous = FALSE;
+`).then(() => {
+  console.log('✅ Users table is_anonymous default TRUE migration complete');
+}).catch(err => console.error('Migration is_anonymous failed:', err));
+
 const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -37,7 +46,7 @@ const registerUser = async (req, res) => {
     // Create user
     // First registered user gets admin role if specified, otherwise user
     const newUser = await pool.query(
-      'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, streak_freezes, total_score, avatar_url, bio',
+      'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, streak_freezes, total_score, avatar_url, bio, is_anonymous',
       [name, email, hashedPassword, 2]
     );
 
@@ -75,6 +84,7 @@ const loginUser = async (req, res) => {
           streak_freezes: user.rows[0].streak_freezes,
           avatar_url: user.rows[0].avatar_url,
           bio: user.rows[0].bio,
+          is_anonymous: Boolean(user.rows[0].is_anonymous),
           token
         });
         return;
@@ -98,7 +108,7 @@ const logoutUser = (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await pool.query(
-      'SELECT id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio FROM users WHERE id = $1', 
+      'SELECT id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous FROM users WHERE id = $1', 
       [req.user.id]
     );
     if (user.rows.length > 0) {
@@ -134,7 +144,7 @@ const updateName = async (req, res) => {
   }
   try {
     const user = await pool.query(
-      'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio', 
+      'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous', 
       [name.trim(), req.user.id]
     );
     if (user.rows.length > 0) {
@@ -149,9 +159,9 @@ const updateName = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-  const { name, bio, avatar_url } = req.body;
+  const { name, bio, avatar_url, is_anonymous } = req.body;
   try {
-    const current = await pool.query('SELECT name, bio, avatar_url FROM users WHERE id = $1', [req.user.id]);
+    const current = await pool.query('SELECT name, bio, avatar_url, is_anonymous FROM users WHERE id = $1', [req.user.id]);
     if (current.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -159,20 +169,41 @@ const updateProfile = async (req, res) => {
     const newName = name !== undefined ? name.trim() : current.rows[0].name;
     const newBio = bio !== undefined ? bio.trim() : current.rows[0].bio;
     const newAvatarUrl = avatar_url !== undefined ? avatar_url : current.rows[0].avatar_url;
+    const newIsAnonymous = is_anonymous !== undefined ? Boolean(is_anonymous) : current.rows[0].is_anonymous;
 
     if (!newName || newName.length === 0) {
       return res.status(400).json({ message: 'Name cannot be empty' });
     }
 
     const updated = await pool.query(
-      'UPDATE users SET name = $1, bio = $2, avatar_url = $3 WHERE id = $4 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
-      [newName, newBio, newAvatarUrl, req.user.id]
+      'UPDATE users SET name = $1, bio = $2, avatar_url = $3, is_anonymous = $4 WHERE id = $5 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous',
+      [newName, newBio, newAvatarUrl, newIsAnonymous, req.user.id]
     );
 
     res.status(200).json(updated.rows[0]);
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Server error updating profile' });
+  }
+};
+
+const toggleAnonymousMode = async (req, res) => {
+  const { is_anonymous } = req.body;
+  try {
+    const updated = await pool.query(
+      'UPDATE users SET is_anonymous = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous',
+      [Boolean(is_anonymous), req.user.id]
+    );
+    if (updated.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({
+      message: is_anonymous ? 'Anonymous mode enabled' : 'Anonymous mode disabled',
+      user: updated.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating anonymous mode:', error);
+    res.status(500).json({ message: 'Server error updating anonymous mode' });
   }
 };
 
@@ -184,7 +215,7 @@ const uploadAvatar = async (req, res) => {
 
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
     const updated = await pool.query(
-      'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
+      'UPDATE users SET avatar_url = $1 WHERE id = $2 RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous',
       [avatarUrl, req.user.id]
     );
 
@@ -214,10 +245,11 @@ const updateStreak = async (req, res) => {
   try {
     const userId = req.user.id;
     // Check user's last active date
-    const result = await pool.query('SELECT last_active_date, current_streak, max_streak, streak_freezes FROM users WHERE id = $1', [userId]);
+    const result = await pool.query('SELECT last_active_date, current_streak, max_streak, streak_freezes, name FROM users WHERE id = $1', [userId]);
     if (result.rows.length === 0) return res.status(404).json({ message: 'User not found' });
 
-    let { last_active_date, current_streak, max_streak, streak_freezes } = result.rows[0];
+    let { last_active_date, current_streak, max_streak, streak_freezes, name: userName } = result.rows[0];
+    const previousStreak = current_streak;
     
     // Fallback if null (shouldn't happen with migration)
     if (streak_freezes == null) streak_freezes = 2;
@@ -280,6 +312,19 @@ const updateStreak = async (req, res) => {
         'UPDATE users SET current_streak = $1, max_streak = $2, streak_freezes = $3, last_active_date = CURRENT_DATE WHERE id = $4',
         [current_streak, max_streak, streak_freezes, userId]
       );
+
+      // Notify friends about major streak milestones (7, 14, 30, 50, 100 days)
+      const streakMilestones = [7, 14, 30, 50, 100, 200, 365];
+      if (streakMilestones.includes(current_streak) && current_streak > previousStreak) {
+        const { notifyAllFriends } = require('../notifications/notifications.controller');
+        await notifyAllFriends(
+          userId,
+          'friend_activity',
+          `${userName} Hit a ${current_streak}-Day Streak! 🔥`,
+          `Amazing dedication! ${userName} has maintained a ${current_streak}-day learning streak!`,
+          `/leaderboard`
+        );
+      }
     }
 
     res.json({ current_streak, max_streak, streak_freezes, updated, freezesUsed });
@@ -379,7 +424,7 @@ const googleAuth = async (req, res) => {
       const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
       const newUser = await pool.query(
-        'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio',
+        'INSERT INTO users (name, email, password, streak_freezes) VALUES ($1, $2, $3, $4) RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio, is_anonymous',
         [name, email, hashedPassword, 2]
       );
       user = newUser.rows[0];
@@ -401,6 +446,7 @@ const googleAuth = async (req, res) => {
       streak_freezes: user.streak_freezes ?? 2,
       avatar_url: user.avatar_url,
       bio: user.bio,
+      is_anonymous: user.is_anonymous === null || user.is_anonymous === undefined ? true : Boolean(user.is_anonymous),
       token: appToken,
     });
   } catch (error) {
@@ -433,6 +479,72 @@ const deleteMyAccount = async (req, res) => {
   }
 };
 
+const resetUserProgress = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const userId = req.user.id;
+
+    await client.query('BEGIN');
+
+    // 1. Delete course material progress & percentages
+    await client.query('DELETE FROM user_progress WHERE user_id = $1', [userId]);
+
+    // 2. Delete study sessions (reading durations & times)
+    await client.query('DELETE FROM study_sessions WHERE user_id = $1', [userId]);
+
+    // 3. Delete quiz attempts and exam attempts
+    await client.query('DELETE FROM quiz_attempts WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM exam_attempts WHERE user_id = $1', [userId]);
+
+    // 4. Delete user certificates
+    await client.query('DELETE FROM certificates WHERE user_id = $1', [userId]);
+
+    // 5. Delete flashcard reviews & deck completions (if table exists)
+    await client.query('DELETE FROM flashcard_reviews WHERE user_id = $1', [userId]);
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'flashcard_completions') THEN 
+          DELETE FROM flashcard_completions WHERE user_id = ${userId}; 
+        END IF; 
+      END $$;
+    `);
+
+    // 6. Delete PDF bookmarks & highlights
+    await client.query('DELETE FROM pdf_bookmarks WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM pdf_highlights WHERE user_id = $1', [userId]);
+
+    // 7. Delete user notes
+    await client.query('DELETE FROM user_notes WHERE user_id = $1', [userId]);
+
+    // 8. Reset user streak, score, freezes, and activity dates
+    const updatedUserRes = await client.query(
+      `UPDATE users 
+       SET current_streak = 0, 
+           max_streak = 0, 
+           total_score = 0, 
+           streak_freezes = 2, 
+           last_active_date = NULL 
+       WHERE id = $1 
+       RETURNING id, name, email, theme, role, current_streak, max_streak, total_score, streak_freezes, avatar_url, bio`,
+      [userId]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'All learning progress, streaks, study history, and courses have been completely reset.',
+      user: updatedUserRes.rows[0]
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Reset progress error:', err);
+    res.status(500).json({ message: 'Failed to reset user progress' });
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -447,4 +559,7 @@ module.exports = {
   uploadAvatar,
   googleAuth,
   deleteMyAccount,
+  resetUserProgress,
+  toggleAnonymousMode,
 };
+

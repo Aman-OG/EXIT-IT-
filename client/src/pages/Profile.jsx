@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare, AlertTriangle, Trash2, ShieldAlert } from 'lucide-react';
+import { User, Target, Flame, BrainCircuit, Award, BookOpen, Clock, Activity, CheckCircle, Calendar, Sun, Moon, Lock, Edit2, Check, X, Trophy, Camera, Upload, RefreshCw, MessageSquare, AlertTriangle, Trash2, ShieldAlert, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import ActivityHeatmapGitHub from '../components/ActivityHeatmapGitHub';
 import { getAvatarUrl } from '../utils/avatar';
+import { ProfileSkeleton } from '../components/Skeleton';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -25,6 +26,12 @@ const Profile = () => {
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
+    const [isResetProgressModalOpen, setIsResetProgressModalOpen] = useState(false);
+    const [resetConfirmText, setResetConfirmText] = useState("");
+    const [isResettingProgress, setIsResettingProgress] = useState(false);
+    const [resetError, setResetError] = useState(null);
+    const [isAnonymousModalOpen, setIsAnonymousModalOpen] = useState(false);
+    const [togglingAnonymous, setTogglingAnonymous] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -187,10 +194,68 @@ const Profile = () => {
         }
     };
 
+    const handleResetProgress = async () => {
+        if (resetConfirmText.trim().toLowerCase() !== 'progress') {
+            setResetError('Please type progress to confirm.');
+            return;
+        }
+
+        try {
+            setIsResettingProgress(true);
+            setResetError(null);
+            const res = await api.post('/users/reset-progress');
+            if (res.data?.user && setUser) {
+                setUser(prev => ({
+                    ...prev,
+                    ...res.data.user
+                }));
+            }
+            // Refetch fresh profile analytics
+            const profileRes = await api.get('/analytics/profile');
+            setProfileData(profileRes.data);
+            setIsResetProgressModalOpen(false);
+            setResetConfirmText("");
+        } catch (err) {
+            console.error('Failed to reset progress', err);
+            setResetError(err.response?.data?.message || 'Failed to reset progress. Please try again.');
+        } finally {
+            setIsResettingProgress(false);
+        }
+    };
+
+    const handleToggleAnonymous = async () => {
+        try {
+            setTogglingAnonymous(true);
+            const currentAnon = profileData?.user?.is_anonymous !== false;
+            const targetState = !currentAnon;
+            const res = await api.put('/users/anonymous', { is_anonymous: targetState });
+            if (res.data?.user && setUser) {
+                setUser(prev => ({
+                    ...prev,
+                    ...res.data.user,
+                    is_anonymous: targetState
+                }));
+            }
+            setProfileData(prev => ({
+                ...prev,
+                user: {
+                    ...prev.user,
+                    is_anonymous: targetState
+                }
+            }));
+            setIsAnonymousModalOpen(false);
+        } catch (err) {
+            console.error('Failed to toggle anonymous mode', err);
+            alert('Failed to update anonymous mode. Please try again.');
+        } finally {
+            setTogglingAnonymous(false);
+        }
+    };
+
     if (loading || !profileData) {
         return (
-            <div className="h-full flex items-center justify-center min-h-[500px]">
-                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <div className="h-full overflow-y-auto w-full p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+                <ProfileSkeleton />
             </div>
         );
     }
@@ -272,6 +337,33 @@ const Profile = () => {
                         </div>
                         
                         <p className="text-text/50 font-medium text-sm md:text-base">{user.email}</p>
+
+                        {/* Anonymous Mode Check / Toggle Button */}
+                        <div className="flex flex-wrap items-center gap-3 pt-0.5">
+                            <button
+                                type="button"
+                                onClick={() => setIsAnonymousModalOpen(true)}
+                                className={`inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                                    user.is_anonymous !== false
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20 ring-2 ring-amber-500/20'
+                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 ring-2 ring-emerald-500/20'
+                                }`}
+                                title={user.is_anonymous !== false ? "Click to reveal your real name on leaderboards" : "Click to hide your real name and switch to Anonymous"}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${user.is_anonymous !== false ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                                {user.is_anonymous !== false ? (
+                                    <>
+                                        <EyeOff size={14} className="text-amber-500" />
+                                        <span>Anonymous: ON (Hidden on Leaderboard)</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Eye size={14} className="text-emerald-500" />
+                                        <span>Public: ON (Real Name Visible)</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
 
                         {/* BIO SECTION */}
                         <div className="pt-1">
@@ -615,29 +707,121 @@ const Profile = () => {
                 </div>
             </div>
 
-            {/* DANGER ZONE: DELETE ACCOUNT */}
-            <div className="bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20 rounded-[2rem] p-6 md:p-8 shadow-sm mt-8 transition-colors">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex items-start space-x-4">
-                        <div className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl shrink-0 mt-1">
-                            <ShieldAlert size={24} />
-                        </div>
-                        <div className="space-y-1">
-                            <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400">Danger Zone</h3>
-                            <p className="text-sm text-text/70 font-normal">
-                                Permanently remove your student account, test scores, bookmarks, progress, and study statistics.
+            {/* DANGER ZONE: RESET PROGRESS & DELETE ACCOUNT */}
+            <div className="bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20 rounded-[2rem] p-6 md:p-8 shadow-sm mt-8 transition-colors space-y-6">
+                <div className="flex items-start space-x-4 border-b border-rose-500/15 pb-4">
+                    <div className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl shrink-0 mt-0.5">
+                        <ShieldAlert size={24} />
+                    </div>
+                    <div className="space-y-1">
+                        <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400">Danger Zone</h3>
+                        <p className="text-sm text-text/70 font-normal">
+                            Manage critical actions for your study history, course progress, or permanent account deletion.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Action 1: Delete / Reset Progress */}
+                    <div className="bg-card/60 dark:bg-card/40 border border-amber-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div className="space-y-1.5">
+                            <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400">
+                                <RefreshCw size={18} />
+                                <h4 className="font-bold text-base">Delete Learning Progress</h4>
+                            </div>
+                            <p className="text-xs text-text/70 leading-relaxed">
+                                Wipe all course material completions, streaks, reading sessions, quiz scores, and exam attempts so your roadmap and courses look 100% fresh. Your student account and login remain intact.
                             </p>
                         </div>
+                        <button
+                            onClick={() => { setIsResetProgressModalOpen(true); setResetConfirmText(""); setResetError(null); }}
+                            className="w-full sm:w-auto self-start px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
+                        >
+                            <RefreshCw size={14} />
+                            <span>Delete Progress</span>
+                        </button>
                     </div>
-                    <button
-                        onClick={() => { setIsDeleteModalOpen(true); setDeleteConfirmText(""); setDeleteError(null); }}
-                        className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 shrink-0"
-                    >
-                        <Trash2 size={16} />
-                        <span>Delete Account</span>
-                    </button>
+
+                    {/* Action 2: Delete Entire Account */}
+                    <div className="bg-card/60 dark:bg-card/40 border border-rose-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                        <div className="space-y-1.5">
+                            <div className="flex items-center space-x-2 text-rose-600 dark:text-rose-400">
+                                <Trash2 size={18} />
+                                <h4 className="font-bold text-base">Delete Account</h4>
+                            </div>
+                            <p className="text-xs text-text/70 leading-relaxed">
+                                Permanently delete your student profile, account credentials, all study data, bookmarks, and login access forever.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => { setIsDeleteModalOpen(true); setDeleteConfirmText(""); setDeleteError(null); }}
+                            className="w-full sm:w-auto self-start px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
+                        >
+                            <Trash2 size={14} />
+                            <span>Delete Account</span>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Reset Progress Modal */}
+            {isResetProgressModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center space-x-3 text-amber-500">
+                            <div className="p-3 bg-amber-500/10 rounded-2xl">
+                                <RefreshCw size={28} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-text">Reset All Progress?</h3>
+                                <p className="text-xs text-text/60">Start courses, quizzes, and roadmap completely fresh.</p>
+                            </div>
+                        </div>
+
+                        {resetError && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-xl">
+                                {resetError}
+                            </div>
+                        )}
+
+                        <p className="text-xs text-text/70 leading-relaxed font-normal">
+                            This will erase all your course percentages, study times, daily goals, streak days, quiz attempts, and exam scores. When completed, your courses and roadmap will appear brand new.
+                        </p>
+
+                        <div className="space-y-1.5 pt-1">
+                            <label className="text-xs font-semibold text-text/70">
+                                Type <span className="font-bold text-amber-600 dark:text-amber-400 font-mono">progress</span> to confirm:
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="progress"
+                                value={resetConfirmText}
+                                onChange={(e) => setResetConfirmText(e.target.value)}
+                                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-background border border-text/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-end space-x-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsResetProgressModalOpen(false)}
+                                disabled={isResettingProgress}
+                                className="px-4 py-2.5 text-xs font-semibold text-text/70 hover:text-text bg-text/5 hover:bg-text/10 rounded-xl transition-all cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleResetProgress}
+                                disabled={isResettingProgress || resetConfirmText.trim().toLowerCase() !== 'progress'}
+                                className="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer"
+                            >
+                                <span>{isResettingProgress ? 'Resetting Progress...' : 'Delete & Reset Progress'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Delete Account Modal */}
             {isDeleteModalOpen && (
@@ -681,7 +865,7 @@ const Profile = () => {
                                 type="button"
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 disabled={isDeletingAccount}
-                                className="px-4 py-2.5 text-xs font-semibold text-text/70 hover:text-text bg-text/5 hover:bg-text/10 rounded-xl transition-all"
+                                className="px-4 py-2.5 text-xs font-semibold text-text/70 hover:text-text bg-text/5 hover:bg-text/10 rounded-xl transition-all cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -689,9 +873,85 @@ const Profile = () => {
                                 type="button"
                                 onClick={handleDeleteAccount}
                                 disabled={isDeletingAccount || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
-                                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2"
+                                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer"
                             >
                                 <span>{isDeletingAccount ? 'Deleting...' : 'Permanently Delete'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Anonymous Mode Modal */}
+            {isAnonymousModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center space-x-3">
+                            <div className={`p-3 rounded-2xl ${user.is_anonymous !== false ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                                {user.is_anonymous !== false ? <EyeOff size={28} /> : <Eye size={28} />}
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-text">
+                                    {user.is_anonymous !== false ? 'Reveal Your Identity?' : 'Switch to Anonymous?'}
+                                </h3>
+                                <p className="text-xs text-text/60">
+                                    {user.is_anonymous !== false ? 'Show your real name & photo on the leaderboard' : 'Mask your identity across all leaderboards'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-background/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 space-y-3 text-xs text-text/80 leading-relaxed">
+                            <p className="font-semibold text-text flex items-center gap-1.5">
+                                <ShieldCheck size={16} className="text-primary shrink-0" />
+                                <span>Leaderboard Identity Settings:</span>
+                            </p>
+                            <ul className="space-y-2 list-disc list-inside text-text/70 pl-1">
+                                <li>
+                                    <strong className="text-text">Leaderboard default:</strong> All accounts are set to <span className="font-bold text-amber-600 dark:text-amber-400">"Anonymous"</span> by default to ensure total learner privacy.
+                                </li>
+                                <li>
+                                    <strong className="text-text">Keep your rank & score:</strong> Your hard work, streak, and points are always preserved and ranked on the leaderboard.
+                                </li>
+                                <li>
+                                    {user.is_anonymous !== false ? (
+                                        <span>
+                                            <strong className="text-text">Revealing identity:</strong> Other students will see your real name (<strong className="text-text">{user.name}</strong>) and avatar on the leaderboard.
+                                        </span>
+                                    ) : (
+                                        <span>
+                                            <strong className="text-text">Anonymous mode:</strong> Other students only see <span className="font-bold text-amber-600 dark:text-amber-400">"Anonymous"</span> with a masked avatar.
+                                        </span>
+                                    )}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="flex items-center justify-end space-x-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsAnonymousModalOpen(false)}
+                                disabled={togglingAnonymous}
+                                className="px-4 py-2.5 text-xs font-semibold text-text/70 hover:text-text bg-text/5 hover:bg-text/10 rounded-xl transition-all cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleToggleAnonymous}
+                                disabled={togglingAnonymous}
+                                className={`px-5 py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center space-x-2 cursor-pointer ${
+                                    user.is_anonymous !== false
+                                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                                        : 'bg-amber-600 hover:bg-amber-700'
+                                }`}
+                            >
+                                <span>
+                                    {togglingAnonymous 
+                                        ? 'Updating...' 
+                                        : user.is_anonymous !== false 
+                                        ? 'Reveal My Identity (Public)' 
+                                        : 'Switch to Anonymous'}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -703,3 +963,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

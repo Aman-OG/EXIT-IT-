@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { FileText, BookOpen, Clock, Trash2, Search, Edit3, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { NoteCardSkeleton } from '../components/Skeleton';
 
 const Notes = () => {
   const [notes, setNotes] = useState([]);
@@ -56,12 +57,6 @@ const Notes = () => {
     (note.note_title && note.note_title.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
-
   return (
     <div className="h-full overflow-y-auto p-4 md:p-8 space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -90,7 +85,11 @@ const Notes = () => {
         </div>
       </div>
 
-      {notes.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map(i => <NoteCardSkeleton key={i} />)}
+        </div>
+      ) : notes.length === 0 ? (
         <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-20 text-center space-y-4">
            <FileText size={48} className="text-text/10 mx-auto" />
            <h2 className="text-xl font-bold">No Notes Yet</h2>

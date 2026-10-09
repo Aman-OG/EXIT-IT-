@@ -228,6 +228,7 @@ exports.getLeaderboard = async (req, res) => {
           u.email,
           u.avatar_url,
           u.bio,
+          COALESCE(u.is_anonymous, TRUE) as is_anonymous,
           u.total_score, 
           u.current_streak,
           (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.user_id = u.id) as total_quizzes,
@@ -242,21 +243,28 @@ exports.getLeaderboard = async (req, res) => {
     `, [currentUserId]);
     
     // Attach rank to each user
-    const leaderboard = result.rows.map((u, index) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      avatar_url: u.avatar_url,
-      bio: u.bio,
-      total_score: parseInt(u.total_score || 0),
-      current_streak: parseInt(u.current_streak || 0),
-      total_quizzes: parseInt(u.total_quizzes || 0),
-      avg_accuracy: Math.round(parseFloat(u.avg_accuracy || 0)),
-      friendship_status: u.friendship_status || null,
-      is_friends: u.friendship_status === 'accepted',
-      is_pending: u.friendship_status === 'pending',
-      rank: index + 1
-    }));
+    const leaderboard = result.rows.map((u, index) => {
+      const isSelf = u.id === currentUserId;
+      const isAnon = Boolean(u.is_anonymous) && !isSelf;
+
+      return {
+        id: isAnon ? 0 : u.id,
+        name: isAnon ? 'Anonymous' : u.name,
+        email: isAnon ? '' : u.email,
+        avatar_url: isAnon ? null : u.avatar_url,
+        bio: isAnon ? '' : u.bio,
+        is_anonymous: Boolean(u.is_anonymous),
+        is_self_incognito: isSelf && Boolean(u.is_anonymous),
+        total_score: parseInt(u.total_score || 0),
+        current_streak: parseInt(u.current_streak || 0),
+        total_quizzes: parseInt(u.total_quizzes || 0),
+        avg_accuracy: Math.round(parseFloat(u.avg_accuracy || 0)),
+        friendship_status: isAnon ? null : (u.friendship_status || null),
+        is_friends: isAnon ? false : (u.friendship_status === 'accepted'),
+        is_pending: isAnon ? false : (u.friendship_status === 'pending'),
+        rank: index + 1
+      };
+    });
 
     res.json(leaderboard);
   } catch (err) {
@@ -271,7 +279,7 @@ exports.getProfileStats = async (req, res) => {
 
     // 1. User info
     const userRes = await pool.query(`
-      SELECT id, name, email, role, created_at, total_score, current_streak, avatar_url, bio
+      SELECT id, name, email, role, created_at, total_score, current_streak, avatar_url, bio, COALESCE(is_anonymous, TRUE) as is_anonymous
       FROM users WHERE id = $1
     `, [userId]);
     const user = userRes.rows[0];

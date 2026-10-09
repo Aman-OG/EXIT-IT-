@@ -32,6 +32,11 @@ const QuizViewer = () => {
       }
       localStorage.setItem('courses_content_type', 'quiz');
       navigate('/courses');
+    } else if (fromPath === '/quizzes') {
+      if (courseId) {
+        localStorage.setItem('quizzes_expanded_course_id', courseId);
+      }
+      navigate('/quizzes');
     } else if (fromPath) {
       navigate(fromPath);
     } else if (window.history.length > 1) {
@@ -89,22 +94,24 @@ const QuizViewer = () => {
   };
 
   if (loading) return (
-    <div className="p-8 text-center">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-      Calibrating Exam Engine...
+    <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+      <div className="animate-spin w-7 h-7 border-3 border-primary border-t-transparent rounded-full mx-auto mb-3" />
+      <span className="text-xs text-text/60 font-semibold">Loading quiz questions...</span>
     </div>
   );
 
-  if (!quiz) return <div className="p-8 text-center text-warning">Quiz not found.</div>;
+  if (!quiz) return <div className="p-8 text-center text-warning text-sm">Quiz not found.</div>;
 
   if (!quiz.questions || quiz.questions.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center p-6">
-        <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-3xl p-10 max-w-md w-full text-center">
-          <HelpCircle size={48} className="mx-auto mb-4 text-warning" />
-          <h2 className="text-2xl font-bold mb-2">Empty Quiz</h2>
-          <p className="text-text/50 mb-6">This quiz has no questions yet.</p>
-          <button onClick={handleBack} className="bg-primary text-primary-foreground font-bold px-6 py-2 rounded-xl">Go Back</button>
+      <div className="h-full flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 max-w-sm w-full text-center">
+          <HelpCircle size={36} className="mx-auto mb-3 text-warning" />
+          <h2 className="text-lg font-bold mb-1">Empty Quiz</h2>
+          <p className="text-text/50 text-xs mb-5">This quiz has no questions yet.</p>
+          <button onClick={handleBack} className="bg-primary text-primary-foreground font-bold px-5 py-2 text-xs rounded-xl shadow-sm">
+            Go Back
+          </button>
         </div>
       </div>
     );
@@ -117,32 +124,32 @@ const QuizViewer = () => {
     const reviewQuestion = reviewIndex !== null ? quiz.questions[reviewIndex] : null;
 
     return (
-      <div className="h-full flex flex-col md:flex-row overflow-hidden bg-background animate-in fade-in duration-500">
-        {/* Left: Score + Grid */}
-        <div className="w-full md:w-96 border-r border-neutral-200 dark:border-neutral-800 bg-card flex flex-col h-1/3 md:h-full overflow-hidden shrink-0">
+      <div className="h-full flex flex-col md:flex-row overflow-hidden bg-background animate-in fade-in duration-300">
+        {/* Left: Score + Question Grid */}
+        <div className="w-full md:w-80 lg:w-88 border-r border-neutral-200 dark:border-neutral-800 bg-card flex flex-col h-1/3 md:h-full overflow-hidden shrink-0">
           {/* Score Card */}
-          <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 text-center space-y-3">
-            <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center ${percentage >= 50 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-warning/10 text-warning'}`}>
-              <Award size={32} />
+          <div className="p-4 sm:p-5 border-b border-neutral-200 dark:border-neutral-800 text-center space-y-2">
+            <div className={`w-12 h-12 rounded-full mx-auto flex items-center justify-center ${percentage >= 50 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-warning/10 text-warning'}`}>
+              <Award size={24} />
             </div>
-            <h2 className="text-xl font-black">Quiz Complete!</h2>
-            <div className={`text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r ${percentage >= 50 ? 'from-emerald-500 to-accent' : 'from-warning to-orange-500'}`}>
+            <h2 className="text-base sm:text-lg font-bold">Quiz Complete!</h2>
+            <div className={`text-3xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r ${percentage >= 50 ? 'from-emerald-500 to-accent' : 'from-warning to-orange-500'}`}>
               {percentage}%
             </div>
-            <p className="text-sm text-text/60">{score.score} / {score.totalQuestions} correct</p>
+            <p className="text-xs text-text/60">{score.score} / {score.totalQuestions} correct</p>
           </div>
 
           {/* Question Grid */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <p className="text-xs font-bold text-text/40 uppercase tracking-widest mb-3">Review Questions</p>
-            <div className="grid grid-cols-5 md:grid-cols-6 gap-2">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+            <p className="text-[10px] font-bold text-text/40 uppercase tracking-widest mb-2.5">Review Questions</p>
+            <div className="grid grid-cols-6 sm:grid-cols-7 md:grid-cols-5 gap-1.5">
               {quiz.questions.map((q, idx) => {
                 const info = answersMap[q.id];
                 const isCorrect = info?.isCorrect;
                 const wasAnswered = info?.selectedOptionId != null;
                 const isReviewing = reviewIndex === idx;
-                let btnClass = 'relative w-10 h-10 flex items-center justify-center font-bold text-xs rounded-xl border-2 transition-all hover:-translate-y-0.5 ';
-                if (isReviewing) btnClass += 'bg-primary border-primary text-primary-foreground shadow-md';
+                let btnClass = 'relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-xs rounded-lg border transition-all ';
+                if (isReviewing) btnClass += 'bg-primary border-primary text-primary-foreground shadow-sm scale-105';
                 else if (wasAnswered && isCorrect) btnClass += 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600';
                 else if (wasAnswered && !isCorrect) btnClass += 'bg-red-500/10 border-red-500/40 text-red-500';
                 else btnClass += 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-text/40';
@@ -150,8 +157,8 @@ const QuizViewer = () => {
                   <button key={q.id} onClick={() => setReviewIndex(idx)} className={btnClass}>
                     {idx + 1}
                     {wasAnswered && (
-                      <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center border-2 border-card ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`}>
-                        {isCorrect ? <CheckCircle2 size={8} className="text-white" /> : <XCircle size={8} className="text-white" />}
+                      <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center border border-card ${isCorrect ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                        {isCorrect ? <CheckCircle2 size={7} className="text-white" /> : <XCircle size={7} className="text-white" />}
                       </div>
                     )}
                   </button>
@@ -161,18 +168,18 @@ const QuizViewer = () => {
           </div>
 
           {/* Legend + Actions */}
-          <div className="p-4 md:p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-3">
-            <div className="space-y-1.5 text-xs font-bold text-text/60">
-              <div className="flex items-center space-x-3"><div className="w-3 h-3 rounded-full bg-emerald-500" /><span>Correct</span></div>
-              <div className="flex items-center space-x-3"><div className="w-3 h-3 rounded-full bg-red-500" /><span>Incorrect</span></div>
-              <div className="flex items-center space-x-3"><div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-neutral-600" /><span>Unanswered</span></div>
+          <div className="p-3 sm:p-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5">
+            <div className="flex items-center justify-between text-[11px] font-bold text-text/60 px-1">
+              <div className="flex items-center space-x-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span>Correct</span></div>
+              <div className="flex items-center space-x-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span>Incorrect</span></div>
+              <div className="flex items-center space-x-1.5"><div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" /><span>Skipped</span></div>
             </div>
-            <div className="flex items-center space-x-3 pt-2">
-              <button onClick={() => window.location.reload()} className="flex-1 flex items-center justify-center space-x-2 py-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 font-bold rounded-xl text-sm transition">
-                <RotateCcw size={16} /><span>Retry</span>
+            <div className="flex items-center space-x-2 pt-1">
+              <button onClick={() => window.location.reload()} className="flex-1 flex items-center justify-center space-x-1.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 font-bold rounded-xl text-xs transition">
+                <RotateCcw size={14} /><span>Retry</span>
               </button>
-              <button onClick={handleBack} className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl text-sm hover:opacity-90 transition flex items-center justify-center space-x-1.5">
-                <span>{location.state?.from === '/courses' ? 'Back to Course' : 'Quiz Repository'}</span>
+              <button onClick={handleBack} className="flex-1 py-2.5 bg-primary text-primary-foreground font-bold rounded-xl text-xs hover:opacity-90 transition flex items-center justify-center space-x-1 shadow-sm">
+                <span>{location.state?.from === '/courses' ? 'Back' : 'Quizzes'}</span>
               </button>
             </div>
           </div>
@@ -182,76 +189,76 @@ const QuizViewer = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {reviewQuestion ? (
             <>
-              <div className="flex-none p-6 border-b border-neutral-200 dark:border-neutral-800 bg-card flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <p className="text-sm font-bold text-text/50">Question <span className="text-primary">{reviewIndex + 1}</span></p>
+              <div className="flex-none p-3.5 sm:p-4 border-b border-neutral-200 dark:border-neutral-800 bg-card flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <p className="text-xs font-bold text-text/50">Question <span className="text-primary font-bold">{reviewIndex + 1}</span> of {quiz.questions.length}</p>
                   {answersMap[reviewQuestion.id]?.isCorrect ? (
-                    <span className="flex items-center space-x-1 text-xs font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full"><CheckCircle2 size={12} /><span>Correct</span></span>
+                    <span className="flex items-center space-x-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full"><CheckCircle2 size={11} /><span>Correct</span></span>
                   ) : (
-                    <span className="flex items-center space-x-1 text-xs font-black text-red-500 bg-red-500/10 px-3 py-1 rounded-full"><XCircle size={12} /><span>Incorrect</span></span>
+                    <span className="flex items-center space-x-1 text-[11px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full"><XCircle size={11} /><span>Incorrect</span></span>
                   )}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 md:p-12">
-                <div className="max-w-4xl mx-auto space-y-6">
-                  <h2 className="text-xl md:text-2xl font-semibold leading-relaxed p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-card">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+                <div className="max-w-3xl mx-auto space-y-4">
+                  <h2 className="text-sm sm:text-base font-semibold leading-relaxed p-3.5 sm:p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-card">
                     {reviewQuestion.question_text}
                   </h2>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {reviewQuestion.options?.map((opt, idx) => {
                       const info = answersMap[reviewQuestion.id];
                       const isUserPick = info?.selectedOptionId == opt.id;
                       const isCorrectOption = info?.correctOptionId == opt.id;
                       const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-                      let optClass = 'w-full flex items-center space-x-4 p-4 rounded-2xl border-2 transition-all ';
-                      if (isCorrectOption) optClass += 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
-                      else if (isUserPick && !isCorrectOption) optClass += 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-400 line-through decoration-2';
+                      let optClass = 'w-full flex items-center space-x-3 p-3 rounded-xl border transition-all text-xs sm:text-sm ';
+                      if (isCorrectOption) optClass += 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium';
+                      else if (isUserPick && !isCorrectOption) optClass += 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-400 line-through decoration-1';
                       else optClass += 'border-neutral-200 dark:border-neutral-800 text-text/60';
                       return (
                         <div key={opt.id} className={optClass}>
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black flex-shrink-0 ${isCorrectOption ? 'bg-emerald-500 text-white' : isUserPick ? 'bg-red-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-text/50'}`}>
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 ${isCorrectOption ? 'bg-emerald-500 text-white' : isUserPick ? 'bg-red-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-text/50'}`}>
                             {labels[idx] || '-'}
                           </div>
-                          <span className="text-left font-medium text-base leading-relaxed flex-1">{opt.option_text}</span>
-                          {isCorrectOption && <CheckCircle2 size={20} className="text-emerald-500 flex-shrink-0" />}
-                          {isUserPick && !isCorrectOption && <XCircle size={20} className="text-red-500 flex-shrink-0" />}
+                          <span className="text-left leading-relaxed flex-1">{opt.option_text}</span>
+                          {isCorrectOption && <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />}
+                          {isUserPick && !isCorrectOption && <XCircle size={16} className="text-red-500 flex-shrink-0" />}
                         </div>
                       );
                     })}
                   </div>
 
                   {reviewQuestion.explanation && (
-                    <div className="p-5 bg-primary/5 border border-primary/10 rounded-2xl">
-                      <div className="flex items-center space-x-2 mb-2 text-primary">
-                        <Sparkles size={16} />
-                        <span className="text-xs font-black uppercase tracking-widest">AI Explanation</span>
+                    <div className="p-3.5 sm:p-4 bg-primary/5 border border-primary/10 rounded-xl">
+                      <div className="flex items-center space-x-1.5 mb-1.5 text-primary">
+                        <Sparkles size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Concept Explanation</span>
                       </div>
-                      <p className="text-sm leading-relaxed text-text/70">{reviewQuestion.explanation}</p>
+                      <p className="text-xs leading-relaxed text-text/70">{reviewQuestion.explanation}</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex-none p-6 border-t border-neutral-200 dark:border-neutral-800 bg-card flex items-center justify-between">
-                <button disabled={reviewIndex === 0} onClick={() => setReviewIndex(p => p - 1)} className="flex items-center space-x-2 px-6 py-3 font-bold text-text/60 disabled:opacity-30 hover:text-primary transition-colors">
-                  <ArrowLeft size={18} /><span>Previous</span>
+              <div className="flex-none p-3.5 sm:p-4 border-t border-neutral-200 dark:border-neutral-800 bg-card flex items-center justify-between">
+                <button disabled={reviewIndex === 0} onClick={() => setReviewIndex(p => p - 1)} className="flex items-center space-x-1.5 px-4 py-2 font-bold text-xs text-text/60 disabled:opacity-30 hover:text-primary transition-colors">
+                  <ArrowLeft size={14} /><span>Previous</span>
                 </button>
                 {reviewIndex < quiz.questions.length - 1 && (
-                  <button onClick={() => setReviewIndex(p => p + 1)} className="flex items-center space-x-2 px-8 py-3 bg-primary text-primary-foreground font-bold rounded-xl shadow-md hover:shadow-lg transition-all">
-                    <span>Next</span><ArrowRight size={18} />
+                  <button onClick={() => setReviewIndex(p => p + 1)} className="flex items-center space-x-1.5 px-5 py-2 bg-primary text-primary-foreground font-bold text-xs rounded-xl shadow-sm hover:opacity-90 transition-all">
+                    <span>Next</span><ArrowRight size={14} />
                   </button>
                 )}
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-4">
-              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <BookOpen size={36} className="text-primary" />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <BookOpen size={24} className="text-primary" />
               </div>
-              <h2 className="text-2xl font-black">Review Your Answers</h2>
-              <p className="text-text/50 max-w-sm">Click any question number on the left to see the correct answer and explanation.</p>
+              <h3 className="text-base font-bold">Review Your Answers</h3>
+              <p className="text-text/50 text-xs max-w-xs">Select any question number on the left to see the correct answer and explanations.</p>
             </div>
           )}
         </div>
@@ -259,98 +266,134 @@ const QuizViewer = () => {
     );
   }
 
-  // ── QUIZ TAKING SCREEN ──
+  // ── QUIZ TAKING SCREEN (COMPACT & MOBILE-FRIENDLY) ──
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-8 animate-in fade-in duration-500 overflow-y-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="h-full flex flex-col p-3 sm:p-5 md:p-6 animate-in fade-in duration-300 overflow-y-auto">
+      {/* Top Navigation & Progress Header */}
+      <div className="w-full max-w-xl mx-auto flex items-center justify-between gap-2 mb-3 sm:mb-5">
         <button
           onClick={handleBack}
-          className="p-2 text-text/40 hover:text-primary transition flex items-center space-x-1 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          className="p-1.5 sm:p-2 text-text/50 hover:text-primary transition flex items-center space-x-1 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0"
           title={location.state?.from === '/courses' ? "Back to Course" : "Back to Quizzes"}
         >
-          <ChevronLeft size={24} />
-          <span className="text-xs font-bold hidden sm:inline">
+          <ChevronLeft size={20} />
+          <span className="text-xs font-semibold hidden sm:inline">
             {location.state?.from === '/courses' ? "Courses" : "Quizzes"}
           </span>
         </button>
-        <div className="flex-1 px-8 text-center">
-          <h1 className="font-bold text-lg truncate mb-1">{quiz.title}</h1>
-          <div className="w-full max-w-xs mx-auto h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+
+        <div className="flex-1 px-3 sm:px-4 text-center min-w-0">
+          <h1 className="font-bold text-xs sm:text-sm text-text truncate mb-1">{quiz.title}</h1>
+          <div className="w-full max-w-[140px] sm:max-w-xs mx-auto h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
         </div>
-        <div className="text-xs font-bold font-mono bg-card px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-sm text-text/50">
+
+        <div className="text-[11px] sm:text-xs font-bold font-mono bg-card px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-xs text-text/60 shrink-0">
           {currentQuestionIndex + 1} / {quiz.questions.length}
         </div>
       </div>
 
-      <div className="flex-1 w-full max-w-xl mx-auto py-4">
-        <div className="bg-card w-full border border-neutral-200 dark:border-neutral-800 rounded-[2rem] p-6 md:p-8 shadow-xl relative">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <HelpCircle className="text-primary" size={24} />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-text/30">
-                {quiz.is_official ? 'Official Course Challenge' : 'Personal AI Practice'}
+      {/* Question Card Container */}
+      <div className="flex-1 w-full max-w-xl mx-auto flex flex-col justify-center my-auto pb-4">
+        <div className="bg-card w-full border border-neutral-200 dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 shadow-md relative">
+          
+          {/* Tag & AI Indicator */}
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center space-x-2">
+              <HelpCircle className="text-primary" size={18} />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-text/40">
+                {quiz.is_official ? 'Official Quiz' : 'AI Practice'}
               </span>
             </div>
             {!quiz.is_official && (
-              <div className="px-2 py-0.5 bg-accent/10 text-accent rounded-full text-[8px] font-black uppercase tracking-tighter border border-accent/20">
+              <span className="px-2 py-0.5 bg-accent/10 text-accent rounded-full text-[9px] font-bold uppercase tracking-wider border border-accent/20">
                 AI Generated
-              </div>
+              </span>
             )}
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold mb-8 leading-tight">{currentQuestion.question_text}</h2>
+          {/* Question Text (Compact & Readable) */}
+          <h2 className="text-sm sm:text-base md:text-lg font-bold mb-4 sm:mb-5 leading-snug text-text">
+            {currentQuestion.question_text}
+          </h2>
 
-          <div className="space-y-3">
-            {currentQuestion.options.map((opt, idx) => (
-              <button
-                key={opt.id}
-                onClick={() => handleOptionSelect(opt.id)}
-                className={`w-full group flex items-center space-x-4 p-4 rounded-2xl border-2 transition-all text-left ${selectedOptionId === opt.id ? 'border-primary bg-primary/5' : 'border-background hover:border-primary/20 hover:bg-primary/[0.02] bg-background'}`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${selectedOptionId === opt.id ? 'bg-primary text-primary-foreground' : 'bg-neutral-100 dark:bg-neutral-800 text-text/40 group-hover:bg-primary/10 group-hover:text-primary'}`}>
-                  {String.fromCharCode(65 + idx)}
-                </div>
-                <span className={`text-base font-semibold ${selectedOptionId === opt.id ? 'text-text' : 'text-text/70'}`}>{opt.option_text}</span>
-                {selectedOptionId === opt.id && <div className="ml-auto text-primary"><CheckCircle2 size={24} /></div>}
-              </button>
-            ))}
+          {/* Options List */}
+          <div className="space-y-2 sm:space-y-2.5">
+            {currentQuestion.options.map((opt, idx) => {
+              const isSelected = selectedOptionId === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleOptionSelect(opt.id)}
+                  className={`w-full group flex items-center space-x-2.5 sm:space-x-3 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all text-left cursor-pointer active:scale-[0.99] ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/30 shadow-xs'
+                      : 'border-neutral-200 dark:border-neutral-800 hover:border-primary/30 hover:bg-primary/[0.02] bg-background'
+                  }`}
+                >
+                  <div
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm transition-all flex-shrink-0 ${
+                      isSelected
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-text/50 group-hover:bg-primary/10 group-hover:text-primary'
+                    }`}
+                  >
+                    {String.fromCharCode(65 + idx)}
+                  </div>
+                  <span className={`text-xs sm:text-sm font-medium leading-relaxed flex-1 ${isSelected ? 'text-text font-semibold' : 'text-text/70'}`}>
+                    {opt.option_text}
+                  </span>
+                  {isSelected && (
+                    <div className="ml-auto text-primary flex-shrink-0">
+                      <CheckCircle2 size={18} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
+          {/* AI Concept Insight / Hint */}
           {currentQuestion.explanation && (
-            <div className="mt-8">
+            <div className="mt-4 sm:mt-5">
               {!showHint ? (
-                <button onClick={() => setShowHint(true)} className="flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors group">
-                  <Sparkles size={16} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Show AI Hint</span>
+                <button
+                  onClick={() => setShowHint(true)}
+                  className="flex items-center space-x-1.5 text-primary hover:text-primary/80 transition-colors group text-xs font-bold cursor-pointer"
+                >
+                  <Sparkles size={13} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] uppercase tracking-wider">Show AI Hint</span>
                 </button>
               ) : (
-                <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl animate-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2 text-primary">
-                      <Sparkles size={16} />
-                      <span className="text-xs font-black uppercase tracking-widest">AI Concept Insight</span>
+                <div className="p-3.5 sm:p-4 bg-primary/5 border border-primary/10 rounded-xl animate-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center space-x-1.5 text-primary">
+                      <Sparkles size={13} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">AI Concept Insight</span>
                     </div>
-                    <button onClick={() => setShowHint(false)} className="text-[10px] font-bold text-text/40 hover:text-text transition-colors">Hide</button>
+                    <button onClick={() => setShowHint(false)} className="text-[10px] font-semibold text-text/40 hover:text-text transition-colors cursor-pointer">
+                      Hide
+                    </button>
                   </div>
-                  <p className="text-sm leading-relaxed text-text/70 italic">{currentQuestion.explanation}</p>
+                  <p className="text-xs leading-relaxed text-text/70 italic">{currentQuestion.explanation}</p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-12 flex justify-end">
+          {/* Action / Next Button */}
+          <div className="mt-5 sm:mt-7 flex justify-end">
             <button
               onClick={handleNext}
               disabled={!selectedOptionId}
-              className="flex items-center space-x-3 bg-primary disabled:opacity-30 disabled:grayscale disabled:pointer-events-none text-primary-foreground font-bold px-8 py-4 rounded-2xl transition hover:bg-primary/90 shadow-xl hover:-translate-y-1 active:translate-y-0"
+              className="flex items-center space-x-2 bg-primary disabled:opacity-30 disabled:grayscale disabled:pointer-events-none text-primary-foreground font-bold px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl transition hover:bg-primary/90 shadow-md hover:-translate-y-0.5 active:translate-y-0 text-xs sm:text-sm cursor-pointer"
             >
-              <span>{currentQuestionIndex === quiz.questions.length - 1 ? 'Finalize Analysis' : 'Next Question'}</span>
-              <ArrowRight size={20} />
+              <span>{currentQuestionIndex === quiz.questions.length - 1 ? 'Finish & Submit' : 'Next Question'}</span>
+              <ArrowRight size={16} />
             </button>
           </div>
         </div>

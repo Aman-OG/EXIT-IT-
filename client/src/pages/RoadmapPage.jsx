@@ -4,6 +4,7 @@ import api from '../api/axios';
 import CourseCard from '../components/CourseCard';
 import ProgressBar from '../components/ProgressBar';
 import { Target, Star, BookOpen, TrendingUp, Loader2, Filter, ArrowRight, Award, CheckCircle2, Clock, Zap } from 'lucide-react';
+import { RoadmapSkeleton } from '../components/Skeleton';
 
 const FILTERS = [
   { key: 'all', label: 'All Courses' },
@@ -90,11 +91,14 @@ const RoadmapPage = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 size={40} className="text-primary animate-spin" />
-          <p className="text-text/50 font-semibold">Loading your roadmap...</p>
+      <div className="h-full overflow-y-auto p-4 md:p-6 lg:p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-1">Study Roadmap</h1>
+            <p className="text-text/60 text-sm">Track your progress across all courses and plan your study journey.</p>
+          </div>
         </div>
+        <RoadmapSkeleton />
       </div>
     );
   }

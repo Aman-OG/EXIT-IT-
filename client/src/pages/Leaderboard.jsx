@@ -3,6 +3,7 @@ import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Trophy, Flame, Medal, Award, Crown, Target, BookOpen, ChevronUp, Sparkles, UserPlus, UserCheck, Clock } from 'lucide-react';
 import { getAvatarUrl } from '../utils/avatar';
+import { LeaderboardSkeleton } from '../components/Skeleton';
 
 const ScholarAvatarWithHover = ({ 
   user, 
@@ -14,6 +15,7 @@ const ScholarAvatarWithHover = ({
   authUserId
 }) => {
   // Placement (vertical)
+  const isAnon = Boolean(user?.is_anonymous) && !user?.is_self_incognito;
   const isBottom = placement === "bottom";
   const positionClasses = isBottom ? "top-full mt-3" : "bottom-full mb-3";
   const arrowClasses = isBottom ? "bottom-full -mb-1 border-l border-t" : "top-full -mt-1 border-r border-b";
@@ -30,13 +32,26 @@ const ScholarAvatarWithHover = ({
     arrowAlignClasses = "right-6 left-auto";
   }
 
+  if (isAnon) {
+    return (
+      <div className="relative inline-block" title="Anonymous">
+        {showCrown && (
+          <Crown size={24} className="text-yellow-500 absolute -top-8 left-1/2 -translate-x-1/2 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] animate-bounce z-10 pointer-events-none" />
+        )}
+        <div className={`${sizeClass} overflow-hidden bg-neutral-200/80 dark:bg-neutral-800 border-2 border-neutral-300 dark:border-neutral-700 shadow-md flex items-center justify-center flex-shrink-0 text-text/50`}>
+          <span className="text-lg">🕶️</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative group/popover inline-block">
       {showCrown && (
         <Crown size={24} className="text-yellow-500 absolute -top-8 left-1/2 -translate-x-1/2 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] animate-bounce z-10 pointer-events-none" />
       )}
       
-      <div className={`${sizeClass} overflow-hidden bg-neutral-200/50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover/popover:scale-105 transition-all duration-300 flex-shrink-0 cursor-pointer`}>
+      <div className={`${sizeClass} overflow-hidden bg-neutral-200/50 dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 shadow-md group-hover/popover:scale-105 transition-all duration-300 flex-shrink-0 cursor-pointer relative`}>
         <img 
           src={getAvatarUrl(user)} 
           alt={user?.name || "Scholar"} 
@@ -46,6 +61,11 @@ const ScholarAvatarWithHover = ({
             e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(user?.email || user?.name || 'User')}`;
           }}
         />
+        {user?.is_self_incognito && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-[10px]" title="You are in Incognito Mode">
+            🕶️
+          </div>
+        )}
       </div>
 
       {/* MINI PROFILE POPUP ON HOVER */}
@@ -169,20 +189,26 @@ const Leaderboard = () => {
   const rest = leaders.slice(3);
 
   // Find current user's position
-  const currentUserEntry = leaders.find(l => l.id === authUser?.id);
-  const userRank = currentUserEntry?.rank;
-  const userAbove = userRank > 1 ? leaders[userRank - 2] : null;
+  const userIndex = leaders.findIndex(l => (authUser?.id && l.id === authUser.id) || l.is_self_incognito);
+  const currentUserEntry = userIndex !== -1 ? leaders[userIndex] : null;
+  const userRank = currentUserEntry?.rank || (userIndex !== -1 ? userIndex + 1 : null);
+  const userAbove = userIndex > 0 ? leaders[userIndex - 1] : null;
+
+  // Calculate points to strictly overtake the user above (+1 when equal)
+  const ptsToOvertake = userAbove
+    ? Math.max(1, (Number(userAbove.total_score) || 0) - (Number(currentUserEntry?.total_score) || 0) + 1)
+    : 0;
 
   if (loading && leaders.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="w-full flex flex-col bg-background relative pb-28 transition-colors duration-300 rounded-tl-3xl">
+        <LeaderboardSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto w-full flex flex-col bg-background relative pb-4 transition-colors duration-300 rounded-tl-3xl">
+    <div className="w-full flex flex-col bg-background relative pb-28 transition-colors duration-300 rounded-tl-3xl">
       
       {/* HERO SECTION: SIDE-BY-SIDE */}
       <div className="relative w-full border-b border-neutral-200 dark:border-neutral-800/50">
@@ -226,8 +252,10 @@ const Leaderboard = () => {
                                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-400 border-2 border-background flex items-center justify-center text-[8px] font-black text-white shadow-lg pointer-events-none">2</div>
                             </div>
                             <div className="text-center mb-2 px-1">
-                                <p className="font-bold text-[10px] md:text-xs text-text truncate w-full opacity-80">{top3[1].name}</p>
-                                <p className="text-primary font-black text-[9px] md:text-[10px]">{top3[1].total_score.toLocaleString()} Points</p>
+                                <p className="font-bold text-[10px] md:text-xs text-text truncate w-full opacity-80">
+                                    {top3[1].is_self_incognito ? 'You (Anonymous)' : top3[1].name}
+                                </p>
+                                <p className="text-primary font-black text-[9px] md:text-[10px]">{(top3[1].total_score || 0).toLocaleString()} Points</p>
                             </div>
                             <div className="w-full h-16 md:h-24 bg-gradient-to-t from-slate-200/50 to-white/40 dark:from-slate-800/80 dark:to-slate-700/40 rounded-t-2xl border-t-2 border-slate-300 dark:border-slate-600 shadow-2xl relative overflow-hidden backdrop-blur-sm">
                                 <Medal size={40} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-400 opacity-20 translate-y-1" />
@@ -251,8 +279,10 @@ const Leaderboard = () => {
                                 <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-yellow-400 border-2 border-background flex items-center justify-center text-xs font-black text-yellow-900 shadow-xl pointer-events-none">1</div>
                             </div>
                             <div className="text-center mb-2 px-1">
-                                <p className="font-black text-xs md:text-sm text-text truncate w-full">{top3[0].name}</p>
-                                <p className="text-primary font-black text-[11px] md:text-xs">{top3[0].total_score.toLocaleString()} Points</p>
+                                <p className="font-black text-xs md:text-sm text-text truncate w-full">
+                                    {top3[0].is_self_incognito ? 'You (Anonymous)' : top3[0].name}
+                                </p>
+                                <p className="text-primary font-black text-[11px] md:text-xs">{(top3[0].total_score || 0).toLocaleString()} Points</p>
                             </div>
                             <div className="w-full h-24 md:h-36 bg-gradient-to-t from-yellow-200/20 to-white/30 dark:from-yellow-900/40 dark:to-yellow-800/20 rounded-t-[2.5rem] border-t-4 border-yellow-400 shadow-3xl relative overflow-hidden backdrop-blur-sm">
                                 <Crown size={56} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-yellow-500 opacity-15 translate-y-2" />
@@ -275,8 +305,10 @@ const Leaderboard = () => {
                                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-700 border-2 border-background flex items-center justify-center text-[8px] font-black text-white shadow-lg pointer-events-none">3</div>
                             </div>
                             <div className="text-center mb-2 px-1">
-                                <p className="font-bold text-[10px] md:text-xs text-text truncate w-full opacity-80">{top3[2].name}</p>
-                                <p className="text-primary font-black text-[9px] md:text-[10px]">{top3[2].total_score.toLocaleString()} Points</p>
+                                <p className="font-bold text-[10px] md:text-xs text-text truncate w-full opacity-80">
+                                    {top3[2].is_self_incognito ? 'You (Anonymous)' : top3[2].name}
+                                </p>
+                                <p className="text-primary font-black text-[9px] md:text-[10px]">{(top3[2].total_score || 0).toLocaleString()} Points</p>
                             </div>
                             <div className="w-full h-12 md:h-20 bg-gradient-to-t from-amber-100/50 to-white/40 dark:from-amber-900/80 dark:to-amber-800/40 rounded-t-2xl border-t-2 border-amber-600 dark:border-amber-700 shadow-2xl relative overflow-hidden backdrop-blur-sm">
                                 <Award size={40} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-amber-600 opacity-20 translate-y-1" />
@@ -298,18 +330,18 @@ const Leaderboard = () => {
             <span>Global Points</span>
         </div>
         
-        {rest.length > 0 ? rest.map((u) => (
+        {rest.length > 0 ? rest.map((u, i) => (
             <div 
-              key={u.id}
+              key={u.id || `rest-${u.rank}-${i}`}
               className={`group flex items-center justify-between p-4 rounded-[1.5rem] border transition-all duration-500 ${
-                u.id === authUser?.id 
+                ((u.id === authUser?.id && authUser?.id) || u.is_self_incognito)
                 ? 'bg-primary/5 border-primary/40 shadow-xl shadow-primary/5 -translate-y-1' 
                 : 'bg-card border-neutral-200 dark:border-neutral-800 hover:border-primary/40 hover:-translate-y-1 hover:shadow-2xl dark:shadow-none'
               }`}
             >
                 <div className="flex items-center space-x-6 md:space-x-10">
                     <div className="w-10 text-center">
-                        <span className={`text-xl font-black ${u.id === authUser?.id ? 'text-primary' : 'text-text/20'}`}>#{u.rank}</span>
+                        <span className={`text-xl font-black ${((u.id === authUser?.id && authUser?.id) || u.is_self_incognito) ? 'text-primary' : 'text-text/20'}`}>#{u.rank}</span>
                     </div>
                     <div className="flex items-center space-x-4">
                         <ScholarAvatarWithHover 
@@ -321,10 +353,16 @@ const Leaderboard = () => {
                           authUserId={authUser?.id}
                         />
                         <div>
-                            <p className="font-black text-text flex items-center">
-                                {u.name}
-                                {u.id === authUser?.id && (
-                                    <span className="ml-2 px-2 py-0.5 bg-primary text-[10px] text-primary-foreground rounded-full uppercase tracking-tighter shadow-md">You</span>
+                            <p className="font-black text-text flex items-center gap-1.5 flex-wrap">
+                                <span>{u.name}</span>
+                                {((u.id === authUser?.id && authUser?.id) || u.is_self_incognito) && !u.is_anonymous && (
+                                    <span className="px-2 py-0.5 bg-primary text-[10px] text-primary-foreground rounded-full uppercase tracking-tighter shadow-md">You</span>
+                                )}
+                                {((u.id === authUser?.id && authUser?.id) || u.is_self_incognito) && u.is_anonymous && (
+                                    <span className="px-2 py-0.5 bg-amber-500 text-[10px] text-black font-black rounded-full uppercase tracking-tighter shadow-md">You (Anonymous)</span>
+                                )}
+                                {u.is_anonymous && !((u.id === authUser?.id && authUser?.id) || u.is_self_incognito) && (
+                                    <span className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 text-[10px] text-text/60 font-bold rounded-full uppercase tracking-tighter">Anonymous</span>
                                 )}
                             </p>
                             
@@ -356,7 +394,7 @@ const Leaderboard = () => {
                     </div>
                 </div>
                 <div className="flex flex-col items-end pl-4">
-                    <span className={`text-2xl font-black ${u.id === authUser?.id ? 'text-primary' : 'text-text'}`}>{u.total_score?.toLocaleString() || 0}</span>
+                    <span className={`text-2xl font-black ${((u.id === authUser?.id && authUser?.id) || u.is_self_incognito) ? 'text-primary' : 'text-text'}`}>{(u.total_score || 0).toLocaleString()}</span>
                     <span className="text-[11px] font-black text-text/30 uppercase tracking-widest">Points</span>
                 </div>
             </div>
@@ -365,13 +403,13 @@ const Leaderboard = () => {
         )}
       </div>
 
-      {/* COMPACT STICKY USER FOOTER */}
-      <div className="sticky bottom-0 left-0 right-0 z-20 px-4 py-2.5 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none mt-auto">
+      {/* COMPACT FLOATING FIXED USER FOOTER */}
+      <div className="fixed bottom-3.5 md:left-[80px] left-0 right-0 z-30 px-4 pointer-events-none transition-all duration-300">
         <div className="max-w-4xl mx-auto pointer-events-auto">
-            <div className="bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 shadow-xl shadow-primary/25 flex items-center justify-between gap-3 border border-white/15 transition-all duration-300">
+            <div className="bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 shadow-2xl shadow-primary/30 flex items-center justify-between gap-3 border border-white/20 backdrop-blur-md transition-all duration-300">
                 {/* User Identity & Rank */}
                 <div className="flex items-center space-x-3 flex-shrink-0">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-primary-foreground/30 bg-primary-foreground/10 shadow-inner flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-primary-foreground/30 bg-primary-foreground/10 shadow-inner flex-shrink-0 flex items-center justify-center">
                         <img 
                           src={getAvatarUrl(authUser)} 
                           alt="" 
@@ -395,8 +433,8 @@ const Leaderboard = () => {
                           <ChevronUp size={15} className="text-primary-foreground flex-shrink-0" />
                           <p className="text-xs font-medium truncate">
                               <span className="font-black text-primary-foreground">
-                                  {((userAbove.total_score || 0) - (currentUserEntry?.total_score || 0)).toLocaleString()}
-                              </span> pts to overtake <span className="font-bold">{userAbove.name}</span>
+                                  {ptsToOvertake.toLocaleString()}
+                              </span> {ptsToOvertake === 1 ? 'pt' : 'pts'} to overtake <span className="font-bold">{userAbove.name}</span>
                           </p>
                       </div>
                   ) : userRank === 1 ? (

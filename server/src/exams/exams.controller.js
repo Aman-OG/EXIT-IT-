@@ -108,13 +108,14 @@ exports.submitExam = async (req, res) => {
     const userName = userRes.rows[0]?.name || 'Your friend';
     const minsSpent = Math.max(1, Math.round(timeSpentSeconds / 60));
 
-    await notifyAllFriends(
-      userId,
-      'friend_activity',
-      `${userName} Finished an Exit Exam! 🏆`,
-      `${userName} completed an Exit Exam with a score of ${score}/${tq} (${percentage}%) in ${minsSpent} mins!`,
-      `/exam`
-    );
+    // Exam completion notification removed (too transparent per user feedback)
+    // await notifyAllFriends(
+    //   userId,
+    //   'friend_activity',
+    //   `${userName} Finished an Exit Exam! 🏆`,
+    //   `${userName} completed an Exit Exam with a score of ${score}/${tq} (${percentage}%) in ${minsSpent} mins!`,
+    //   `/exam`
+    // );
 
     res.json({ score, totalQuestions: tq, percentage, answers_map, pointsEarned });
   } catch (err) {
