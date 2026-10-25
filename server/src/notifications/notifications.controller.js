@@ -7,13 +7,15 @@ let transporter = null;
 const initializeEmailTransporter = () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
+      secure: process.env.SMTP_SECURE === 'true', // false = STARTTLS on port 587
       auth: {
         user: process.env.SMTP_USER,
         pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
+      },
+      tls: {
+        rejectUnauthorized: false, // allows self-signed certs in dev
       },
     });
     console.log('✅ Email transporter initialized for ' + process.env.SMTP_USER);
