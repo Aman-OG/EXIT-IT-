@@ -108,7 +108,7 @@ const AdminDashboard = () => {
 
       setBroadcastResult({
         type: 'success',
-        text: res.data.message || `Dispatched to ${res.data.totalRecipients} scholars!`
+        text: res.data.message || `In-app alerts delivered to ${res.data.totalRecipients} scholars. ${res.data.emailsSent} emails dispatching in background.`
       });
 
       // Clear form on success
@@ -138,7 +138,7 @@ const AdminDashboard = () => {
 
       setBroadcastResult({
         type: 'success',
-        text: res.data.message || 'Weekly Hall of Fame digest broadcasted successfully!'
+        text: res.data.message || `Hall of Fame digest sent! ${res.data.emailsSent} emails dispatching in background.`
       });
     } catch (err) {
       console.error('Failed to broadcast Hall of Fame:', err);
@@ -342,7 +342,7 @@ const AdminDashboard = () => {
               className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm rounded-xl shadow-lg shadow-primary/20 flex items-center space-x-2 transition cursor-pointer active:scale-95"
             >
               <Send size={18} />
-              <span>{broadcasting ? 'Broadcasting to All Students...' : 'Broadcast to All Scholars Now'}</span>
+              <span>{broadcasting ? 'Sending...' : 'Broadcast to All Scholars Now'}</span>
             </button>
           </div>
         </form>

@@ -204,6 +204,21 @@ exports.createNotification = async (userId, type, title, message, link = null) =
   }
 };
 
+// Helper: send emails in parallel batches without blocking
+const sendEmailBatch = async (users, title, message, link) => {
+  const BATCH_SIZE = 5;
+  let sent = 0;
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    await Promise.allSettled(
+      batch.map(u => sendEmail(u.email, u.name, title, message, link))
+    );
+    sent += batch.length;
+    console.log(`📧 [Broadcast] Emails sent: ${sent}/${users.length}`);
+  }
+  console.log(`✅ [Broadcast] All ${sent} emails dispatched.`);
+};
+
 // Admin Broadcast Notification & Email to all users
 exports.broadcastNotification = async (req, res) => {
   try {
@@ -216,28 +231,35 @@ exports.broadcastNotification = async (req, res) => {
     const usersRes = await pool.query('SELECT id, name, email FROM users');
     const users = usersRes.rows;
 
-    let emailsDispatched = 0;
-    for (const u of users) {
-      // In-app notification
-      await pool.query(
-        `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)`,
-        [u.id, type, title, message, link || '/dashboard']
-      );
+    // 1) Save all in-app notifications immediately (fast bulk insert)
+    await Promise.all(
+      users.map(u =>
+        pool.query(
+          `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)`,
+          [u.id, type, title, message, link || '/dashboard']
+        )
+      )
+    );
 
-      // Email dispatch
-      if (sendEmailToAll && transporter && u.email) {
-        await sendEmail(u.email, u.name, title, message, link || '/dashboard');
-        emailsDispatched++;
-      }
-    }
+    // 2) Respond to admin immediately — don't make them wait for emails
+    const emailRecipients = sendEmailToAll && transporter
+      ? users.filter(u => u.email)
+      : [];
 
-    console.log(`📢 [Broadcast] Dispatched to ${users.length} users (${emailsDispatched} emails sent)`);
+    console.log(`📢 [Broadcast] ${users.length} in-app notifications saved. Dispatching ${emailRecipients.length} emails in background...`);
     res.json({
       success: true,
-      message: `Broadcast successfully sent to ${users.length} scholars (${emailsDispatched} emails delivered).`,
+      message: `In-app alerts sent to ${users.length} scholars. ${emailRecipients.length} emails are being dispatched in the background.`,
       totalRecipients: users.length,
-      emailsSent: emailsDispatched
+      emailsSent: emailRecipients.length
     });
+
+    // 3) Send emails in background batches (non-blocking)
+    if (emailRecipients.length > 0) {
+      sendEmailBatch(emailRecipients, title, message, link || '/dashboard').catch(err =>
+        console.error('❌ [Broadcast] Background email error:', err)
+      );
+    }
   } catch (error) {
     console.error('❌ [Notifications] Error in broadcast:', error);
     res.status(500).json({ message: 'Failed to dispatch broadcast announcement' });
@@ -269,25 +291,32 @@ exports.broadcastHallOfFame = async (req, res) => {
     const usersRes = await pool.query('SELECT id, name, email FROM users');
     const users = usersRes.rows;
 
-    let emailsDispatched = 0;
-    for (const u of users) {
-      await pool.query(
-        `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, 'system_announcements', $2, $3, '/leaderboard')`,
-        [u.id, title, message]
-      );
+    // Save all in-app notifications immediately
+    await Promise.all(
+      users.map(u =>
+        pool.query(
+          `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, 'system_announcements', $2, $3, '/leaderboard')`,
+          [u.id, title, message]
+        )
+      )
+    );
 
-      if (transporter && u.email) {
-        await sendEmail(u.email, u.name, title, message, '/leaderboard');
-        emailsDispatched++;
-      }
-    }
+    const emailRecipients = transporter ? users.filter(u => u.email) : [];
 
+    // Respond immediately
     res.json({
       success: true,
-      message: `Weekly Hall of Fame digest broadcast to ${users.length} scholars!`,
+      message: `Hall of Fame digest sent to ${users.length} scholars! ${emailRecipients.length} emails dispatching in background.`,
       totalRecipients: users.length,
-      emailsSent: emailsDispatched
+      emailsSent: emailRecipients.length
     });
+
+    // Send emails in background
+    if (emailRecipients.length > 0) {
+      sendEmailBatch(emailRecipients, title, message, '/leaderboard').catch(err =>
+        console.error('❌ [HallOfFame] Background email error:', err)
+      );
+    }
   } catch (error) {
     console.error('❌ [Notifications] Error broadcasting Hall of Fame:', error);
     res.status(500).json({ message: 'Failed to broadcast Hall of Fame digest' });
