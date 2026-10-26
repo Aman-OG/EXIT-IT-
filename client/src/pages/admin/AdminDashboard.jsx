@@ -420,6 +420,21 @@ const AdminDashboard = () => {
                 Tracker ID: {activeJob.jobId}
               </div>
             </div>
+
+            {activeJob.failed > 0 && activeJob.lastError && (
+              <div className="mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-2.5">
+                <AlertCircle size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <p className="font-bold text-rose-300">Failure Diagnostics:</p>
+                  <p className="font-mono text-[11px] opacity-90 break-all">{activeJob.lastError}</p>
+                  {(activeJob.lastError.includes('ETIMEDOUT') || activeJob.lastError.includes('timeout') || activeJob.lastError.includes('connect')) && (
+                    <p className="text-[11px] text-amber-300/90 leading-relaxed pt-1">
+                      💡 <strong>Render Cloud Port Restriction:</strong> Render Free Tier blocks outbound SMTP ports 25, 465, and 587. Add a free <strong>RESEND_API_KEY</strong> in Render's Environment tab to send seamlessly via HTTPS (Port 443).
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

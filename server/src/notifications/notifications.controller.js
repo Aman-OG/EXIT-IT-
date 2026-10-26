@@ -217,6 +217,8 @@ const sendEmailBatch = async (users, title, message, link, jobId = null) => {
   const BATCH_SIZE = 5;
   let sent = 0;
   let failed = 0;
+  let lastError = null;
+
   for (let i = 0; i < users.length; i += BATCH_SIZE) {
     const batch = users.slice(i, i + BATCH_SIZE);
     const results = await Promise.allSettled(
@@ -227,7 +229,8 @@ const sendEmailBatch = async (users, title, message, link, jobId = null) => {
         sent++;
       } else {
         failed++;
-        console.error(`❌ [Broadcast] Failed to send to ${batch[idx]?.email}: ${r.reason?.message || r.reason}`);
+        lastError = r.reason?.message || String(r.reason);
+        console.error(`❌ [Broadcast] Failed to send to ${batch[idx]?.email}: ${lastError}`);
       }
     });
     // Update job tracker
@@ -235,6 +238,8 @@ const sendEmailBatch = async (users, title, message, link, jobId = null) => {
       const job = broadcastJobs.get(jobId);
       job.sent = sent;
       job.failed = failed;
+      job.lastError = lastError;
+      job.percent = job.total > 0 ? Math.round(((sent + failed) / job.total) * 100) : 100;
     }
     console.log(`📧 [Broadcast] Progress: ${sent} sent, ${failed} failed out of ${i + batch.length}/${users.length}`);
   }
@@ -243,11 +248,13 @@ const sendEmailBatch = async (users, title, message, link, jobId = null) => {
     const job = broadcastJobs.get(jobId);
     job.sent = sent;
     job.failed = failed;
+    job.lastError = lastError;
     job.done = true;
-    // Auto-cleanup after 10 minutes
-    setTimeout(() => broadcastJobs.delete(jobId), 10 * 60 * 1000);
+    job.percent = 100;
+    // Auto-cleanup after 15 minutes
+    setTimeout(() => broadcastJobs.delete(jobId), 15 * 60 * 1000);
   }
-  console.log(`✅ [Broadcast] Done. Sent: ${sent}, Failed: ${failed}`);
+  console.log(`✅ [Broadcast] Done. Sent: ${sent}, Failed: ${failed}${lastError ? ` | Last error: ${lastError}` : ''}`);
 };
 
 // Get broadcast job status (for live frontend polling)
@@ -264,6 +271,7 @@ exports.getBroadcastStatus = (req, res) => {
     sent: job.sent,
     failed: job.failed,
     done: job.done,
+    lastError: job.lastError,
     percent,
     startedAt: job.startedAt
   });
@@ -455,19 +463,10 @@ exports.notifyBadgeUnlocked = async (req, res) => {
   }
 };
 
-// Send email notification
+// Send email notification (supports HTTPS Resend API or SMTP Nodemailer)
 const sendEmail = async (email, name, title, message, link) => {
-  if (!transporter) {
-    console.warn('⚠️ [Email] Transporter not initialized, skipping email to', email);
-    return;
-  }
-
   const fullLink = link ? `${process.env.CLIENT_URL || 'http://localhost:5173'}${link}` : null;
-  const mailOptions = {
-    from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: `⚡ EXIT-IT: ${title}`,
-    html: `
+  const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -501,12 +500,45 @@ const sendEmail = async (email, name, title, message, link) => {
         </table>
       </body>
       </html>
-    `,
+  `;
+
+  // 1) Primary Cloud Method: If RESEND_API_KEY is configured, send via HTTPS REST (never blocked by Render)
+  if (process.env.RESEND_API_KEY) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || 'EXIT-IT Platform <onboarding@resend.dev>',
+        to: [email],
+        subject: `⚡ EXIT-IT: ${title}`,
+        html: emailHtml
+      })
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `Resend API error: HTTP ${res.status}`);
+    }
+    console.log(`✅ [Email:Resend] Sent to ${email}: ${title}`);
+    return;
+  }
+
+  // 2) Fallback to SMTP Nodemailer
+  if (!transporter) {
+    throw new Error('Email service unconfigured: Neither RESEND_API_KEY nor valid SMTP credentials found.');
+  }
+
+  const mailOptions = {
+    from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `⚡ EXIT-IT: ${title}`,
+    html: emailHtml
   };
 
-  // Let errors propagate so sendEmailBatch can log them
   await transporter.sendMail(mailOptions);
-  console.log(`✅ [Email] Sent to ${email}: ${title}`);
+  console.log(`✅ [Email:SMTP] Sent to ${email}: ${title}`);
 };
 
 
