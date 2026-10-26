@@ -6,19 +6,20 @@ let transporter = null;
 
 const initializeEmailTransporter = () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true', // false = STARTTLS on port 587
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
-        pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
+        pass,
       },
       tls: {
-        rejectUnauthorized: false, // allows self-signed certs in dev
+        rejectUnauthorized: false,
       },
     });
-    console.log('✅ Email transporter initialized for ' + process.env.SMTP_USER);
+    console.log(`✅ Email transporter initialized | user=${process.env.SMTP_USER} | host=${process.env.SMTP_HOST || 'smtp.gmail.com'} | port=${process.env.SMTP_PORT || 587} | passLen=${pass.length}`);
   } else {
     console.log('⚠️  Email not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env');
   }
@@ -208,15 +209,23 @@ exports.createNotification = async (userId, type, title, message, link = null) =
 const sendEmailBatch = async (users, title, message, link) => {
   const BATCH_SIZE = 5;
   let sent = 0;
+  let failed = 0;
   for (let i = 0; i < users.length; i += BATCH_SIZE) {
     const batch = users.slice(i, i + BATCH_SIZE);
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       batch.map(u => sendEmail(u.email, u.name, title, message, link))
     );
-    sent += batch.length;
-    console.log(`📧 [Broadcast] Emails sent: ${sent}/${users.length}`);
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        sent++;
+      } else {
+        failed++;
+        console.error(`❌ [Broadcast] Failed to send to ${batch[idx].email}: ${r.reason?.message || r.reason}`);
+      }
+    });
+    console.log(`📧 [Broadcast] Progress: ${sent} sent, ${failed} failed out of ${i + batch.length}/${users.length}`);
   }
-  console.log(`✅ [Broadcast] All ${sent} emails dispatched.`);
+  console.log(`✅ [Broadcast] Done. Sent: ${sent}, Failed: ${failed}`);
 };
 
 // Admin Broadcast Notification & Email to all users
@@ -388,90 +397,59 @@ exports.notifyBadgeUnlocked = async (req, res) => {
 
 // Send email notification
 const sendEmail = async (email, name, title, message, link) => {
-  if (!transporter) return;
-
-  try {
-    const fullLink = link ? `${process.env.CLIENT_URL || 'http://localhost:5173'}${link}` : null;
-    const mailOptions = {
-      from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: `⚡ EXIT-IT: ${title}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 24px; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
-          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #1e293b; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
-            <!-- HEADER BRAND -->
-            <tr>
-              <td style="padding: 28px 32px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); text-align: left;">
-                <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td>
-                      <span style="display: inline-block; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff; text-decoration: none;">
-                        🎓 EXIT-IT
-                      </span>
-                      <span style="display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; color: #ffffff; letter-spacing: 0.5px;">
-                        Learning Platform
-                      </span>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- BODY CONTENT -->
-            <tr>
-              <td style="padding: 32px;">
-                <h1 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">
-                  ${title}
-                </h1>
-                
-                <p style="margin: 0 0 12px 0; font-size: 14px; color: #94a3b8; font-weight: 600;">
-                  Hello <span style="color: #e2e8f0; font-weight: 700;">${name || 'Scholar'}</span>,
-                </p>
-
-                <div style="background-color: #0f172a; border-radius: 14px; padding: 20px; margin: 16px 0 24px 0; border: 1px solid rgba(255,255,255,0.06);">
-                  <p style="margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.6;">
-                    ${message}
-                  </p>
-                </div>
-
-                ${fullLink ? `
-                  <div style="text-align: center; margin: 28px 0 12px 0;">
-                    <a href="${fullLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); text-transform: uppercase; letter-spacing: 0.5px;">
-                      Open in EXIT-IT →
-                    </a>
-                  </div>
-                ` : ''}
-              </td>
-            </tr>
-
-            <!-- FOOTER -->
-            <tr>
-              <td style="padding: 20px 32px; background-color: #0f172a; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
-                <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.5;">
-                  You received this email because notification alerts are enabled on your EXIT-IT account.
-                  <br>
-                  You can customize or mute email alerts in your <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/notifications/settings" style="color: #818cf8; text-decoration: underline;">Notification Settings</a>.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ [Email] Sent to ${email}: ${title}`);
-  } catch (error) {
-    console.error('❌ [Email] Error sending email:', error);
+  if (!transporter) {
+    console.warn('⚠️ [Email] Transporter not initialized, skipping email to', email);
+    return;
   }
+
+  const fullLink = link ? `${process.env.CLIENT_URL || 'http://localhost:5173'}${link}` : null;
+  const mailOptions = {
+    from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `⚡ EXIT-IT: ${title}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 24px; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #1e293b; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          <tr>
+            <td style="padding: 28px 32px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); text-align: left;">
+              <span style="font-size: 22px; font-weight: 900; color: #ffffff;">🎓 EXIT-IT</span>
+              <span style="margin-left: 8px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; color: #ffffff;">Learning Platform</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <h1 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #ffffff;">${title}</h1>
+              <p style="margin: 0 0 12px 0; font-size: 14px; color: #94a3b8;">Hello <span style="color: #e2e8f0; font-weight: 700;">${name || 'Scholar'}</span>,</p>
+              <div style="background-color: #0f172a; border-radius: 14px; padding: 20px; margin: 16px 0 24px 0; border: 1px solid rgba(255,255,255,0.06);">
+                <p style="margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.6;">${message}</p>
+              </div>
+              ${fullLink ? `<div style="text-align: center; margin: 28px 0 12px 0;"><a href="${fullLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 12px;">Open in EXIT-IT →</a></div>` : ''}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 20px 32px; background-color: #0f172a; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #64748b;">You received this because notifications are enabled on your EXIT-IT account.<br>
+              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/notifications/settings" style="color: #818cf8;">Manage Notification Settings</a></p>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `,
+  };
+
+  // Let errors propagate so sendEmailBatch can log them
+  await transporter.sendMail(mailOptions);
+  console.log(`✅ [Email] Sent to ${email}: ${title}`);
 };
+
+
 
 // Schedule notification (for exam reminders, etc.)
 exports.scheduleNotification = async (userId, type, scheduledFor, payload) => {
