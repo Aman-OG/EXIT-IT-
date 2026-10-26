@@ -4,6 +4,10 @@ const nodemailer = require('nodemailer');
 // Email transporter setup (configure with your SMTP settings)
 let transporter = null;
 
+// In-memory broadcast job tracker: jobId -> { total, sent, failed, done, startedAt }
+const broadcastJobs = new Map();
+const makeJobId = () => `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
 const initializeEmailTransporter = () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
@@ -18,6 +22,9 @@ const initializeEmailTransporter = () => {
       tls: {
         rejectUnauthorized: false,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
     console.log(`✅ Email transporter initialized | user=${process.env.SMTP_USER} | host=${process.env.SMTP_HOST || 'smtp.gmail.com'} | port=${process.env.SMTP_PORT || 587} | passLen=${pass.length}`);
   } else {
@@ -205,8 +212,8 @@ exports.createNotification = async (userId, type, title, message, link = null) =
   }
 };
 
-// Helper: send emails in parallel batches without blocking
-const sendEmailBatch = async (users, title, message, link) => {
+// Helper: send emails in parallel batches, updates job tracker
+const sendEmailBatch = async (users, title, message, link, jobId = null) => {
   const BATCH_SIZE = 5;
   let sent = 0;
   let failed = 0;
@@ -220,12 +227,46 @@ const sendEmailBatch = async (users, title, message, link) => {
         sent++;
       } else {
         failed++;
-        console.error(`❌ [Broadcast] Failed to send to ${batch[idx].email}: ${r.reason?.message || r.reason}`);
+        console.error(`❌ [Broadcast] Failed to send to ${batch[idx]?.email}: ${r.reason?.message || r.reason}`);
       }
     });
+    // Update job tracker
+    if (jobId && broadcastJobs.has(jobId)) {
+      const job = broadcastJobs.get(jobId);
+      job.sent = sent;
+      job.failed = failed;
+    }
     console.log(`📧 [Broadcast] Progress: ${sent} sent, ${failed} failed out of ${i + batch.length}/${users.length}`);
   }
+  // Mark job done
+  if (jobId && broadcastJobs.has(jobId)) {
+    const job = broadcastJobs.get(jobId);
+    job.sent = sent;
+    job.failed = failed;
+    job.done = true;
+    // Auto-cleanup after 10 minutes
+    setTimeout(() => broadcastJobs.delete(jobId), 10 * 60 * 1000);
+  }
   console.log(`✅ [Broadcast] Done. Sent: ${sent}, Failed: ${failed}`);
+};
+
+// Get broadcast job status (for live frontend polling)
+exports.getBroadcastStatus = (req, res) => {
+  const { jobId } = req.params;
+  const job = broadcastJobs.get(jobId);
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found or already completed', done: true });
+  }
+  const percent = job.total > 0 ? Math.round(((job.sent + job.failed) / job.total) * 100) : 100;
+  res.json({
+    jobId,
+    total: job.total,
+    sent: job.sent,
+    failed: job.failed,
+    done: job.done,
+    percent,
+    startedAt: job.startedAt
+  });
 };
 
 // Admin Broadcast Notification & Email to all users
@@ -257,22 +298,32 @@ exports.broadcastNotification = async (req, res) => {
       [ids, types, titles, msgs, links]
     );
 
-    // 2) Respond to admin immediately
+    // 2) Create job tracker & respond immediately
     const emailRecipients = sendEmailToAll && transporter
       ? users.filter(u => u.email)
       : [];
 
-    console.log(`📢 [Broadcast] ${users.length} in-app notifications saved. Dispatching ${emailRecipients.length} emails in background...`);
+    const jobId = makeJobId();
+    broadcastJobs.set(jobId, {
+      total: emailRecipients.length,
+      sent: 0,
+      failed: 0,
+      done: emailRecipients.length === 0,
+      startedAt: Date.now()
+    });
+
+    console.log(`📢 [Broadcast] ${users.length} in-app notifications saved. Dispatching ${emailRecipients.length} emails in background... jobId=${jobId}`);
     res.json({
       success: true,
-      message: `In-app alerts sent to ${users.length} scholars. ${emailRecipients.length} emails are being dispatched in the background.`,
+      jobId,
+      message: `In-app alerts sent to ${users.length} scholars. ${emailRecipients.length} emails are being dispatched.`,
       totalRecipients: users.length,
       emailsSent: emailRecipients.length
     });
 
     // 3) Send emails in background batches (non-blocking)
     if (emailRecipients.length > 0) {
-      sendEmailBatch(emailRecipients, title, message, link || '/dashboard').catch(err =>
+      sendEmailBatch(emailRecipients, title, message, link || '/dashboard', jobId).catch(err =>
         console.error('❌ [Broadcast] Background email error:', err)
       );
     }
@@ -321,10 +372,19 @@ exports.broadcastHallOfFame = async (req, res) => {
     }
 
     const emailRecipients = transporter ? users.filter(u => u.email) : [];
+    const jobId = makeJobId();
+    broadcastJobs.set(jobId, {
+      total: emailRecipients.length,
+      sent: 0,
+      failed: 0,
+      done: emailRecipients.length === 0,
+      startedAt: Date.now()
+    });
 
     // Respond immediately
     res.json({
       success: true,
+      jobId,
       message: `Hall of Fame digest sent to ${users.length} scholars! ${emailRecipients.length} emails dispatching in background.`,
       totalRecipients: users.length,
       emailsSent: emailRecipients.length
@@ -332,7 +392,7 @@ exports.broadcastHallOfFame = async (req, res) => {
 
     // Send emails in background
     if (emailRecipients.length > 0) {
-      sendEmailBatch(emailRecipients, title, message, '/leaderboard').catch(err =>
+      sendEmailBatch(emailRecipients, title, message, '/leaderboard', jobId).catch(err =>
         console.error('❌ [HallOfFame] Background email error:', err)
       );
     }

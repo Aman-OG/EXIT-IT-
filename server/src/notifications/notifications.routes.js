@@ -26,5 +26,7 @@ router.put('/preferences', notificationsController.updatePreferences);
 // Admin Broadcasts
 router.post('/broadcast', adminOnly, notificationsController.broadcastNotification);
 router.post('/broadcast/hall-of-fame', adminOnly, notificationsController.broadcastHallOfFame);
+router.get('/broadcast/status/:jobId', adminOnly, notificationsController.getBroadcastStatus);
 
 module.exports = router;
+
