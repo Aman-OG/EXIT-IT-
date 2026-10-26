@@ -231,17 +231,24 @@ exports.broadcastNotification = async (req, res) => {
     const usersRes = await pool.query('SELECT id, name, email FROM users');
     const users = usersRes.rows;
 
-    // 1) Save all in-app notifications immediately (fast bulk insert)
-    await Promise.all(
-      users.map(u =>
-        pool.query(
-          `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)`,
-          [u.id, type, title, message, link || '/dashboard']
-        )
-      )
+    if (users.length === 0) {
+      return res.json({ success: true, message: 'No users found.', totalRecipients: 0, emailsSent: 0 });
+    }
+
+    // 1) Single bulk INSERT for all in-app notifications (one DB round-trip)
+    const ids    = users.map(u => u.id);
+    const types  = users.map(() => type);
+    const titles = users.map(() => title);
+    const msgs   = users.map(() => message);
+    const links  = users.map(() => link || '/dashboard');
+
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, message, link)
+       SELECT * FROM UNNEST($1::int[], $2::text[], $3::text[], $4::text[], $5::text[])`,
+      [ids, types, titles, msgs, links]
     );
 
-    // 2) Respond to admin immediately — don't make them wait for emails
+    // 2) Respond to admin immediately
     const emailRecipients = sendEmailToAll && transporter
       ? users.filter(u => u.email)
       : [];
@@ -262,7 +269,7 @@ exports.broadcastNotification = async (req, res) => {
     }
   } catch (error) {
     console.error('❌ [Notifications] Error in broadcast:', error);
-    res.status(500).json({ message: 'Failed to dispatch broadcast announcement' });
+    res.status(500).json({ message: 'Failed to dispatch broadcast announcement', detail: error.message });
   }
 };
 
@@ -291,15 +298,18 @@ exports.broadcastHallOfFame = async (req, res) => {
     const usersRes = await pool.query('SELECT id, name, email FROM users');
     const users = usersRes.rows;
 
-    // Save all in-app notifications immediately
-    await Promise.all(
-      users.map(u =>
-        pool.query(
-          `INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, 'system_announcements', $2, $3, '/leaderboard')`,
-          [u.id, title, message]
-        )
-      )
-    );
+    // Single bulk INSERT for all in-app notifications
+    if (users.length > 0) {
+      const ids    = users.map(u => u.id);
+      const titles = users.map(() => title);
+      const msgs   = users.map(() => message);
+
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, message, link)
+         SELECT unnest($1::int[]), 'system_announcements', unnest($2::text[]), unnest($3::text[]), '/leaderboard'`,
+        [ids, titles, msgs]
+      );
+    }
 
     const emailRecipients = transporter ? users.filter(u => u.email) : [];
 
@@ -319,7 +329,7 @@ exports.broadcastHallOfFame = async (req, res) => {
     }
   } catch (error) {
     console.error('❌ [Notifications] Error broadcasting Hall of Fame:', error);
-    res.status(500).json({ message: 'Failed to broadcast Hall of Fame digest' });
+    res.status(500).json({ message: 'Failed to broadcast Hall of Fame digest', detail: error.message });
   }
 };
 
