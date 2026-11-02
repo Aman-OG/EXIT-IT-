@@ -40,8 +40,17 @@ async function seed2017ModelExam() {
       `, [quizId]);
       await client.query('DELETE FROM questions WHERE quiz_id = $1', [quizId]);
     } else {
-      const courseRes = await client.query('SELECT id FROM courses LIMIT 1');
-      const courseId = courseRes.rows.length > 0 ? courseRes.rows[0].id : null;
+      // FIX: Look up a specific course instead of using 'SELECT id FROM courses LIMIT 1',
+      // which previously assigned all exit exams to whichever course had the lowest DB id.
+      // Exit exams are general IT exams — link to ITPM303 as a representative course,
+      // or change to NULL to make them appear only in Exam Mode (not tied to any course).
+      const examCourseRes = await client.query(
+        "SELECT id FROM courses WHERE code = 'ITPM303' LIMIT 1"
+      );
+      const courseId = examCourseRes.rows.length > 0 ? examCourseRes.rows[0].id : null;
+      if (!courseId) {
+        console.warn('⚠️ Course ITPM303 not found. 2017 Model Exam will have NULL course_id (visible in Exam Mode only).');
+      }
 
       const quizRes = await client.query(`
         INSERT INTO quizzes (title, is_official, quiz_type, course_id, description)

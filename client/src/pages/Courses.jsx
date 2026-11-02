@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import api, { SERVER_URL, API_BASE_URL } from '../api/axios';
-import { 
+import api, { SERVER_URL, API_BASE_URL } from '../api/axios';import { 
   BookOpen, FileText, Upload, X, FolderOpen, Plus, Pencil, Trash2, 
   CheckCircle2, AlertCircle, HelpCircle, Sparkles, ChevronDown, Download, 
   GripVertical, PlayCircle, CheckSquare, Loader2 
@@ -52,10 +51,15 @@ const Courses = () => {
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
   const courseRefs = useRef({});
+  const scrollContainerRef = useRef(null);
+  const scrollRestoredRef = useRef(false);
 
   // Download UX states & timers
   const [downloadingCourses, setDownloadingCourses] = useState({});
   const downloadTimers = useRef({});
+
+  // Helper — returns the real scrolling element (the <main> in MainLayout)
+  const getScrollEl = () => scrollContainerRef.current?.closest('main') ?? scrollContainerRef.current;
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -75,6 +79,24 @@ const Courses = () => {
     };
     fetchCourses();
   }, []);
+
+  // Restore scroll position once courses have loaded and DOM has painted
+  useEffect(() => {
+    if (isLoading || scrollRestoredRef.current) return;
+    scrollRestoredRef.current = true;
+
+    const savedScroll = sessionStorage.getItem('courses_scroll_y');
+    if (!savedScroll) return;
+
+    // rAF ensures the browser has painted the expanded course before we scroll
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const el = getScrollEl();
+        if (el) el.scrollTop = parseInt(savedScroll, 10);
+        sessionStorage.removeItem('courses_scroll_y');
+      }, 80);
+    });
+  }, [isLoading]);
 
   const fetchMaterials = async (courseId) => {
     setLoadingMaterials(prev => ({ ...prev, [courseId]: true }));
@@ -311,7 +333,7 @@ const Courses = () => {
   const iconColors = ['text-blue-500', 'text-emerald-500', 'text-violet-500', 'text-amber-500', 'text-rose-500', 'text-cyan-500'];
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
+    <div ref={scrollContainerRef} className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
         <div>
@@ -534,7 +556,11 @@ const Courses = () => {
                               className={`relative group ${user?.role === 'admin' ? '' : ''}`}
                             >
                               <button
-                                onClick={() => navigate(`/study/${mat.id}`)}
+                                onClick={() => {
+                                  const el = getScrollEl();
+                                  if (el) sessionStorage.setItem('courses_scroll_y', el.scrollTop);
+                                  navigate(`/study/${mat.id}`);
+                                }}
                                 className="w-full bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
                               >
                                 {/* Drag handle — admin only */}
@@ -650,7 +676,12 @@ const Courses = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Upload Study Material</h3>
+              <div>
+                <h3 className="text-xl font-bold">Upload Study Material</h3>
+                <p className="text-xs font-semibold mt-0.5 text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md inline-block">
+                  → {courses.find(c => c.id === uploadModal)?.title ?? 'Unknown Course'}
+                </p>
+              </div>
               <button onClick={() => setUploadModal(null)} className="text-text/40 hover:text-text transition"><X size={20}/></button>
             </div>
             

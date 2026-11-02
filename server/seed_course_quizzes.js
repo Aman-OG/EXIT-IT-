@@ -166,6 +166,7 @@ async function seedCourseQuizzes() {
         const endIdx = Math.min((i + 1) * CHUNK_SIZE, questions.length);
         const quizQuestions = questions.slice(startIdx, endIdx);
         const quizNumber = i + 1;
+        const quizTitle = `${courseTitle} - Quiz ${quizNumber}`; // FIX: was missing, causing undefined title
         const quizDesc = `Practice Quiz ${quizNumber} (${quizQuestions.length} Questions)`;
 
         // Insert Quiz

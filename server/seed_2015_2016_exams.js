@@ -63,8 +63,19 @@ async function seedExams() {
     let totalQuestionsInserted = 0;
     let totalOptionsInserted = 0;
 
-    const courseRes = await client.query('SELECT id FROM courses LIMIT 1');
-    const courseId = courseRes.rows.length > 0 ? courseRes.rows[0].id : null;
+    // FIX: Look up each course individually using a proper course code lookup.
+    // Previously used 'SELECT id FROM courses LIMIT 1' which assigned ALL exit exams
+    // to whichever course had the lowest DB id — causing quizzes to show in wrong courses.
+    // Exit exams are general IT exams, so we link them to IT Project Management (ITPM303)
+    // as the closest representative course, or leave course_id NULL for global exam quizzes.
+    // To link to a specific course, change the code below to the desired course code.
+    const examCourseRes = await client.query(
+      "SELECT id FROM courses WHERE code = 'ITPM303' LIMIT 1"
+    );
+    const courseId = examCourseRes.rows.length > 0 ? examCourseRes.rows[0].id : null;
+    if (!courseId) {
+      console.warn('⚠️ Course ITPM303 not found. Exit exams will have NULL course_id (visible in Exam Mode only).');
+    }
 
     for (const item of examMapping) {
       const questionsList = examData[item.key] || [];
