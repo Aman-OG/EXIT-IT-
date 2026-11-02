@@ -51,15 +51,11 @@ const Courses = () => {
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
   const courseRefs = useRef({});
-  const scrollContainerRef = useRef(null);
   const scrollRestoredRef = useRef(false);
 
   // Download UX states & timers
   const [downloadingCourses, setDownloadingCourses] = useState({});
   const downloadTimers = useRef({});
-
-  // Helper — returns the real scrolling element (the <main> in MainLayout)
-  const getScrollEl = () => scrollContainerRef.current?.closest('main') ?? scrollContainerRef.current;
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -85,16 +81,16 @@ const Courses = () => {
     if (isLoading || scrollRestoredRef.current) return;
     scrollRestoredRef.current = true;
 
-    const savedScroll = sessionStorage.getItem('courses_scroll_y');
-    if (!savedScroll) return;
+    const savedCourse = localStorage.getItem('expanded_course_id');
+    if (!savedCourse) return;
 
-    // rAF ensures the browser has painted the expanded course before we scroll
+    // Scroll the expanded course to the top
+    const courseId = parseInt(savedCourse, 10);
     requestAnimationFrame(() => {
       setTimeout(() => {
-        const el = getScrollEl();
-        if (el) el.scrollTop = parseInt(savedScroll, 10);
-        sessionStorage.removeItem('courses_scroll_y');
-      }, 80);
+        const el = courseRefs.current[courseId];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     });
   }, [isLoading]);
 
@@ -333,7 +329,7 @@ const Courses = () => {
   const iconColors = ['text-blue-500', 'text-emerald-500', 'text-violet-500', 'text-amber-500', 'text-rose-500', 'text-cyan-500'];
 
   return (
-    <div ref={scrollContainerRef} className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
+    <div className="h-full overflow-y-auto p-4 md:p-6 space-y-8 animate-in fade-in duration-500">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
         <div>
@@ -556,11 +552,7 @@ const Courses = () => {
                               className={`relative group ${user?.role === 'admin' ? '' : ''}`}
                             >
                               <button
-                                onClick={() => {
-                                  const el = getScrollEl();
-                                  if (el) sessionStorage.setItem('courses_scroll_y', el.scrollTop);
-                                  navigate(`/study/${mat.id}`);
-                                }}
+                                onClick={() => navigate(`/study/${mat.id}`)}
                                 className="w-full bg-background rounded-2xl border border-neutral-200 dark:border-neutral-800 p-5 flex flex-col items-center text-center hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden"
                               >
                                 {/* Drag handle — admin only */}
