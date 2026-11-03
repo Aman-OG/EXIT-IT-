@@ -33,6 +33,15 @@ const StudyViewer = () => {
   const [zoom, setZoom] = useState(1); // 1 = 100% (Fit to width)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState('1');
+  const [pageAspectRatio, setPageAspectRatio] = useState(null);
+  const activePageRef = useRef(1);
+  const isResizingRef = useRef(false);
+  const resizeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    activePageRef.current = currentPage;
+  }, [currentPage]);
+
   const [sidebarTab, setSidebarTab] = useState('ai');
   const [showSidebar, setShowSidebar] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -78,27 +87,89 @@ const StudyViewer = () => {
     setZoom(1);
   }, [id]);
 
+  const reanchorToActivePage = (instant = true) => {
+    const target = activePageRef.current;
+    if (!target) return;
+    const pageElement = document.getElementById(`pdf-page-${target}`);
+    if (pageElement) {
+      pageElement.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' });
+    }
+  };
+
   // Measure container width using ResizeObserver so the PDF always fits its
   // actual container edge-to-edge on initial mount AND whenever sidebars open/close
   useEffect(() => {
     const container = pdfContainerRef.current;
     if (!container) return;
 
-    const updateWidth = (entries) => {
-      const w = entries ? entries[0].contentRect.width : container.clientWidth;
+    const updateWidth = () => {
+      const w = container.clientWidth;
       if (w > 0) {
-        // Really fill from side to side (full available container width)
         setContainerWidth(Math.floor(w));
       }
     };
 
     updateWidth();
+    const rafId = requestAnimationFrame(updateWidth);
+    const timerId = setTimeout(updateWidth, 150);
 
-    const observer = new ResizeObserver(updateWidth);
+    const observer = new ResizeObserver((entries) => {
+      if (entries && entries[0]) {
+        const w = entries[0].contentRect.width;
+        if (w > 0) {
+          setContainerWidth(Math.floor(w));
+        }
+      } else {
+        updateWidth();
+      }
+    });
+
     observer.observe(container);
 
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+      observer.disconnect();
+    };
   }, [id, showSidebar]);
+
+  // Re-anchor scroll to current page whenever container resizes or zoom changes
+  useEffect(() => {
+    if (!numPages || containerWidth === 0) return;
+
+    isResizingRef.current = true;
+    if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+
+    reanchorToActivePage(true);
+    const rafId = requestAnimationFrame(() => {
+      reanchorToActivePage(true);
+    });
+
+    resizeTimeoutRef.current = setTimeout(() => {
+      isResizingRef.current = false;
+    }, 350);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+    };
+  }, [containerWidth, zoom, numPages]);
+
+  // Keep page locked during native fullscreen transitions
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      isResizingRef.current = true;
+      setTimeout(() => {
+        reanchorToActivePage(true);
+        setTimeout(() => {
+          isResizingRef.current = false;
+        }, 300);
+      }, 60);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     initialZoomRef.current = zoom;
@@ -475,34 +546,43 @@ const StudyViewer = () => {
         if (pageElement) {
           pageElement.scrollIntoView({ behavior: 'auto', block: 'start' });
         }
-      }, 500); // Small delay to ensure react-pdf has rendered the target page
+      }, 300);
     }
 
     // 2. Track Visible Page on Scroll
     let timeoutId;
     const handleScroll = () => {
+      if (isResizingRef.current) return;
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
+        if (isResizingRef.current) return;
         const pages = viewer.querySelectorAll('.pdf-page-wrapper');
-        let currentPage = 1;
+        if (!pages || pages.length === 0) return;
+
+        let detectedPage = activePageRef.current;
         let minDistance = Infinity;
+        const viewerRect = viewer.getBoundingClientRect();
+        const targetY = viewerRect.top + 30;
 
         pages.forEach((page, index) => {
           const rect = page.getBoundingClientRect();
-          const distance = Math.abs(rect.top - 64); // 64 is the toolbar height approximately
+          const distance = Math.abs(rect.top - targetY);
           if (distance < minDistance) {
             minDistance = distance;
-            currentPage = index + 1;
+            detectedPage = index + 1;
           }
         });
 
-        localStorage.setItem(`pdf_page_${id}`, currentPage);
-        setCurrentPage(currentPage);
-        setPageInput(String(currentPage));
+        if (detectedPage && detectedPage !== activePageRef.current) {
+          activePageRef.current = detectedPage;
+          localStorage.setItem(`pdf_page_${id}`, detectedPage);
+          setCurrentPage(detectedPage);
+          setPageInput(String(detectedPage));
+        }
         
         // Continuous Percentage Tracking
-        if (numPages && !isCompleted) {
-            const percentage = Math.round((currentPage / numPages) * 100);
+        if (numPages && !isCompleted && detectedPage) {
+            const percentage = Math.round((detectedPage / numPages) * 100);
             const savedPct = parseInt(localStorage.getItem(`pdf_pct_${id}`) || '0');
             
             // Only update backend if going forward
@@ -526,7 +606,7 @@ const StudyViewer = () => {
                 }).catch(console.error);
             }
         }
-      }, 500); // Throttled to 500ms
+      }, 100);
     };
 
     viewer.addEventListener('scroll', handleScroll);
@@ -563,11 +643,13 @@ const StudyViewer = () => {
   const scrollToPage = (page) => {
     if (!numPages) return;
     const target = Math.max(1, Math.min(numPages, page));
+    activePageRef.current = target;
+    setCurrentPage(target);
+    setPageInput(String(target));
+    localStorage.setItem(`pdf_page_${id}`, target);
     const pageElement = document.getElementById(`pdf-page-${target}`);
     if (pageElement) {
       pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setCurrentPage(target);
-      setPageInput(String(target));
     }
   };
 
@@ -581,21 +663,42 @@ const StudyViewer = () => {
   const handleFullscreen = () => {
     const container = document.getElementById('study-container');
     if (container) {
+      isResizingRef.current = true;
       if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(err => console.error(err));
       } else {
-        container.requestFullscreen();
+        container.requestFullscreen().catch(err => console.error(err));
       }
     }
   };
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
+  const onDocumentLoadSuccess = async (pdfDoc) => {
+    const total = pdfDoc.numPages || numPages;
+    setNumPages(total);
+    try {
+      const page1 = await pdfDoc.getPage(1);
+      const viewport = page1.getViewport({ scale: 1 });
+      if (viewport.width && viewport.height) {
+        setPageAspectRatio(viewport.height / viewport.width);
+      }
+    } catch (e) {
+      console.warn('Could not determine page aspect ratio', e);
+    }
+
     // Restore last read page indicator
     const savedPage = parseInt(localStorage.getItem(`pdf_page_${id}`) || '1');
-    const restoredPage = Math.min(savedPage, numPages);
+    const restoredPage = Math.min(Math.max(1, savedPage), total);
+    activePageRef.current = restoredPage;
     setCurrentPage(restoredPage);
     setPageInput(String(restoredPage));
+
+    setTimeout(() => {
+      const pageElement = document.getElementById(`pdf-page-${restoredPage}`);
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    }, 200);
+
     // Force a progress ping to update last_accessed_at in DB
     const savedPct = parseInt(localStorage.getItem(`pdf_pct_${id}`) || '0');
     api.post(`/progress/${id}`, { percentage: savedPct }).catch(e => console.error(e));
@@ -751,7 +854,10 @@ const StudyViewer = () => {
             </button>
             <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700 mx-0.5" />
             <button 
-              onClick={() => setShowSidebar(!showSidebar)} 
+              onClick={() => {
+                isResizingRef.current = true;
+                setShowSidebar(prev => !prev);
+              }} 
               className={`p-1.5 sm:p-2 rounded-lg transition ${showSidebar ? 'bg-primary/10 text-primary' : 'text-text/60 hover:text-primary hover:bg-primary/5'}`}
               title={showSidebar ? "Collapse Sidebar" : "Expand Sidebar"}
             >
@@ -765,7 +871,7 @@ const StudyViewer = () => {
       <div className="flex flex-1 min-h-0 overflow-hidden relative">
         {/* PDF Viewer Panel */}
         {!isNotesMode && (
-          <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 overflow-y-auto overflow-x-auto relative w-full`}>
+          <div ref={pdfContainerRef} className={`pdf-viewer-area flex-1 min-w-0 overflow-y-auto overflow-x-auto relative w-full`}>
 
           {/* Floating Page Navigation Pill — fixed bottom center of viewport */}
           {numPages && (
@@ -811,10 +917,11 @@ const StudyViewer = () => {
             </div>
           )}
           {pdfUrl ? (
-            <div className="flex flex-col w-full pb-20">
+            <div className="flex flex-col w-full pb-20 items-center">
               <Document
                 file={pdfUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
+                className="w-full flex flex-col items-center"
                 loading={
                   <div className="w-full flex justify-center py-10">
                     <StudySkeleton />
@@ -826,8 +933,14 @@ const StudyViewer = () => {
                     key={`page_${index + 1}`} 
                     id={`pdf-page-${index + 1}`}
                     ref={index === numPages - 1 ? lastPageRef : null}
-                    className={`pdf-page-wrapper mb-4 shadow-lg overflow-hidden border-y border-neutral-200 dark:border-neutral-800 transition-all duration-150 ${pdfThemeClass}`}
-                    style={{ width: containerWidth ? `${Math.round(containerWidth * zoom)}px` : '100%', maxWidth: '100%' }}
+                    className={`pdf-page-wrapper mb-4 shadow-lg overflow-hidden border-y border-neutral-200 dark:border-neutral-800 transition-colors duration-150 ${pdfThemeClass}`}
+                    style={{ 
+                      width: containerWidth ? `${Math.round(containerWidth * zoom)}px` : '100%', 
+                      maxWidth: zoom > 1 ? undefined : '100%',
+                      minHeight: pageAspectRatio && containerWidth 
+                        ? `${Math.round(containerWidth * zoom * pageAspectRatio)}px` 
+                        : '400px'
+                    }}
                   >
                     <Page 
                       pageNumber={index + 1} 
@@ -836,6 +949,11 @@ const StudyViewer = () => {
                       renderTextLayer={true}
                       renderAnnotationLayer={true}
                       className="bg-transparent flex justify-center"
+                      onLoadSuccess={(page) => {
+                        if (!pageAspectRatio && page.width && page.height) {
+                          setPageAspectRatio(page.height / page.width);
+                        }
+                      }}
                     />
                   </div>
                 ))}
@@ -943,7 +1061,10 @@ const StudyViewer = () => {
           <>
             <div 
               className="fixed inset-0 top-16 bg-black/50 z-30 md:hidden animate-in fade-in duration-200"
-              onClick={() => setShowSidebar(false)}
+              onClick={() => {
+                isResizingRef.current = true;
+                setShowSidebar(false);
+              }}
             />
             <div className={`fixed md:relative top-[108px] md:top-0 bottom-0 right-0 z-40 md:z-10 w-full sm:w-80 md:w-80 h-auto md:h-full bg-card border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col shrink-0 animate-in slide-in-from-right duration-200`}>
               {/* Sidebar Tabs - Hidden in Notes Mode */}
@@ -952,32 +1073,35 @@ const StudyViewer = () => {
                   <div className="flex flex-1">
                     <button
                       onClick={() => setSidebarTab('ai')}
-                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                      className={`flex-1 py-2 px-2 text-xs font-bold transition-colors flex flex-row items-center justify-center gap-1.5 border-b-2 ${sidebarTab === 'ai' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
                     >
-                      <Sparkles size={15} />
+                      <Sparkles size={14} className="shrink-0" />
                       <span>AI</span>
                     </button>
                     <button
                       onClick={() => setSidebarTab('notes')}
-                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
+                      className={`flex-1 py-2 px-2 text-xs font-bold transition-colors flex flex-row items-center justify-center gap-1.5 border-b-2 ${sidebarTab === 'notes' ? 'border-primary text-primary' : 'border-transparent text-text/50 hover:text-text'}`}
                     >
-                      <StickyNote size={15} />
+                      <StickyNote size={14} className="shrink-0" />
                       <span>Notes</span>
                     </button>
                     <button
                       onClick={() => setSidebarTab('videos')}
-                      className={`flex-1 py-2.5 text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
+                      className={`flex-1 py-2 px-2 text-xs font-bold transition-colors flex flex-row items-center justify-center gap-1.5 border-b-2 ${sidebarTab === 'videos' ? 'border-red-500 text-red-500' : 'border-transparent text-text/50 hover:text-text'}`}
                     >
-                      <PlayCircle size={15} />
+                      <PlayCircle size={14} className="shrink-0" />
                       <span>Videos</span>
                     </button>
                   </div>
                   <button 
-                    onClick={() => setShowSidebar(false)}
-                    className="md:hidden p-2 text-text/60 hover:text-text hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition shrink-0 ml-1"
+                    onClick={() => {
+                      isResizingRef.current = true;
+                      setShowSidebar(false);
+                    }}
+                    className="md:hidden p-1.5 text-text/60 hover:text-text hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition shrink-0 ml-1"
                     title="Close Drawer"
                   >
-                    <X size={18} />
+                    <X size={16} />
                   </button>
                 </div>
               )}
