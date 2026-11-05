@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -17,8 +17,8 @@ import Skeleton, { StudySkeleton } from '../components/Skeleton';
 import VideoPanel from '../components/VideoPanel';
 import ReactMarkdown from 'react-markdown';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF.js worker - now using LOCAL worker instead of CDN (cached locally for fast loading)
+pdfjs.GlobalWorkerOptions.workerSrc = '/workers/pdf.worker.min.mjs';
 
 const StudyViewer = () => {
   const { id } = useParams();
@@ -287,21 +287,18 @@ const StudyViewer = () => {
         const res = await api.get(`/materials/${id}`);
         setMaterial(res.data);
         
-        // Fetch quizzes for this course
-        const quizRes = await api.get(`/quizzes/course/${res.data.course_id}`);
+        // Parallelize all API calls instead of sequential fetches
+        const [quizRes, progressRes, noteRes, bkRes] = await Promise.all([
+          api.get(`/quizzes/course/${res.data.course_id}`),
+          api.get(`/materials/course/${res.data.course_id}`),
+          api.get(`/notes/${id}`),
+          api.get(`/materials/${id}/bookmarks`)
+        ]);
+
         setQuizzes(quizRes.data);
-        
-        // Also check if already completed
-        const progressRes = await api.get(`/materials/course/${res.data.course_id}`);
         const currentMat = progressRes.data.find(m => m.id === parseInt(id));
         if (currentMat?.is_completed) setIsCompleted(true);
-        
-        // Fetch User Note for this material
-        const noteRes = await api.get(`/notes/${id}`);
         setNoteContent(noteRes.data.content || '');
-
-        // Fetch bookmarks
-        const bkRes = await api.get(`/materials/${id}/bookmarks`);
         setBookmarks(bkRes.data);
         
         setIsLoading(false);
@@ -313,7 +310,7 @@ const StudyViewer = () => {
     fetchMaterial();
   }, [id]);
 
-  const handleAiAction = async (type, text) => {
+  const handleAiAction = useCallback(async (type, text) => {
     if (!text) return;
     setSelectionPopup(p => ({ ...p, visible: false }));
     setAiResponse(''); // Initialize as empty string for streaming
@@ -383,7 +380,7 @@ const StudyViewer = () => {
       setAiResponse(`Error: ${err.message || 'Failed to contact AI Assistant.'}`);
       setIsAiLoading(false);
     }
-  };
+  }, [showSidebar]);
 
   const handleAddAiToNotes = async () => {
     if (!aiResponse) return;
@@ -464,7 +461,7 @@ const StudyViewer = () => {
   };
 
 
-  const handleAddBookmark = async () => {
+  const handleAddBookmark = useCallback(async () => {
     try {
       const res = await api.post(`/materials/${id}/bookmarks`, {
         page_number: currentPage,
@@ -472,14 +469,14 @@ const StudyViewer = () => {
       });
       setBookmarks(prev => [...prev.filter(b => b.page_number !== currentPage), res.data]);
     } catch (e) { console.error(e); }
-  };
+  }, [id, currentPage]);
 
-  const handleDeleteBookmark = async (bookmarkId) => {
+  const handleDeleteBookmark = useCallback(async (bookmarkId) => {
     try {
       await api.delete(`/materials/bookmarks/${bookmarkId}`);
       setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
   // Keyboard navigation for PDF pages (arrow keys)
   useEffect(() => {
@@ -640,7 +637,7 @@ const StudyViewer = () => {
     };
   }, [numPages, id, isCompleted]);
 
-  const scrollToPage = (page) => {
+  const scrollToPage = useCallback((page) => {
     if (!numPages) return;
     const target = Math.max(1, Math.min(numPages, page));
     activePageRef.current = target;
@@ -651,16 +648,16 @@ const StudyViewer = () => {
     if (pageElement) {
       pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
+  }, [numPages, id]);
 
-  const handlePageInputKeyDown = (e) => {
+  const handlePageInputKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       const parsed = parseInt(pageInput);
       if (!isNaN(parsed)) scrollToPage(parsed);
     }
-  };
+  }, [pageInput, scrollToPage]);
 
-  const handleFullscreen = () => {
+  const handleFullscreen = useCallback(() => {
     const container = document.getElementById('study-container');
     if (container) {
       isResizingRef.current = true;
@@ -670,9 +667,9 @@ const StudyViewer = () => {
         container.requestFullscreen().catch(err => console.error(err));
       }
     }
-  };
+  }, []);
 
-  const onDocumentLoadSuccess = async (pdfDoc) => {
+  const onDocumentLoadSuccess = useCallback(async (pdfDoc) => {
     const total = pdfDoc.numPages || numPages;
     setNumPages(total);
     try {
@@ -702,13 +699,13 @@ const StudyViewer = () => {
     // Force a progress ping to update last_accessed_at in DB
     const savedPct = parseInt(localStorage.getItem(`pdf_pct_${id}`) || '0');
     api.post(`/progress/${id}`, { percentage: savedPct }).catch(e => console.error(e));
-  };
+  }, [id]);
 
-  // Encode the URL so special characters in filenames (e.g. '#' in "C#.pdf")
-  // aren't treated as URL fragments or otherwise misinterpreted by the browser.
-  const pdfUrl = material
-    ? `${SERVER_URL}${material.file_url.split('/').map(encodeURIComponent).join('/')}`
-    : null;
+  // Memoize PDF URL encoding so it's not recalculated on every render
+  const pdfUrl = useMemo(() => {
+    if (!material) return null;
+    return `${SERVER_URL}${material.file_url.split('/').map(encodeURIComponent).join('/')}`;
+  }, [material]);
 
   if (isLoading) return (
     <div className="h-full bg-background flex flex-col">
@@ -814,28 +811,29 @@ const StudyViewer = () => {
                     <Download size={15} />
                   </a>
                 </div>
-                <div className="flex items-center space-x-2 hidden md:flex">
-                   <p className="text-[10px] text-text/50 uppercase tracking-widest font-bold">University Study Engine</p>
-                   {isCompleted && (
-                     <span className="flex items-center space-x-1 bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-500/20">
-                       <CheckCircle2 size={10} />
-                       <span>Completed</span>
-                     </span>
-                   )}
-                </div>
               </div>
               
               <div className="w-px h-8 bg-neutral-200 dark:bg-neutral-800 mx-2 hidden sm:block" />
               
               {/* Study Timer display - Click to start/pause */}
-              <button 
-                onClick={() => setIsTimerRunning(!isTimerRunning)}
-                className={`hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all ${isTimerRunning ? 'bg-primary/10 border-primary text-primary' : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-text/40 hover:text-text/60'}`}
-                title={isTimerRunning ? "Pause Timer" : "Start Timer"}
-              >
-                <Clock size={14} className={isTimerRunning ? 'animate-pulse' : ''} />
-                <span className="text-xs font-mono font-bold">{formatTime(studyTime)}</span>
-              </button>
+              <div className="hidden sm:flex items-center space-x-2">
+                <button 
+                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border transition-all ${isTimerRunning ? 'bg-primary/10 border-primary text-primary' : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-text/40 hover:text-text/60'}`}
+                  title={isTimerRunning ? "Pause Timer" : "Start Timer"}
+                >
+                  <Clock size={14} className={isTimerRunning ? 'animate-pulse' : ''} />
+                  <span className="text-xs font-mono font-bold">{formatTime(studyTime)}</span>
+                </button>
+                
+                {/* Completed Badge - next to timer */}
+                {isCompleted && (
+                  <span className="flex items-center space-x-1 bg-emerald-500/10 text-emerald-500 px-2 py-1.5 rounded-xl text-[9px] font-bold border border-emerald-500/20">
+                    <CheckCircle2 size={12} />
+                    <span>Completed</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
