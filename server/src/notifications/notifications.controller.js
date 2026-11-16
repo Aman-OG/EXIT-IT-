@@ -8,6 +8,37 @@ let transporter = null;
 const broadcastJobs = new Map();
 const makeJobId = () => `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+// Rate limiter for Gmail (max ~300/hour, we'll use ~250 to be safe)
+const emailQueue = [];
+let emailSending = false;
+
+const processEmailQueue = async () => {
+  if (emailSending || emailQueue.length === 0) return;
+  emailSending = true;
+
+  while (emailQueue.length > 0) {
+    const { mailOptions, resolve, reject } = emailQueue.shift();
+    try {
+      const result = await transporter.sendMail(mailOptions);
+      resolve(result);
+      // Rate limit: ~4 emails per second (safe for Gmail)
+      await new Promise(r => setTimeout(r, 250));
+    } catch (error) {
+      reject(error);
+    }
+  }
+
+  emailSending = false;
+};
+
+// Queue email to respect Gmail rate limits
+const queueEmail = (mailOptions) => {
+  return new Promise((resolve, reject) => {
+    emailQueue.push({ mailOptions, resolve, reject });
+    processEmailQueue();
+  });
+};
+
 const initializeEmailTransporter = () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
     const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
@@ -25,6 +56,13 @@ const initializeEmailTransporter = () => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 15000,
+      // Gmail pool settings for better throughput
+      pool: {
+        maxConnections: 1,
+        maxMessages: 100,
+        rateDelta: 250,
+        rateLimit: 5
+      }
     });
     console.log(`✅ Email transporter initialized | user=${process.env.SMTP_USER} | host=${process.env.SMTP_HOST || 'smtp.gmail.com'} | port=${process.env.SMTP_PORT || 587} | passLen=${pass.length}`);
   } else {
@@ -466,38 +504,49 @@ exports.notifyBadgeUnlocked = async (req, res) => {
 // Send email notification (supports HTTPS Resend API or SMTP Nodemailer)
 const sendEmail = async (email, name, title, message, link) => {
   const fullLink = link ? `${process.env.CLIENT_URL || 'http://localhost:5173'}${link}` : null;
+  const unsubscribeLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/notifications/settings`;
+  
   const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { margin: 0; padding: 16px; background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+          .container { max-width: 580px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 24px; color: white; }
+          .header-title { margin: 0; font-size: 20px; font-weight: 700; }
+          .header-subtitle { margin: 8px 0 0 0; font-size: 12px; opacity: 0.8; }
+          .content { padding: 24px; }
+          .content h2 { margin: 0 0 12px 0; font-size: 18px; color: #1e293b; }
+          .greeting { color: #64748b; margin: 0 0 16px 0; font-size: 14px; }
+          .message-box { background: #f1f5f9; border-left: 4px solid #4f46e5; padding: 16px; border-radius: 4px; margin: 16px 0; }
+          .message-box p { margin: 0; color: #334155; line-height: 1.6; font-size: 14px; }
+          .button { display: inline-block; background: #4f46e5; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 20px 0; }
+          .footer { background: #f8fafc; padding: 16px 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+          .footer a { color: #4f46e5; text-decoration: none; }
+        </style>
       </head>
-      <body style="margin: 0; padding: 24px; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #1e293b; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
-          <tr>
-            <td style="padding: 28px 32px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); text-align: left;">
-              <span style="font-size: 22px; font-weight: 900; color: #ffffff;">🎓 EXIT-IT</span>
-              <span style="margin-left: 8px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; color: #ffffff;">Learning Platform</span>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 32px;">
-              <h1 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #ffffff;">${title}</h1>
-              <p style="margin: 0 0 12px 0; font-size: 14px; color: #94a3b8;">Hello <span style="color: #e2e8f0; font-weight: 700;">${name || 'Scholar'}</span>,</p>
-              <div style="background-color: #0f172a; border-radius: 14px; padding: 20px; margin: 16px 0 24px 0; border: 1px solid rgba(255,255,255,0.06);">
-                <p style="margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.6;">${message}</p>
-              </div>
-              ${fullLink ? `<div style="text-align: center; margin: 28px 0 12px 0;"><a href="${fullLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 12px;">Open in EXIT-IT →</a></div>` : ''}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 20px 32px; background-color: #0f172a; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #64748b;">You received this because notifications are enabled on your EXIT-IT account.<br>
-              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/notifications/settings" style="color: #818cf8;">Manage Notification Settings</a></p>
-            </td>
-          </tr>
-        </table>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 class="header-title">🎓 EXIT-IT</h1>
+            <p class="header-subtitle">Learning Platform</p>
+          </div>
+          <div class="content">
+            <h2>${title}</h2>
+            <p class="greeting">Hello ${name || 'Scholar'},</p>
+            <div class="message-box">
+              <p>${message}</p>
+            </div>
+            ${fullLink ? `<div style="text-align: center;"><a href="${fullLink}" class="button">Open in EXIT-IT →</a></div>` : ''}
+          </div>
+          <div class="footer">
+            <p style="margin: 0 0 8px 0;">You received this because notifications are enabled on your EXIT-IT account.</p>
+            <p style="margin: 0;"><a href="${unsubscribeLink}">Manage Notification Settings</a></p>
+          </div>
+        </div>
       </body>
       </html>
   `;
@@ -525,20 +574,44 @@ const sendEmail = async (email, name, title, message, link) => {
     return;
   }
 
-  // 2) Fallback to SMTP Nodemailer
+  // 2) Fallback to SMTP Nodemailer with Gmail anti-spam headers
   if (!transporter) {
     throw new Error('Email service unconfigured: Neither RESEND_API_KEY nor valid SMTP credentials found.');
   }
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || `"EXIT-IT Platform" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_FROM || `"EXIT-IT" <${process.env.SMTP_USER}>`,
     to: email,
+    replyTo: process.env.SMTP_USER,
     subject: `⚡ EXIT-IT: ${title}`,
-    html: emailHtml
+    html: emailHtml,
+    text: `${title}\n\nHello ${name || 'Scholar'},\n\n${message}\n\nManage your notification settings: ${unsubscribeLink}`,
+    
+    // Critical anti-spam headers for Gmail inbox placement
+    headers: {
+      // RFC 8058: One-Click Unsubscribe (Gmail respects this)
+      'List-Unsubscribe': `<mailto:${process.env.SMTP_USER}?subject=unsubscribe>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      
+      // Priority & importance (signals legitimate transactional mail)
+      'X-Priority': '3',
+      'Importance': 'normal',
+      'X-MSMail-Priority': 'Normal',
+      
+      // Prevent threading issues
+      'In-Reply-To': `<notification-${Date.now()}@exit-it.local>`,
+      'References': `<notification-${Date.now()}@exit-it.local>`,
+      
+      // Anti-spam reputation signals
+      'X-Mailer': 'EXIT-IT/1.0',
+      'Precedence': 'bulk',
+      'X-Auto-Response-Suppress': 'OOF, DR, RN, NRN, AutoReply'
+    }
   };
 
-  await transporter.sendMail(mailOptions);
-  console.log(`✅ [Email:SMTP] Sent to ${email}: ${title}`);
+  // Use queue to respect Gmail rate limits
+  await queueEmail(mailOptions);
+  console.log(`✅ [Email:SMTP] Queued to ${email}: ${title}`);
 };
 
 
