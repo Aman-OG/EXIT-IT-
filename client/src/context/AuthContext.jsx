@@ -20,14 +20,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUser = async () => {
       const existingToken = localStorage.getItem('token');
-      console.log('[AUTH] checkUser running, token in localStorage:', existingToken ? 'YES (' + existingToken.substring(0, 20) + '...)' : 'NO');
+      if (!existingToken) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         const { data } = await api.get('/users/me');
         setUser(data);
       } catch (err) {
-        console.log('[AUTH] checkUser failed:', err.response?.status, err.response?.data?.message);
-        localStorage.removeItem('token');
-        setUser(null);
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          setUser(null);
+        } else {
+          console.error('Unable to restore the current session:', err);
+        }
       } finally {
         setLoading(false);
       }
@@ -37,13 +45,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const { data } = await api.post('/users/login', { email, password });
-    console.log('[AUTH] Login response keys:', Object.keys(data));
-    console.log('[AUTH] Token received:', data.token ? 'YES (' + data.token.substring(0, 20) + '...)' : 'NO - server not returning token!');
     if (data.token) {
       localStorage.setItem('token', data.token);
-      console.log('[AUTH] Token saved to localStorage');
-    } else {
-      console.warn('[AUTH] ⚠️ No token in login response! Server may not have redeployed yet.');
     }
     setUser(data);
     return data;

@@ -79,6 +79,10 @@ const AdminDashboard = () => {
         const { data } = await api.get(`/notifications/broadcast/status/${activeJob.jobId}`);
         setActiveJob(prev => {
           if (!prev || prev.jobId !== activeJob.jobId) return prev;
+          if (data.unavailable) {
+            return { ...prev, done: true, unavailable: true };
+          }
+
           const total = data.total ?? prev.total;
           const sent = data.sent ?? prev.sent;
           const failed = data.failed ?? prev.failed;
@@ -95,8 +99,10 @@ const AdminDashboard = () => {
         }
       } catch (err) {
         if (err.response?.status === 404) {
-          setActiveJob(prev => prev ? { ...prev, done: true, percent: 100 } : null);
+          setActiveJob(prev => prev ? { ...prev, done: true, unavailable: true } : null);
           clearInterval(intervalId);
+        } else {
+          console.error('Unable to refresh broadcast progress:', err);
         }
       }
     }, 1200);
@@ -339,41 +345,51 @@ const AdminDashboard = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div className="flex items-center space-x-3">
                 <div className={`p-2.5 rounded-xl border ${
-                  activeJob.done 
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                    : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30 animate-pulse'
+                  activeJob.unavailable
+                    ? 'bg-neutral-500/20 text-neutral-400 border-neutral-500/30'
+                    : activeJob.done
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      : 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30 animate-pulse'
                 }`}>
-                  {activeJob.done ? <CheckCircle2 size={22} /> : <Loader2 size={22} className="animate-spin text-indigo-400" />}
+                  {activeJob.unavailable ? <AlertCircle size={22} /> : activeJob.done ? <CheckCircle2 size={22} /> : <Loader2 size={22} className="animate-spin text-indigo-400" />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-text">
-                      {activeJob.done ? 'Email Dispatch Completed' : 'Sending Emails Live'}
+                      {activeJob.unavailable ? 'Progress Unavailable' : activeJob.done ? 'Email Dispatch Completed' : 'Sending Emails Live'}
                     </h3>
                     <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                      activeJob.done 
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                        : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse'
+                      activeJob.unavailable
+                        ? 'bg-neutral-500/20 text-neutral-400 border border-neutral-500/30'
+                        : activeJob.done
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse'
                     }`}>
-                      {activeJob.done ? 'Done' : 'In Progress'}
+                      {activeJob.unavailable ? 'Unknown' : activeJob.done ? 'Done' : 'In Progress'}
                     </span>
                   </div>
                   <p className="text-xs text-text/60">
-                    {activeJob.done 
-                      ? `All emails processed: ${activeJob.sent} delivered successfully${activeJob.failed > 0 ? `, ${activeJob.failed} failed` : ''}.`
-                      : `Dispatching to scholars via Exitdbu@gmail.com (${activeJob.sent + activeJob.failed} of ${activeJob.total} processed)`}
+                    {activeJob.unavailable
+                      ? 'The email job tracker is no longer available, so delivery totals cannot be confirmed.'
+                      : activeJob.done
+                        ? `All emails processed: ${activeJob.sent} delivered successfully${activeJob.failed > 0 ? `, ${activeJob.failed} failed` : ''}.`
+                        : `Dispatching to scholars via Exitdbu@gmail.com (${activeJob.sent + activeJob.failed} of ${activeJob.total} processed)`}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4 self-end sm:self-center">
                 <div className="text-right">
-                  <div className="text-2xl font-black text-text tracking-tight font-mono">
-                    {activeJob.percent || 0}%
-                  </div>
-                  <div className="text-[10px] text-text/50 uppercase font-bold tracking-wider">
-                    {activeJob.sent} Sent • {activeJob.failed} Failed
-                  </div>
+                  {!activeJob.unavailable && (
+                    <>
+                      <div className="text-2xl font-black text-text tracking-tight font-mono">
+                        {activeJob.percent || 0}%
+                      </div>
+                      <div className="text-[10px] text-text/50 uppercase font-bold tracking-wider">
+                        {activeJob.sent} Sent • {activeJob.failed} Failed
+                      </div>
+                    </>
+                  )}
                 </div>
                 {activeJob.done && (
                   <button
@@ -388,7 +404,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Dynamic Progress Bar */}
-            <div className="w-full bg-neutral-900/90 rounded-full h-3 overflow-hidden p-0.5 border border-white/5 my-2">
+            {!activeJob.unavailable && <div className="w-full bg-neutral-900/90 rounded-full h-3 overflow-hidden p-0.5 border border-white/5 my-2">
               <div 
                 className={`h-full rounded-full transition-all duration-500 ${
                   activeJob.done 
@@ -397,14 +413,14 @@ const AdminDashboard = () => {
                 }`}
                 style={{ width: `${Math.max(activeJob.percent || 0, 4)}%` }}
               />
-            </div>
+            </div>}
 
             <div className="flex flex-wrap items-center justify-between text-[11px] text-text/60 gap-2 pt-1">
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 font-medium">
+                {!activeJob.unavailable && <span className="flex items-center gap-1.5 font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <strong className="text-emerald-400">{activeJob.sent}</strong> Delivered
-                </span>
+                </span>}
                 {activeJob.failed > 0 && (
                   <span className="flex items-center gap-1.5 font-medium">
                     <span className="w-2 h-2 rounded-full bg-rose-400" />
