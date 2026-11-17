@@ -299,9 +299,14 @@ const sendEmailBatch = async (users, title, message, link, jobId = null) => {
 exports.getBroadcastStatus = (req, res) => {
   const { jobId } = req.params;
   const job = broadcastJobs.get(jobId);
-  if (!job) {
-    return res.status(404).json({ error: 'Job not found or already completed', done: true });
-  }
+    if (!job) {
+      return res.json({
+        jobId,
+        done: true,
+        unavailable: true,
+        message: 'Progress tracking is no longer available for this job.'
+      });
+    }
   const percent = job.total > 0 ? Math.round(((job.sent + job.failed) / job.total) * 100) : 100;
   res.json({
     jobId,
