@@ -154,13 +154,16 @@ export const AuthProvider = ({ children }) => {
                 // 1. Show celebration modal to current user
                 enqueueNotification({ category: 'badge', ...badgeDetails[id] });
 
-                // 2. Dispatch push notification to all friends
+                // 2. Dispatch push notification to all friends (server deduplicates)
                 try {
-                  await api.post('/notifications/badge-unlocked', {
+                  const resp = await api.post('/notifications/badge-unlocked', {
                     badgeId: id,
                     badgeName: badgeDetails[id]?.name,
                     badgeIcon: badgeDetails[id]?.icon
                   });
+                  if (resp.data?.alreadyNotified) {
+                    console.log(`Badge "${id}" already notified server-side, skipped.`);
+                  }
                 } catch (e) {
                   console.error('Failed to notify friends of badge unlock:', e);
                 }

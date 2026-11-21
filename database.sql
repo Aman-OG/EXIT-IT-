@@ -109,3 +109,12 @@ CREATE TABLE IF NOT EXISTS scheduled_notifications (
 CREATE INDEX idx_scheduled_notifications_user ON scheduled_notifications(user_id);
 CREATE INDEX idx_scheduled_notifications_scheduled ON scheduled_notifications(scheduled_for);
 CREATE INDEX idx_scheduled_notifications_sent ON scheduled_notifications(sent);
+
+-- Phase 6: Badge Unlock Deduplication
+CREATE TABLE IF NOT EXISTS user_badge_unlocks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    badge_id VARCHAR(50) NOT NULL,
+    notified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, badge_id)
+);

@@ -480,11 +480,49 @@ exports.notifyAllFriends = async (userId, type, title, message, link = null) => 
   }
 };
 
-// Notify all friends when a user unlocks a trophy / badge
+// Ensure badge dedup table exists (called once at startup)
+const ensureBadgeUnlocksTable = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_badge_unlocks (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        badge_id VARCHAR(50) NOT NULL,
+        notified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, badge_id)
+      )
+    `);
+  } catch (err) {
+    console.error('⚠️ [Notifications] Could not create user_badge_unlocks table:', err.message);
+  }
+};
+ensureBadgeUnlocksTable();
+
+// Notify all friends when a user unlocks a trophy / badge (with dedup)
 exports.notifyBadgeUnlocked = async (req, res) => {
   try {
     const userId = req.user.id;
     const { badgeId, badgeName, badgeIcon } = req.body;
+
+    if (!badgeId) {
+      return res.status(400).json({ message: 'badgeId is required' });
+    }
+
+    // --- Dedup check: skip if this badge was already notified ---
+    const existing = await pool.query(
+      'SELECT 1 FROM user_badge_unlocks WHERE user_id = $1 AND badge_id = $2',
+      [userId, badgeId]
+    );
+    if (existing.rows.length > 0) {
+      console.log(`ℹ️ [Notifications] Badge "${badgeId}" already notified for user ${userId}, skipping.`);
+      return res.json({ success: true, message: 'Badge already notified', alreadyNotified: true });
+    }
+
+    // Record unlock so it's never re-sent
+    await pool.query(
+      'INSERT INTO user_badge_unlocks (user_id, badge_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [userId, badgeId]
+    );
 
     const userRes = await pool.query('SELECT name FROM users WHERE id = $1', [userId]);
     const userName = userRes.rows[0]?.name || 'Your friend';
@@ -519,37 +557,37 @@ const sendEmail = async (email, name, title, message, link) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body { margin: 0; padding: 16px; background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-          .container { max-width: 580px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 24px; color: white; }
-          .header-title { margin: 0; font-size: 20px; font-weight: 700; }
-          .header-subtitle { margin: 8px 0 0 0; font-size: 12px; opacity: 0.8; }
-          .content { padding: 24px; }
-          .content h2 { margin: 0 0 12px 0; font-size: 18px; color: #1e293b; }
+          .container { max-width: 580px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+          .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 28px 24px; color: white; }
+          .header-title { margin: 0; font-size: 22px; font-weight: 800; }
+          .header-subtitle { margin: 6px 0 0 0; font-size: 12px; opacity: 0.9; font-weight: 500; text-transform: uppercase; }
+          .content { padding: 28px 24px; }
+          .content h2 { margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #0f172a; }
           .greeting { color: #64748b; margin: 0 0 16px 0; font-size: 14px; }
-          .message-box { background: #f1f5f9; border-left: 4px solid #4f46e5; padding: 16px; border-radius: 4px; margin: 16px 0; }
-          .message-box p { margin: 0; color: #334155; line-height: 1.6; font-size: 14px; }
-          .button { display: inline-block; background: #4f46e5; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 20px 0; }
-          .footer { background: #f8fafc; padding: 16px 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
-          .footer a { color: #4f46e5; text-decoration: none; }
+          .message-box { background: #f0f7ff; border-left: 4px solid #2563eb; padding: 16px 20px; border-radius: 6px; margin: 18px 0; }
+          .message-box p { margin: 0; color: #1e293b; line-height: 1.6; font-size: 14px; }
+          .button { display: inline-block; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 16px 0 8px 0; }
+          .footer { background: #f8fafc; padding: 18px 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+          .footer a { color: #2563eb; text-decoration: none; font-weight: 500; }
         </style>
       </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1 class="header-title">🎓 EXIT-IT</h1>
-            <p class="header-subtitle">Learning Platform</p>
+      <body style="margin: 0; padding: 16px; background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+        <div class="container" style="max-width: 580px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+          <div class="header" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 28px 24px; color: white;">
+            <h1 class="header-title" style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff;">🎓 EXIT-IT</h1>
+            <p class="header-subtitle" style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.9; font-weight: 500; text-transform: uppercase; color: #ffffff;">Learning Platform</p>
           </div>
-          <div class="content">
-            <h2>${title}</h2>
-            <p class="greeting">Hello ${name || 'Scholar'},</p>
-            <div class="message-box">
-              <p>${message}</p>
+          <div class="content" style="padding: 28px 24px;">
+            <h2 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 700; color: #0f172a;">${title}</h2>
+            <p class="greeting" style="color: #64748b; margin: 0 0 16px 0; font-size: 14px;">Hello <span style="font-weight: 600; color: #0f172a;">${name || 'Scholar'}</span>,</p>
+            <div class="message-box" style="background: #f0f7ff; border-left: 4px solid #2563eb; padding: 16px 20px; border-radius: 6px; margin: 18px 0;">
+              <p style="margin: 0; color: #1e293b; line-height: 1.6; font-size: 14px;">${message}</p>
             </div>
-            ${fullLink ? `<div style="text-align: center;"><a href="${fullLink}" class="button">Open in EXIT-IT →</a></div>` : ''}
+            ${fullLink ? `<div style="text-align: center; margin: 24px 0 8px 0;"><a href="${fullLink}" class="button" style="display: inline-block; background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">Open in EXIT-IT →</a></div>` : ''}
           </div>
-          <div class="footer">
-            <p style="margin: 0 0 8px 0;">You received this because notifications are enabled on your EXIT-IT account.</p>
-            <p style="margin: 0;"><a href="${unsubscribeLink}">Manage Notification Settings</a></p>
+          <div class="footer" style="background: #f8fafc; padding: 18px 24px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center;">
+            <p style="margin: 0 0 8px 0; color: #64748b;">You received this because notifications are enabled on your EXIT-IT account.</p>
+            <p style="margin: 0;"><a href="${unsubscribeLink}" style="color: #2563eb; text-decoration: none; font-weight: 500;">Manage Notification Settings</a></p>
           </div>
         </div>
       </body>
